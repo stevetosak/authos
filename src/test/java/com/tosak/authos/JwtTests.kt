@@ -21,9 +21,4 @@ class JwtTests (private val rsaKey: RSAKey) {
     fun contextLoads() {
     }
 
-    @Test
-    fun jwtGenerationTest() {
-        val jwt = jwtUtils.createSignedJwt(1)
-        println("BEARER: $jwt")
-    }
 }

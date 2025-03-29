@@ -1,16 +1,13 @@
 package com.tosak.authos.service.oidc
 
+import org.springframework.http.ResponseEntity
+import java.net.URI
 import java.net.URLEncoder
 import java.security.SecureRandom
 import java.util.*
 
-fun generateAuthorizationCode() : String {
-    val randomBytes = ByteArray(64)
-    SecureRandom().nextBytes(randomBytes)
-    return URLEncoder.encode(Base64.getEncoder().encodeToString(randomBytes).replace("=",""), Charsets.UTF_8);
 
-}
-
-fun sendErrorResponse(){
-
+fun <T> sendErrorResponse(errCode: String,body : T? = null) : ResponseEntity<T?>{
+    return ResponseEntity.status(302)
+        .location(URI("http://localhost:5173/error?err_code=$errCode")).body(body)
 }

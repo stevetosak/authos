@@ -1,5 +1,4 @@
 package com.tosak.authos.entity
-
 import jakarta.persistence.*
 import lombok.NoArgsConstructor
 import java.time.Instant
@@ -11,7 +10,7 @@ class App (
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "app_id_seq")
     @SequenceGenerator(name = "app_id_seq", sequenceName = "app_id_seq", allocationSize = 1)
-    val id : Int = 0,
+    val id : Int? = null,
     val name : String = "",
     @Column(name = "redirect_uri")
     val redirectUri : String = "",
@@ -24,4 +23,7 @@ class App (
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     val user: User = User(),
+    @ManyToOne
+    @JoinColumn(name = "group_id", referencedColumnName = "id")
+    val group: AppGroup = AppGroup(),
 )

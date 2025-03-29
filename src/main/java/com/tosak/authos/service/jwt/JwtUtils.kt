@@ -8,16 +8,24 @@ import com.nimbusds.jose.crypto.RSASSAVerifier
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
-import com.tosak.authos.exceptions.JwtExpiredException
+import com.tosak.authos.crypto.getHash
+import com.tosak.authos.entity.App
+import com.tosak.authos.entity.User
+import com.tosak.authos.service.PPIDService
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class JwtUtils(private val rsaKeyPair: RSAKey) {
+class JwtUtils(
+    private val rsaKeyPair: RSAKey,
+    private val ppidService: PPIDService
+) {
 
-    fun createSignedJwt(userId: Int?): String {
+    // ova ne e dobro impl
+    fun createSignedJwt(sub: String): String {
         val claims: JWTClaimsSet = JWTClaimsSet.Builder()
-            .subject(userId.toString())
+            .subject(sub) // ignore this, just for ttesting
             .issuer("http://localhost:9000")
             .expirationTime(Date(Date().time + 3600 * 1000))
             .build();
@@ -31,12 +39,13 @@ class JwtUtils(private val rsaKeyPair: RSAKey) {
 
     }
 
-    fun verifySignature(jwtString: String): SignedJWT {
+    fun verifyIdToken(jwtString: String): SignedJWT {
         val jwt = SignedJWT.parse(jwtString)
         val verifier: JWSVerifier = RSASSAVerifier(rsaKeyPair.toRSAPublicKey())
 
         require(jwt.verify(verifier)) { "JWT signature could not be verified" }
         require(jwt.jwtClaimsSet.issuer == "http://localhost:9000") { "JWT issuer could not be verified" }
+        require(jwt.jwtClaimsSet.expirationTime.after(Date()))
 
         return jwt
     }
@@ -44,6 +53,54 @@ class JwtUtils(private val rsaKeyPair: RSAKey) {
     fun isExpired(idToken : SignedJWT): Boolean{
         return idToken.jwtClaimsSet.expirationTime.before(Date())
 
+    }
+
+
+    fun generateIdToken(user: User, request: HttpServletRequest, app:App) : String {
+
+        val sub = ppidService.getOrCreatePPID(user,app.group)
+        val claims: JWTClaimsSet = JWTClaimsSet.Builder()
+            .subject(sub)
+            .issuer("http://localhost:9000")
+            .audience(app.clientId)
+            .expirationTime(Date(System.currentTimeMillis() * 1000 + 3600 )) // 1 sat
+            .issueTime(Date())
+            .jwtID(UUID.randomUUID().toString())
+            .claim("ua_hash", getHash(request.getHeader("User-Agent")))
+            .claim("ip_hash", getHash(request.remoteAddr))
+            .claim("auth_time",Date())
+            .build();
+
+
+        val signer = RSASSASigner(rsaKeyPair.toPrivateKey())
+        val signedJwt = SignedJWT(JWSHeader(JWSAlgorithm.RS256), claims);
+        signedJwt.sign(signer);
+
+
+        return signedJwt.serialize();
+    }
+
+
+    // todo ko ke expirenit tokenov da sa revokenit, t.e vo baza tabela za blacklisted/used tokens
+
+    fun generateLoginToken(user: User,request: HttpServletRequest): String {
+        val claims: JWTClaimsSet = JWTClaimsSet.Builder()
+            .subject(user.id.toString())
+            .issuer("http://localhost:9000")
+            .expirationTime(Date(System.currentTimeMillis() * 1000 + 3600 )) // 1 sat
+            .issueTime(Date())
+            .jwtID(UUID.randomUUID().toString())
+            .claim("ua_hash", getHash(request.getHeader("User-Agent")))
+            .claim("ip_hash", getHash(request.remoteAddr))
+            .build();
+
+
+        val signer = RSASSASigner(rsaKeyPair.toPrivateKey())
+        val signedJwt = SignedJWT(JWSHeader(JWSAlgorithm.RS256), claims);
+        signedJwt.sign(signer);
+
+
+        return signedJwt.serialize();
     }
 
     fun parseClaims(){

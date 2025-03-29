@@ -6,6 +6,7 @@ target/
 
 er.xml
 authos_er.xml
+src/main/resources/db
 ### STS ###
 .apt_generated
 .classpath

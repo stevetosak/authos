@@ -19,10 +19,4 @@ class AuthosApplicationTests {
 	void contextLoads() {
 	}
 
-	@Test
-	void jwtGenerationTest(){
-		String jwt = jwtUtils.createSignedJwt(1);
-		System.out.println("BEARER: " + jwt);
-	}
-
 }
