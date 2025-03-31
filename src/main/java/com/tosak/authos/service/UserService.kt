@@ -2,7 +2,7 @@ package com.tosak.authos.service
 
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.entity.User
-import com.tosak.authos.exceptions.UserNotFoundException
+import com.tosak.authos.exceptions.unauthorized.UserNotFoundException
 import com.tosak.authos.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -32,7 +32,9 @@ class UserService @Autowired constructor(
 
 
     fun getById(id: Int): User {
-        return userRepository.findUserById(id) ?: throw UserNotFoundException("User with id $id not found")
+        return userRepository.findUserById(id) ?: throw UserNotFoundException(
+            "User with id $id not found"
+        )
     }
 
 

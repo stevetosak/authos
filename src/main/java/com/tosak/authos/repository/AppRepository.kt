@@ -29,4 +29,5 @@ interface AppRepository : JpaRepository<App, Long> {
 
     fun existsByClientIdAndRedirectUri(@Param("clientId") clientId: String, @Param("redirectUri") redirectUri: String): Boolean
     fun existsByGroupId(@Param("groupId") groupId: Int): Boolean
+    fun findAppById(appId: Int): App?
 }

@@ -1,11 +1,22 @@
 package com.tosak.authos
 
-import java.util.*
+import com.tosak.authos.exceptions.badreq.PromptParseException
 
 enum class PromptType {
-    none,
-    login,
-    consent,
-    select_account;
+    NONE,
+    LOGIN,
+    CONSENT,
+    SELECT_ACCOUNT;
+
+    companion object{
+        fun parse(prompt : String): PromptType {
+            return entries.find { it.name.equals(prompt,ignoreCase = true) } ?: throw PromptParseException(
+                "Can't parse prompt: $prompt"
+            )
+        }
+    }
+    override fun toString(): String {
+        return name.lowercase()
+    }
 
 }

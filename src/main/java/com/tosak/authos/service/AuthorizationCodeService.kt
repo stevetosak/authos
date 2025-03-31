@@ -2,13 +2,13 @@ package com.tosak.authos.service
 
 import com.tosak.authos.crypto.getHash
 import com.tosak.authos.crypto.hex
+import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AuthorizationCode
-import com.tosak.authos.exceptions.AuthorizationCodeExpiredException
-import com.tosak.authos.exceptions.AuthorizationCodeUsedException
-import com.tosak.authos.exceptions.ClientSecretDoesNotMatchException
-import com.tosak.authos.exceptions.InvalidAuthorizationCodeCredentials
-import com.tosak.authos.exceptions.InvalidScopeException
+import com.tosak.authos.exceptions.badreq.InvalidScopeException
+import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeExpiredException
+import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeUsedException
+import com.tosak.authos.exceptions.unauthorized.InvalidAuthorizationCodeCredentials
 import com.tosak.authos.repository.AuthorizationCodeRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -24,12 +24,12 @@ class AuthorizationCodeService (
     private val passwordEncoder: PasswordEncoder
 ) {
 
-    fun generateAuthorizationCode(clientId: String,redirectUri: String): String {
+    fun generateAuthorizationCode(clientId: String,redirectUri: String,scope: String): String {
         val randomBytes = ByteArray(64)
         SecureRandom().nextBytes(randomBytes)
         val authorizationCodeValue = URLEncoder.encode(Base64.getEncoder().encodeToString(randomBytes).replace("=",""), Charsets.UTF_8);
         val codeHash = hex(getHash(authorizationCodeValue));
-        val authorizationCode = AuthorizationCode(null,codeHash,clientId,redirectUri)
+        val authorizationCode = AuthorizationCode(null,codeHash,clientId,redirectUri,scope = scope)
         authorizationCodeRepository.save(authorizationCode)
 
         return authorizationCodeValue;
@@ -37,10 +37,10 @@ class AuthorizationCodeService (
     }
 
 
-    fun validateTokenRequest(app: App, code: String) : AuthorizationCode {
+    fun validateTokenRequest(app: App, tokenRequestDto: TokenRequestDto) : AuthorizationCode {
 
 
-        val codeHash = hex(getHash(code));
+        val codeHash = hex(getHash(tokenRequestDto.code));
 
         val authorizationCode =  authorizationCodeRepository.findByClientIdAndRedirectUriAndCodeHash(app.clientId,app.redirectUri,codeHash) ?: throw InvalidAuthorizationCodeCredentials(
             "Could not link provided credentials to an authorization code"

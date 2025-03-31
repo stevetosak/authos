@@ -1,47 +1,68 @@
 package com.tosak.authos.service
 
 import com.tosak.authos.entity.App
-import com.tosak.authos.entity.SSOSession
 import com.tosak.authos.entity.User
+import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.SSOSessionRepository
-import jakarta.servlet.http.HttpServletRequest
+import com.tosak.authos.repository.UserRepository
 import jakarta.servlet.http.HttpSession
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.*
+import kotlin.time.Duration
 
 @Service
 class SSOSessionService(
-    private val ssoSessionRepository: SSOSessionRepository
-)
-{
+    private val ssoSessionRepository: SSOSessionRepository,
+    private val redisService: RedisService,
+    private val userRepository: UserRepository,
+    private val appRepository: AppRepository
+) {
+    @Value("\${spring.session.timeout}")
+    private lateinit var sessionTimeout: String
 
-    fun createSession(user: User, app: App,request:HttpServletRequest,httpSession: HttpSession) {
+    /**
+     * Creates a new session or validates the existing one.
+     *
+     *     Sessions are bound to the User (that requests authentication) and Group (of the application that has authenticated the user)
+     *
+     */
+    fun create(user: User, app: App, httpSession: HttpSession) {
+
         if(httpSession.isNew){
-            httpSession.setAttribute("uid", user.id)
+            httpSession.setAttribute("user", user.id)
+            httpSession.setAttribute("app", app.id)
+            httpSession.setAttribute("created_at", LocalDateTime.now())
+
+            val key = "authos:sso:${user.id}:${app.group.id}"
+            val timeoutS = Duration.parse(sessionTimeout)
+            redisService.setWithTTL(key, httpSession.id.toString(), timeoutS.inWholeSeconds)
         }
 
-        println("SESSION ID ON CREATE: ${httpSession.id}")
-        val uid = httpSession.getAttribute("uid");
-        require (uid != null && uid == user.id) { "Invalid user id session" }
+        val userId = httpSession.getAttribute("user") as Int?
+        val appId = httpSession.getAttribute("app") as Int?
+        require(userId != null && appId != null) { "Required attributes not present" }
+        require(userId == user.id && appId == app.id) { "Provided values do not match attributes" }
+        val ssoSession = redisService.tryGetValue("authos:sso:${user.id}:${app.group.id}")
+
+        require(ssoSession == httpSession.id) { "No session found" }
+    }
 
 
-        println("${httpSession.getAttribute("uid")} USERID" )
 
-        val existingSession = ssoSessionRepository.findActiveSessionByUserAndApp(app.id!!,user.id!!)
-        if (existingSession == null) {
-            val ssoSession = SSOSession(null,request.remoteAddr,
-                LocalDateTime.now(),LocalDateTime.now().plusHours(12),
-                request.getHeader("User-Agent"),
-                LocalDateTime.now(),user,app);
-            ssoSessionRepository.save(ssoSession);
+    fun hasActiveSession(userId: Int, appId: Int): Boolean {
+        val user: User = userRepository.findUserById(userId)
+            ?: throw IllegalArgumentException("Cant find user")
+        val app = appRepository.findAppById(appId)
+            ?: throw IllegalArgumentException("Cant find app")
 
-        }else {
-           val ssoSession = SSOSession(existingSession.id,existingSession.ipAddress,
-                existingSession.createdAt,existingSession.expiresAt,
-                existingSession.userAgent,
-                LocalDateTime.now(),existingSession.user,existingSession.app);
-            ssoSessionRepository.save(ssoSession);
-        }
+        val sessionId = kotlin.runCatching { redisService.tryGetValue("authos:sso:${user.id}:${app.group.id}") }
+            .getOrDefault("")
+        println("SESSION ID: $sessionId")
+        return redisService.hasKey("spring:session:sessions:$sessionId")
+
 
     }
+
 }

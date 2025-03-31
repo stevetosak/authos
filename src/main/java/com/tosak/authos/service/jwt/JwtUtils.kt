@@ -11,6 +11,7 @@ import com.nimbusds.jwt.SignedJWT
 import com.tosak.authos.crypto.getHash
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.User
+import com.tosak.authos.exceptions.badreq.InvalidIDTokenException
 import com.tosak.authos.service.PPIDService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Service
@@ -43,9 +44,13 @@ class JwtUtils(
         val jwt = SignedJWT.parse(jwtString)
         val verifier: JWSVerifier = RSASSAVerifier(rsaKeyPair.toRSAPublicKey())
 
-        require(jwt.verify(verifier)) { "JWT signature could not be verified" }
+        require(jwt.verify(verifier)) { throw InvalidIDTokenException(
+            "Provided id token is invalid."
+        )
+        }
         require(jwt.jwtClaimsSet.issuer == "http://localhost:9000") { "JWT issuer could not be verified" }
         require(jwt.jwtClaimsSet.expirationTime.after(Date()))
+        require(jwt.jwtClaimsSet.subject != null)
 
         return jwt
     }

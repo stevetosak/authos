@@ -4,7 +4,7 @@ import com.tosak.authos.crypto.b64UrlSafe
 import com.tosak.authos.crypto.getHash
 import com.tosak.authos.entity.AccessToken
 import com.tosak.authos.entity.AuthorizationCode
-import com.tosak.authos.exceptions.AuthorizationCodeUsedException
+import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeUsedException
 import com.tosak.authos.repository.AccessTokenRepository
 import com.tosak.authos.repository.AuthorizationCodeRepository
 import org.springframework.stereotype.Service

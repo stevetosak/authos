@@ -2,12 +2,14 @@ package com.tosak.authos.web.rest
 
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
+import com.tosak.authos.PromptType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
 import com.tosak.authos.entity.App
+import com.tosak.authos.exceptions.oauth.InvalidScopeException
+import com.tosak.authos.exceptions.oauth.LoginRequiredException
 import com.tosak.authos.service.*
 import com.tosak.authos.service.jwt.JwtUtils
-import com.tosak.authos.utils.errorResponse
 import com.tosak.authos.utils.redirectToLogin
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -17,19 +19,21 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.yaml.snakeyaml.util.UriEncoder
 import java.net.URI
+import java.net.URLEncoder
 
 @RestController
 @RequestMapping("/oauth")
 class OAuthEndpoints(
     private val rsaKeyDEV: RSAKey,
     private val jwtUtils: JwtUtils,
-    private val oAuthService: OAuthService,
     private val authorizationCodeService: AuthorizationCodeService,
     private val appService: AppService,
     private val accessTokenService: AccessTokenService,
     private val userService: UserService,
-    private val ppidService: PPIDService
+    private val ppidService: PPIDService,
+    private val sessionService: SSOSessionService
 ) {
 
     // todo impl scopes
@@ -41,51 +45,59 @@ class OAuthEndpoints(
         @RequestParam("redirect_uri") redirectUri: String,
         @RequestParam("state") state: String,
         @RequestParam("scope") scope: String,
-        @RequestParam("prompt", defaultValue = "login") prompt:String,
+        @RequestParam("prompt", defaultValue = "login") prompt: String,
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
         @RequestParam(name = "response_type") responseType: String,
         request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
+        // todo prompt handling
 
-        if(scope.isEmpty() || !scope.contains("openid")){
-            return errorResponse("invalid_scope",state,redirectUri)
+        appService.verifyClientIdAndRedirectUri(clientId,redirectUri)
+
+
+        if (scope.isEmpty() || !scope.contains("openid")) {
+            throw InvalidScopeException(redirectUri,state)
         }
 
+        if(idTokenHint == null && PromptType.parse(prompt) == PromptType.NONE ) {
+           throw LoginRequiredException(redirectUri,state)
+        }
 
-        if(prompt == "login") return redirectToLogin(clientId, redirectUri, state)
-        val app: App = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
+        if (prompt == "login") return redirectToLogin(clientId, redirectUri, state)
 
-        if(idTokenHint != null){
+
+
+        if (idTokenHint != null) {
             val idToken = jwtUtils.verifyIdToken(idTokenHint)
+            println("PPID HASH: ${idToken.jwtClaimsSet.subject}")
             val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
+            val app: App = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
+            val hasActiveSession = sessionService.hasActiveSession(userId, app.id!!)
 
-            if(appService.hasActiveSession(userId, app.id!!)){
+
+            if (hasActiveSession && prompt == "consent") {
                 return ResponseEntity.status(303)
-                    .location(URI("http://localhost:5173/oauth/user-consent?client_id=$clientId&redirect_uri=$redirectUri&state=$state"))
+                    .location(URI("http://localhost:5173/oauth/user-consent?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}"))
+                    .build();
+            } else if (hasActiveSession && prompt == "select_account") {
+                // todo account selection page
+            } else if (hasActiveSession && prompt == "none") {
+                println("vleze none")
+                return ResponseEntity.status(303)
+                    .location(URI("http://localhost:9000/oauth/approve?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}"))
                     .build();
             }
+
         }
-
-
-
-
-
-
-
-        // SEKOJ REQUEST SO GO PRAKJAM NA FRONTEND MORAT DA IMAT TOKEN POTPISAN OD AUTHOS backendov za da sa znet deka e od nego praten
-
-//        if (!isExpired || hasActiveSession) {
-//            //tuka spored prompt go nosam
-//            response.sendRedirect("http://localhost:5173/oauth/user-consent?client_id=$clientId&redirect_uri=$redirectUri&state=$state")
-//            return ResponseEntity.status(302).build()
-//        }
-
 
         return redirectToLogin(clientId, redirectUri, state)
 
-        TODO("KEY HANDLING")
+
+
+
+        TODO("RSA KEY HANDLING")
 
     }
 
@@ -97,11 +109,12 @@ class OAuthEndpoints(
         @RequestParam("client_id") clientId: String,
         @RequestParam("redirect_uri") redirectUri: String,
         @RequestParam("state") state: String,
+        @RequestParam("scope") scope: String,
         response: HttpServletResponse
     ): ResponseEntity<Void?> {
 
-        appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
-        val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri)
+        appService.verifyClientIdAndRedirectUri(clientId, redirectUri)
+        val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri,scope)
         return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
     }
 
@@ -118,43 +131,37 @@ class OAuthEndpoints(
     // todo da vidam tocno koi request parametri trebit da gi imat tuka.
     // todo support for different client authentication methods: client_secret, private_key_jwt
     @PostMapping("/token")
-    fun token(@RequestBody tokenRequestDto: TokenRequestDto,
-              httpSession: HttpSession,
-              request:HttpServletRequest) : ResponseEntity<TokenResponse>{
-        //todo input sanitization
+    fun token(
+        @RequestBody tokenRequestDto: TokenRequestDto,
+        httpSession: HttpSession,
+        request: HttpServletRequest
+    ): ResponseEntity<TokenResponse> {
 
-        // tuka trebit da kreiram sesija vo baza.
-        // vrakjam acces_token i id_token
-        // sub vo id token trebit da e sha256(group_id || user_id || salt) - ppid tabela
+        val app = appService.validateAppCredentials(
+            tokenRequestDto.clientId,
+            tokenRequestDto.clientSecret,
+            tokenRequestDto.redirectUri
+        );
+        val code = authorizationCodeService.validateTokenRequest(app, tokenRequestDto)
 
-        val app = appService.validateAppCredentials(tokenRequestDto.clientId,tokenRequestDto.clientSecret,tokenRequestDto.redirectUri);
-        val code = authorizationCodeService.validateTokenRequest(app,tokenRequestDto.code)
-
-
-        println("IS_SESSION_NEW?: ${httpSession.isNew}")
-
-        println("SESSION ID: ${httpSession.id}")
-
-
-        val uid = httpSession.getAttribute("uid") as Int;
-        println("USERID: $uid")
+        val uid = httpSession.getAttribute("user") as Int;
         val user = userService.getById(uid);
 
         val accessToken = accessTokenService.generateAccessToken(tokenRequestDto.clientId, code)
-        val idToken = jwtUtils.generateIdToken(user,request,app)
+        val idToken = jwtUtils.generateIdToken(user, request, app)
 
         val headers = HttpHeaders();
         headers.contentType = MediaType.APPLICATION_JSON;
         headers.cacheControl = "no-store";
 
 
-        return ResponseEntity(TokenResponse(accessToken,"Bearer",idToken,3600),headers,HttpStatus.OK);
+        return ResponseEntity(TokenResponse(accessToken, "Bearer", idToken, 3600), headers, HttpStatus.OK);
 
 
     }
 
     @GetMapping("/userinfo")
-    fun userinfo(@RequestParam("client_id") clientId: String,@RequestHeader("Authorization") authorization: String){
+    fun userinfo(@RequestParam("client_id") clientId: String, @RequestHeader("Authorization") authorization: String) {
 
     }
 }
