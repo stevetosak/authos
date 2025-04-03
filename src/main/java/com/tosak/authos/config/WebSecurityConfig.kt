@@ -29,10 +29,10 @@ open class WebSecurityConfig {
     @Bean
     open fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.addAllowedOrigin("http://localhost:5173")
-        configuration.addAllowedOrigin("https://imaps.mk")
-        configuration.addAllowedMethod("*")
+        configuration.allowedOrigins = listOf("http://localhost:5173")
+        configuration.allowedMethods = listOf("GET", "POST", "OPTIONS")
         configuration.addAllowedHeader("*")
+        configuration.exposedHeaders = listOf("Location")
         configuration.allowCredentials = true
 
         val source = UrlBasedCorsConfigurationSource()

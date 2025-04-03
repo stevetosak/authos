@@ -20,8 +20,6 @@ import java.util.*
 @Service
 class AuthorizationCodeService (
     private val authorizationCodeRepository: AuthorizationCodeRepository,
-    private val appService: AppService,
-    private val passwordEncoder: PasswordEncoder
 ) {
 
     fun generateAuthorizationCode(clientId: String,redirectUri: String,scope: String): String {

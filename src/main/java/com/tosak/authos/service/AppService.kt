@@ -16,12 +16,9 @@ class AppService(
 )
 {
     fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
-        println("REDIRECT URI$redirectUri")
         return appRepository.findAppByClientIdAndRedirectUri(clientId, redirectUri)
             ?: throw InvalidClientCredentialsException("Invalid client credentials.")
     }
-
-
 
 
     fun verifyClientIdAndRedirectUri(clientId: String, redirectUri: String) {

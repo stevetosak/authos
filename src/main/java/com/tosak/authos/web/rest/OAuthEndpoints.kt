@@ -36,9 +36,6 @@ class OAuthEndpoints(
     private val sessionService: SSOSessionService
 ) {
 
-    // todo impl scopes
-    // todo state da ne e moralno ama mnogu reccomended
-    // todo display parametar
     @GetMapping("/authorize")
     fun authorize(
         @RequestParam("client_id") clientId: String,
@@ -52,7 +49,6 @@ class OAuthEndpoints(
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
-        // todo prompt handling
 
         appService.verifyClientIdAndRedirectUri(clientId,redirectUri)
 
@@ -71,7 +67,6 @@ class OAuthEndpoints(
 
         if (idTokenHint != null) {
             val idToken = jwtUtils.verifyIdToken(idTokenHint)
-            println("PPID HASH: ${idToken.jwtClaimsSet.subject}")
             val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
             val app: App = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
             val hasActiveSession = sessionService.hasActiveSession(userId, app.id!!)

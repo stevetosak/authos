@@ -35,7 +35,7 @@ open class BeanConfig {
         return RSAKey
             .Builder(keyPair.public as RSAPublicKey)
             .privateKey(keyPair.private as RSAPrivateKey)
-            .keyID("1")
+            .keyID(UUID.randomUUID().toString())
             .algorithm(Algorithm.parse("RS256"))
             .issueTime(Date())
             .keyUse(KeyUse.SIGNATURE)

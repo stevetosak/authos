@@ -23,22 +23,6 @@ class JwtUtils(
     private val ppidService: PPIDService
 ) {
 
-    // ova ne e dobro impl
-    fun createSignedJwt(sub: String): String {
-        val claims: JWTClaimsSet = JWTClaimsSet.Builder()
-            .subject(sub) // ignore this, just for ttesting
-            .issuer("http://localhost:9000")
-            .expirationTime(Date(Date().time + 3600 * 1000))
-            .build();
-
-
-        val signer = RSASSASigner(rsaKeyPair.toPrivateKey())
-        val signedJwt = SignedJWT(JWSHeader(JWSAlgorithm.RS256), claims);
-        signedJwt.sign(signer);
-
-        return signedJwt.serialize();
-
-    }
 
     fun verifyIdToken(jwtString: String): SignedJWT {
         val jwt = SignedJWT.parse(jwtString)
@@ -55,12 +39,8 @@ class JwtUtils(
         return jwt
     }
 
-    fun isExpired(idToken : SignedJWT): Boolean{
-        return idToken.jwtClaimsSet.expirationTime.before(Date())
 
-    }
-
-
+    //todo c_hash i at_hash
     fun generateIdToken(user: User, request: HttpServletRequest, app:App) : String {
 
         val sub = ppidService.getOrCreatePPID(user,app.group)
