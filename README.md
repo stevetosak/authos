@@ -1,8 +1,11 @@
 # Authos
 
-![Authos Logo](https://via.placeholder.com/150)
+_this app is still in development._
 
 ## Overview
+
+![logo](https://github.com/user-attachments/assets/3aecf034-07e0-4d27-86e4-807dece2685c)
+
 Authos is an **OpenID-compliant Identity Provider (IDP)** that facilitates **Single Sign-On (SSO)**, application grouping, and real-time session updates. It simplifies authentication and access management across multiple applications, enhancing security and user experience.
 
 ## Features
