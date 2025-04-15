@@ -1,16 +1,15 @@
 import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import {useLocation} from "react-router";
+import axios from "axios";
+import {User} from "@/services/interfaces.ts";
+import {AuthContext} from "@/Pages/AuthContext.tsx";
+import {useAuth} from "@/services/useAuth.ts";
+import {useNavigate} from "react-router-dom";
 
 export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     const [email, setEmail] = useState<string>("");
@@ -19,32 +18,34 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     const [error, setError] = useState<string | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [loading, setLoading] = useState<boolean>(false);
+    const {user, setUser} = useAuth()
 
-    const nav = useLocation();
-
-
-    const handleLogin = async (email: string, password: string) => {
-
-        const params = new URLSearchParams(window.location.search)
-
-        const formData = new URLSearchParams();
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('client_id', params.get("client_id") || '');
-        formData.append('redirect_uri', params.get("redirect_uri") || '');
-        formData.append('state', params.get("state") || '');
-        formData.append('scope', params.get("scope") || '')
+    const nav = useNavigate()
 
 
-        return await fetch("http://localhost:9000/login", {
-            method: "POST",
+    // todo security checks on frontend redirecs
+
+
+    const handleNativeLogin = async (formData: URLSearchParams) => {
+
+
+        return await axios.post<User>("http://localhost:9000/native-login", formData, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
-            body: formData.toString(),
+            withCredentials: true
         });
 
 
+    }
+
+    const handleOauthLogin = async (formData: URLSearchParams) => {
+        return await axios.post("http://localhost:9000/oauth-login", formData, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            withCredentials: true
+        });
     }
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -56,14 +57,37 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
             return;
         }
 
+        const params = new URLSearchParams(window.location.search)
+        const formData = new URLSearchParams();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('client_id', params.get("client_id") || '');
+        formData.append('redirect_uri', params.get("redirect_uri") || '');
+        formData.append('state', params.get("state") || '');
+        formData.append('scope', params.get("scope") || '')
+
+
+        const oauthRequest = Array.from(formData.values()).every(val => val !== null && val !== '');
+
         setLoading(true);
-        handleLogin(email, password)
-            .then(resp => {
-                window.location.href = resp.headers.get("location") || ""
-                setLoading(false);
-            }).catch(err => {
-            console.error(err)
-        })
+
+        if (oauthRequest) {
+            handleOauthLogin(formData)
+                .then(resp => {
+                    //dopolnitelna validacija na linkot
+                    window.location.href = resp.headers.get("Location") || ""
+                })
+        } else {
+            handleNativeLogin(formData)
+                .then(resp => {
+                    setUser(resp.data)
+                    nav("/dashboard")
+                }).catch(err => {
+                console.error(err)
+            })
+        }
+        setLoading(false);
+
 
     };
 

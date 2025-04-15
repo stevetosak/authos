@@ -47,9 +47,9 @@ class UserService @Autowired constructor(
             throw IllegalArgumentException("Email already in use")
         }
 
-        return User()
+        val user = User(null,dto.email, password = passwordEncoder.encode(dto.password),dto.number, givenName = dto.firstName, familyName = dto.lastName)
+        return userRepository.save(user)
 
-        TODO()
 
 
     }

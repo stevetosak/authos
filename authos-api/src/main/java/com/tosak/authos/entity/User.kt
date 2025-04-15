@@ -18,7 +18,7 @@ class User(
     @Column(nullable = false)
     val password: String = "",
 
-    val phone: String = "",
+    val phone: String? = "",
     @Column(name = "avatar_url")
     val avatarUrl: String? = null,
     @Column(name = "given_name")

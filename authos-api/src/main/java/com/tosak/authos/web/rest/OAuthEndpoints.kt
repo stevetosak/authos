@@ -19,7 +19,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.yaml.snakeyaml.util.UriEncoder
 import java.net.URI
 import java.net.URLEncoder
 
@@ -66,7 +65,7 @@ class OAuthEndpoints(
 
 
         if (idTokenHint != null) {
-            val idToken = jwtUtils.verifyIdToken(idTokenHint)
+            val idToken = jwtUtils.verifyToken(idTokenHint)
             val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
             val app: App = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
             val hasActiveSession = sessionService.hasActiveSession(userId, app.id!!)

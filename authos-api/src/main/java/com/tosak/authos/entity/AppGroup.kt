@@ -14,4 +14,7 @@ class AppGroup (
     val name : String = "default_app_group",
     @Column(name = "created_at")
     val createdAt : LocalDateTime = LocalDateTime.now(),
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "id",nullable = false)
+    val user: User = User(),
 )

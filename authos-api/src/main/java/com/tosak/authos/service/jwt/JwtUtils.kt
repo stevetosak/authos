@@ -8,7 +8,9 @@ import com.nimbusds.jose.crypto.RSASSAVerifier
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import com.tosak.authos.crypto.b64UrlSafe
 import com.tosak.authos.crypto.getHash
+import com.tosak.authos.crypto.getSecureRandomValue
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.User
 import com.tosak.authos.exceptions.badreq.InvalidIDTokenException
@@ -24,12 +26,12 @@ class JwtUtils(
 ) {
 
 
-    fun verifyIdToken(jwtString: String): SignedJWT {
+    fun verifyToken(jwtString: String): SignedJWT {
         val jwt = SignedJWT.parse(jwtString)
         val verifier: JWSVerifier = RSASSAVerifier(rsaKeyPair.toRSAPublicKey())
 
         require(jwt.verify(verifier)) { throw InvalidIDTokenException(
-            "Provided id token is invalid."
+            "Provided token is invalid."
         )
         }
         require(jwt.jwtClaimsSet.issuer == "http://localhost:9000") { "JWT issuer could not be verified" }
@@ -68,7 +70,7 @@ class JwtUtils(
 
     // todo ko ke expirenit tokenov da sa revokenit, t.e vo baza tabela za blacklisted/used tokens
 
-    fun generateLoginToken(user: User,request: HttpServletRequest): String {
+    fun generateLoginToken(user: User,request: HttpServletRequest): SignedJWT {
         val claims: JWTClaimsSet = JWTClaimsSet.Builder()
             .subject(user.id.toString())
             .issuer("http://localhost:9000")
@@ -77,6 +79,7 @@ class JwtUtils(
             .jwtID(UUID.randomUUID().toString())
             .claim("ua_hash", getHash(request.getHeader("User-Agent")))
             .claim("ip_hash", getHash(request.remoteAddr))
+            .claim("xsrf_token", b64UrlSafe(getSecureRandomValue(8)))
             .build();
 
 
@@ -85,7 +88,7 @@ class JwtUtils(
         signedJwt.sign(signer);
 
 
-        return signedJwt.serialize();
+        return signedJwt;
     }
 
     fun parseClaims(){
