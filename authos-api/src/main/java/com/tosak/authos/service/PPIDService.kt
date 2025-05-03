@@ -19,7 +19,7 @@ class PPIDService (
 
 {
 
-    fun getOrCreatePPID(user: User, group:AppGroup) : String{
+    fun getOrCreatePPID(user: User, group: AppGroup) : String{
         val ppidOpt = ppidRepository.findById(PPIDKey(group.id,user.id))
 
         if(ppidOpt.isPresent){

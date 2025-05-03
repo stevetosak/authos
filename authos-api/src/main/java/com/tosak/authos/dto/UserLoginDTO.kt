@@ -1,5 +1,6 @@
 package com.tosak.authos.dto
 
+import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AppGroup
 
 data class UserLoginDTO(
@@ -7,5 +8,5 @@ data class UserLoginDTO(
     val firstName: String = "",
     val lastName: String = "",
     val phone: String? = "",
-    val appGroups: List<AppGroup>
+    val apps: List<AppDTO> = listOf()
 )

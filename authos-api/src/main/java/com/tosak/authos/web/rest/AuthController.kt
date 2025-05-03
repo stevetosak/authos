@@ -2,6 +2,7 @@ package com.tosak.authos.web.rest
 
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.dto.UserLoginDTO
+import com.tosak.authos.entity.User
 import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.service.*
 import com.tosak.authos.service.jwt.JwtUtils
@@ -12,10 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
 import java.time.Duration
@@ -101,14 +99,14 @@ class AuthController(
             .build()
 
 
-        val appGroups = user.id?.let { appGroupService.getAllGroupsForUser(it) }
+        val apps = appService.getAllAppsForUser(user.id!!)
 
 
         return ResponseEntity
             .status(201)
             .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
             .header(HttpHeaders.SET_COOKIE, xsrfCookie.toString())
-            .body(UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, appGroups!!));
+            .body(UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, apps.map { app -> app.toDTO() }));
 
     }
 
@@ -124,6 +122,20 @@ class AuthController(
         userService.createUser(createUserAccountDTO)
 
         return ResponseEntity.status(201).location(URI("http://localhost:5173/login")).build()
+    }
+
+    // todo da ne sa zemat userot na sekoe poso nepotrebno e ako vekje e logiran
+    @GetMapping("/verify")
+    fun verify(@CookieValue(name = "AUTH_TOKEN", required = false) token: String?): ResponseEntity<UserLoginDTO> {
+        if(token != null){
+            val jwt = jwtUtils.verifyToken(token)
+            val user =  userService.getById(jwt.jwtClaimsSet.subject.toInt())
+            val apps = appService.getAllAppsForUser(user.id!!)
+            val userDto = UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, apps.map { app -> app.toDTO() })
+            return ResponseEntity.ok(userDto)
+        } else {
+            return ResponseEntity.status(401).location(URI("http://localhost:5173/login")).build()
+        }
     }
 
 

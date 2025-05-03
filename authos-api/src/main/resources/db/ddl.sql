@@ -82,7 +82,6 @@ create table app
     user_id       integer      not null
         references users
             on delete cascade,
-    redirect_uri  text,
     client_id     varchar(255) not null
         unique,
     client_secret varchar(255) not null,
@@ -93,7 +92,12 @@ create table app
 alter table app
     owner to stevetosak;
 
-
+create table redirect_uris
+(
+    app_id int references app(id),
+    redirect_uri text,
+    primary key (app_id,redirect_uri)
+);
 
 create table user_app_group
 (

@@ -4,19 +4,21 @@ export interface User{
     firstName: string,
     lastName: string,
     phone?: string,
-    appGroups: AppGroup[]
+    apps: App[]
 }
 
-interface App {
+
+export interface App {
     id: number,
     name: string,
     redirectUri: string,
     clientId: string,
     clientSecret: string,
     createdAt: string
+    group: AppGroup
 }
 
-interface AppGroup {
+export interface AppGroup {
     id: number,
     name: string,
     createdAt: string,

@@ -13,13 +13,13 @@ import axios from "axios";
 //todo app icon validation to match app uri
 export default function ClientRegistration() {
     const [formData, setFormData] = useState({
-        appName: "",
-        appIcon: "",
-        shortDescription: "",
-        tokenAuthMethod: "client_secret_post",
-        grantType: "authorization_code",
-        responseType: "code",
-        appInfoUri: "",
+        appName: String,
+        appIconUrl: String,
+        shortDescription: String,
+        tokenEndpointAuthMethod: String,
+        grantType : String,
+        responseType : String,
+        appInfoUri : String,
     });
 
     const [selectedScopes, setSelectedScopes] = useState<string[]>(["openid"])
@@ -33,7 +33,7 @@ export default function ClientRegistration() {
         const data = {
             ...formData,
             redirectUris: redirectUris,
-            scope: selectedScopes
+            scopes: selectedScopes
         }
 
         try {
@@ -42,8 +42,6 @@ export default function ClientRegistration() {
         } catch (err) {
             console.error(err)
         }
-
-
     }
 
     return (

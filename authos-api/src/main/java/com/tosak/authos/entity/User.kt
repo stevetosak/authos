@@ -1,6 +1,7 @@
 package com.tosak.authos.entity
 
 
+import com.tosak.authos.dto.UserLoginDTO
 import jakarta.persistence.*
 import java.time.LocalDateTime
 

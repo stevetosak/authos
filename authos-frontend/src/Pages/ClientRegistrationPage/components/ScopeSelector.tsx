@@ -1,76 +1,94 @@
-import { useState } from "react";
-import { Info, X, ChevronDown } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
-import { Command, CommandInput, CommandItem, CommandList } from "@/components/ui/command.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Badge } from "@/components/ui/badge";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {Label} from "@/components/ui/label.tsx";
+import {Info} from "lucide-react";
 
-const availableScopes = ["openid", "profile", "email", "offline_access"];
+const AVAILABLE_SCOPES = ["openid", "profile", "email", "offline_access"];
 
-export default function ScopeSelector({ selectedScopes, setSelectedScopes }: { selectedScopes: string[]; setSelectedScopes: (scopes: string[]) => void }) {
-    const [open, setOpen] = useState(false);
+interface ScopeSelectorProps {
+    selectedScopes: string[];
+    setSelectedScopes: (scopes: string[]) => void;
+}
 
-    const addScope = (scope: string) => {
+export default function ScopeSelector({
+                                          selectedScopes,
+                                          setSelectedScopes,
+                                      }: ScopeSelectorProps) {
+    const handleScopeSelect = (scope: string) => {
         if (!selectedScopes.includes(scope)) {
             setSelectedScopes([...selectedScopes, scope]);
         }
-        setOpen(false);
     };
 
-    const removeScope = (scope: string) => {
-        setSelectedScopes(selectedScopes.filter((s) => s !== scope));
+    const removeScope = (scopeToRemove: string) => {
+        // Don't allow removing the openid scope
+        if (scopeToRemove === "openid") return;
+
+        setSelectedScopes(selectedScopes.filter((scope) => scope !== scopeToRemove));
     };
 
     return (
-        <div>
-            <label className="flex items-center gap-2 p-2 text-white">
-                Scopes
+        <div className="space-y-4">
+            <Label className="flex items-center gap-2 p-2">
+                OAuth Scopes
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Info className="w-4 h-4 text-gray-400 cursor-pointer" />
+                        <Info className="w-4 h-4 text-gray-400" />
                     </TooltipTrigger>
-                    <TooltipContent className="bg-gray-800 text-white">Select or type a scope.</TooltipContent>
+                    <TooltipContent className="bg-gray-800 text-white">
+                        Select the permissions your application needs
+                    </TooltipContent>
                 </Tooltip>
-            </label>
+            </Label>
 
-            <div className="border border-gray-600 bg-gray-700 p-2 rounded-md w-full flex flex-wrap gap-1">
+            <div className="flex gap-2 flex-wrap">
                 {selectedScopes.map((scope) => (
-                    <div key={scope} className="relative flex items-center">
-                        <Badge className="flex items-center gap-1 bg-gray-500 text-white px-2 py-1 rounded-md pr-6">
-                            {scope}
-                        </Badge>
-                        <X
-                            className="absolute right-1 top-2 w-3 h-3 cursor-pointer text-white bg-gray-700 rounded-full p-0.5 hover:bg-gray-600 pointer-events-auto"
-                            onClick={() => removeScope(scope)}
-                        />
-                    </div>
+                    <Badge
+                        key={scope}
+                        variant="outline"
+                        className={`px-3 py-1 rounded-full flex items-center gap-1 ${
+                            scope === "openid" ? "bg-gray-700" : "bg-gray-800 hover:bg-gray-700"
+                        }`}
+                    >
+                        <span>{scope}</span>
+                        {scope !== "openid" && (
+                            <button
+                                type="button"
+                                onClick={() => removeScope(scope)}
+                                className="ml-1 text-gray-400 hover:text-white"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </Badge>
                 ))}
-
-                <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" className="text-white bg-gray-700 px-2 py-1 flex items-center gap-1">
-                            Add Scope <ChevronDown className="w-4 h-4" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 p-1 bg-gray-800 text-white rounded-md">
-                        <Command>
-                            <CommandInput placeholder="Search scopes..." />
-                            <CommandList>
-                                {availableScopes.map((scope) => (
-                                    <CommandItem
-                                        key={scope}
-                                        onSelect={() => addScope(scope)}
-                                        className="cursor-pointer flex justify-between"
-                                    >
-                                        {scope}
-                                    </CommandItem>
-                                ))}
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
             </div>
+
+            <Select onValueChange={handleScopeSelect}>
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="Add a scope..." />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                    {AVAILABLE_SCOPES.filter((scope) => !selectedScopes.includes(scope)).map(
+                        (scope) => (
+                            <SelectItem
+                                key={scope}
+                                value={scope}
+                                className="hover:bg-gray-700 focus:bg-gray-700"
+                            >
+                                {scope}
+                            </SelectItem>
+                        )
+                    )}
+                </SelectContent>
+            </Select>
         </div>
     );
 }

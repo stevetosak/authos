@@ -1,6 +1,14 @@
 package com.tosak.authos.service
 
+import com.tosak.authos.crypto.getSecureRandomValue
+import com.tosak.authos.crypto.hex
+import com.tosak.authos.dto.AppDTO
+import com.tosak.authos.dto.RegisterAppDTO
 import com.tosak.authos.entity.App
+import com.tosak.authos.entity.RedirectUri
+import com.tosak.authos.entity.User
+import com.tosak.authos.entity.compositeKeys.RedirectIdKey
+import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
 import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.UserRepository
@@ -27,10 +35,38 @@ class AppService(
         }
     }
 
+    fun getAllAppsForUser(userId: Int) : List<App> {
+        return appRepository.findByUserId(userId) ?: throw InvalidUserIdException("No apps found for user")
+    }
+
 
     fun validateAppCredentials(clientId: String, clientSecret: String, redirectUri: String) : App{
         val app = getAppByClientIdAndRedirectUri(clientId,redirectUri)
         require(passwordEncoder.matches(clientSecret,app.clientSecret))
         return app;
     }
+
+    fun registerApp(appDto: RegisterAppDTO,userLoggedIn: User) : AppDTO{
+        val clientId = hex(getSecureRandomValue(64))
+        val clientSecret = hex(getSecureRandomValue(64))
+
+        val app = App(
+            name = appDto.appName,
+            clientId = clientId,
+            clientSecret = clientSecret,
+            tokenEndpointAuthMethod = appDto.tokenEndpointAuthMethod,
+            shortDescription = appDto.shortDescription,
+            scopes = appDto.scopes,
+            clientUri = appDto.appInfoUri,
+            logoUri = appDto.appIconUrl,
+            user = userLoggedIn,
+            responseTypes = appDto.responseTypes
+        ).apply { addRedirectUris(appDto.redirectUris.toList()) }
+
+        return appRepository.save(app).toDTO()
+
+    }
+
+
+
 }
