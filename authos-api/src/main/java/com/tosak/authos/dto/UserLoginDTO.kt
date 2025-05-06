@@ -8,5 +8,5 @@ data class UserLoginDTO(
     val firstName: String = "",
     val lastName: String = "",
     val phone: String? = "",
-    val apps: List<AppDTO> = listOf()
+    val appGroups: List<AppGroupDTO> = listOf()
 )

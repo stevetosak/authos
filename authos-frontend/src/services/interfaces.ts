@@ -4,7 +4,7 @@ export interface User{
     firstName: string,
     lastName: string,
     phone?: string,
-    apps: App[]
+    appGroups: AppGroup[]
 }
 
 
@@ -22,5 +22,5 @@ export interface AppGroup {
     id: number,
     name: string,
     createdAt: string,
-    apps: App[]
+    apps: App[],
 }

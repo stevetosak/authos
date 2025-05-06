@@ -9,11 +9,10 @@ import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
 
 const Dashboard: React.FC = () => {
 
-    const {user,isAuthenticated,appGroups} = useAuth()
+    const {user,isAuthenticated} = useAuth()
     useEffect(() => {
         console.log("USER:::   " + JSON.stringify(user))
         console.log("IS AUTH:" + isAuthenticated)
-        console.log("Groups: ", JSON.stringify(appGroups))
     })
 
     return (
@@ -51,7 +50,7 @@ const Dashboard: React.FC = () => {
                             </CardHeader>
                             <CardContent>
                                 <ul className="flex flex-col gap-4">
-                                    {user.apps.map(app => (
+                                    {user.appGroups.flatMap(group => group.apps).map(app => (
                                         <li key={app.id}>
                                             <div
                                                 className="bg-gray-800 text-gray-300 p-2 rounded-lg shadow hover:shadow-lg hover:bg-gray-700 transition cursor-pointer"
@@ -75,7 +74,7 @@ const Dashboard: React.FC = () => {
                             </CardHeader>
                             <CardContent>
                                 <ul className="text-gray-300">
-                                    {appGroups.map(group => (
+                                    {user.appGroups.map(group => (
                                         <li key={group.id}>
                                             <div
                                                 className="bg-gray-800 text-gray-300 p-2 rounded-lg shadow hover:shadow-lg hover:bg-gray-700 transition cursor-pointer"

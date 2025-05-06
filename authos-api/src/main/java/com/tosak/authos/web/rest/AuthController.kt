@@ -1,5 +1,6 @@
 package com.tosak.authos.web.rest
 
+import com.tosak.authos.dto.AppGroupDTO
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.dto.UserLoginDTO
 import com.tosak.authos.entity.User
@@ -100,13 +101,14 @@ class AuthController(
 
 
         val apps = appService.getAllAppsForUser(user.id!!)
+        val groups = appGroupService.groupApps(apps)
 
 
         return ResponseEntity
             .status(201)
             .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
             .header(HttpHeaders.SET_COOKIE, xsrfCookie.toString())
-            .body(UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, apps.map { app -> app.toDTO() }));
+            .body(UserLoginDTO(user.email, user.givenName, user.familyName, user.phone,groups));
 
     }
 
@@ -138,8 +140,10 @@ class AuthController(
             val jwt = jwtUtils.verifyToken(token)
             val user =  userService.getById(jwt.jwtClaimsSet.subject.toInt())
             val apps = appService.getAllAppsForUser(user.id!!)
-            println("AUTH USER ID: " + user.id)
-            val userDto = UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, apps.map { app -> app.toDTO() })
+            val groups = appGroupService.groupApps(apps)
+
+            println("AUTH USER ID: " + user.id +  " APPS: " + apps.map { app -> app.toDTO() })
+            val userDto = UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, groups)
             return ResponseEntity.ok(userDto)
         } catch (e : Exception){
             e.printStackTrace()
