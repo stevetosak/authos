@@ -1,13 +1,13 @@
-import {cn} from "@/lib/utils";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
+import {cn} from "@/lib/utils.ts";
+import {Button} from "@/components/ui/button.tsx";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card.tsx";
+import {Input} from "@/components/ui/input.tsx";
+import {Label} from "@/components/ui/label.tsx";
 import React, {useContext, useState} from "react";
 import {useLocation} from "react-router";
 import axios from "axios";
 import {User} from "@/services/interfaces.ts";
-import {AuthContext} from "@/Pages/AuthContext.tsx";
+import {AuthContext} from "@/components/context/AuthProvider.tsx";
 import {useAuth} from "@/services/useAuth.ts";
 import {useNavigate} from "react-router-dom";
 
@@ -21,6 +21,7 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     const {user, setUser} = useAuth()
 
     const nav = useNavigate()
+    const {setIsAuthenticated} = useAuth()
 
 
     // todo security checks on frontend redirecs
@@ -81,6 +82,7 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
             handleNativeLogin(formData)
                 .then(resp => {
                     setUser(resp.data)
+                    setIsAuthenticated(true)
                     nav("/dashboard")
                 }).catch(err => {
                 console.error(err)

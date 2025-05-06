@@ -127,14 +127,24 @@ class AuthController(
     // todo da ne sa zemat userot na sekoe poso nepotrebno e ako vekje e logiran
     @GetMapping("/verify")
     fun verify(@CookieValue(name = "AUTH_TOKEN", required = false) token: String?): ResponseEntity<UserLoginDTO> {
-        if(token != null){
+
+        println("VERIFY")
+        if(token == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+        }
+        println("POMINA")
+
+        try{
             val jwt = jwtUtils.verifyToken(token)
             val user =  userService.getById(jwt.jwtClaimsSet.subject.toInt())
             val apps = appService.getAllAppsForUser(user.id!!)
+            println("AUTH USER ID: " + user.id)
             val userDto = UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, apps.map { app -> app.toDTO() })
             return ResponseEntity.ok(userDto)
-        } else {
-            return ResponseEntity.status(401).location(URI("http://localhost:5173/login")).build()
+        } catch (e : Exception){
+            e.printStackTrace()
+            return ResponseEntity.status(401).build()
+
         }
     }
 

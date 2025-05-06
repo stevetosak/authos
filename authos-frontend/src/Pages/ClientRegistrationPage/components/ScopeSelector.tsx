@@ -28,7 +28,6 @@ export default function ScopeSelector({
     };
 
     const removeScope = (scopeToRemove: string) => {
-        // Don't allow removing the openid scope
         if (scopeToRemove === "openid") return;
 
         setSelectedScopes(selectedScopes.filter((scope) => scope !== scopeToRemove));

@@ -16,10 +16,10 @@ data class AppDTO(
     val shortDescription: String = "",
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val group: AppGroup,
-    val logoUri: String = "",
+    val logoUri: String? = "",
     val scopes: List<String> = listOf(),
     val responseTypes: List<String> = listOf(),
     val grantTypes: List<String> = listOf(),
-    val tokenEndpointAuthMethod: String,
+    val tokenEndpointAuthMethod: String?,
     ) :
     Serializable

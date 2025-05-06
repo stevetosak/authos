@@ -6,9 +6,9 @@ import HomePage from "@/Pages/HomePage/HomePage.tsx";
 import Dashboard from "@/Pages/Dashboard/Dashboard.tsx";
 import ConsentForm from "@/Pages/ConsentPage/ConsentForm.tsx";
 import ErrorPage from "@/Pages/ErrorPage/ErrorPage.tsx";
-import ClientRegistration from "@/Pages/ClientRegistrationPage/ClientRegistration.tsx";
 import UserRegistrationPage from "@/Pages/UserRegistrationPage/UserRegistrationPage.tsx";
-import {AuthProvider} from "@/Pages/AuthContext.tsx";
+import {AuthProvider} from "@/components/context/AuthProvider.tsx";
+import ProtectedRoute from "@/components/my/ProtectedRoute.tsx";
 
 
 function App() {
@@ -18,12 +18,13 @@ function App() {
         <AuthProvider>
             <Router>
                 <Routes>
+                    <Route element={<ProtectedRoute/>}>
+                        <Route path={"/dashboard"} element={<Dashboard/>}/>
+                    </Route>
                     <Route path={"/login"} element={<LoginPage/>}/>
                     <Route path={"/"} element={<HomePage/>}/>
-                    <Route path={"/dashboard"} element={<Dashboard/>}/>
                     <Route path="/oauth/user-consent" element={<ConsentForm/>}/>
                     <Route path="/error" element={<ErrorPage/>}/>
-                    <Route path={"/register-app"} element={<ClientRegistration/>}></Route>
                     <Route path={"/register-user"} element={<UserRegistrationPage/>}></Route>
                 </Routes>
             </Router>

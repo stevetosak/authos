@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Grid, Users } from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
-import {UserSidebar} from "@/components/user-sidebar.tsx";
+import {UserSidebar} from "@/components/my/user-sidebar.tsx";
 import ClientRegistration from "@/Pages/ClientRegistrationPage/ClientRegistration.tsx";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
 
@@ -12,7 +12,7 @@ const Dashboard: React.FC = () => {
     const {user,isAuthenticated,appGroups} = useAuth()
     useEffect(() => {
         console.log("USER:::   " + JSON.stringify(user))
-        console.log("IS AUTH:" + isAuthenticated())
+        console.log("IS AUTH:" + isAuthenticated)
         console.log("Groups: ", JSON.stringify(appGroups))
     })
 

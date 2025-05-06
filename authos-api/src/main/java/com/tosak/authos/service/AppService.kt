@@ -5,9 +5,7 @@ import com.tosak.authos.crypto.hex
 import com.tosak.authos.dto.AppDTO
 import com.tosak.authos.dto.RegisterAppDTO
 import com.tosak.authos.entity.App
-import com.tosak.authos.entity.RedirectUri
 import com.tosak.authos.entity.User
-import com.tosak.authos.entity.compositeKeys.RedirectIdKey
 import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
 import com.tosak.authos.repository.AppRepository
@@ -56,11 +54,12 @@ class AppService(
             clientSecret = clientSecret,
             tokenEndpointAuthMethod = appDto.tokenEndpointAuthMethod,
             shortDescription = appDto.shortDescription,
-            scopes = appDto.scopes,
+            scopes = App.serializeTransientLists(appDto.scopes," "),
             clientUri = appDto.appInfoUri,
             logoUri = appDto.appIconUrl,
             user = userLoggedIn,
-            responseTypes = appDto.responseTypes
+            responseTypes = App.serializeTransientLists(appDto.responseTypes,";"),
+            grantTypes = App.serializeTransientLists(appDto.grantTypes,";")
         ).apply { addRedirectUris(appDto.redirectUris.toList()) }
 
         return appRepository.save(app).toDTO()

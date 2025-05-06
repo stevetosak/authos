@@ -4,7 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class RedirectIdKey(
+class RedirectUriId(
     @Column(name = "app_id")
     val appId: Int? = null,
     @Column(name = "redirect_uri")

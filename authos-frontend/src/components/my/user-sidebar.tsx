@@ -1,5 +1,5 @@
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx"
+import { Button } from "@/components/ui/button.tsx"
 import { LogOut, Settings, User as LucideUser } from "lucide-react"
 import {User} from "@/services/interfaces.ts";
 
