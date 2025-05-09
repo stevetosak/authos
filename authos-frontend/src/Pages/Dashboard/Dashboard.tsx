@@ -78,7 +78,6 @@ const Dashboard: React.FC = () => {
                                         <li key={group.id}>
                                             <div
                                                 className="bg-gray-800 text-gray-300 p-2 rounded-lg shadow hover:shadow-lg hover:bg-gray-700 transition cursor-pointer"
-
                                             >
                                                 <h3 className="text-xl font-semibold">{group.name}</h3>
                                             </div>

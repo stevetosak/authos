@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import {Badge} from "@/components/ui/badge.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {
     Select,
     SelectContent,
@@ -7,8 +7,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Info } from "lucide-react";
+import {Label} from "@/components/ui/label.tsx";
+import {Info} from "lucide-react";
 
 interface MultiSelectBadgeProps {
     label: string;
@@ -41,13 +41,13 @@ export default function MultiSelectBadge({
     };
 
     return (
-        <div className="space-y-4">
+        <div className=" space-y-4">
             <Label className="flex items-center gap-2 p-2">
                 {label}
                 {tooltip && (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Info className="w-4 h-4 text-gray-400" />
+                            <Info className="w-4 h-4 text-gray-400"/>
                         </TooltipTrigger>
                         <TooltipContent className="bg-gray-800 text-white">{tooltip}</TooltipContent>
                     </Tooltip>
@@ -77,9 +77,10 @@ export default function MultiSelectBadge({
                 ))}
             </div>
 
+
             <Select onValueChange={handleSelect}>
-                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                    <SelectValue placeholder={placeholder} />
+                <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white text-xs">
+                    <SelectValue placeholder={placeholder}/>
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700 text-white">
                     {options.filter((o) => !selected.includes(o)).map((value) => (
@@ -94,5 +95,6 @@ export default function MultiSelectBadge({
                 </SelectContent>
             </Select>
         </div>
+
     );
 }

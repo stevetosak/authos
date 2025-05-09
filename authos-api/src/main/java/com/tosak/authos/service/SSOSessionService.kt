@@ -6,13 +6,14 @@ import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.SSOSessionRepository
 import com.tosak.authos.repository.UserRepository
 import jakarta.servlet.http.HttpSession
+import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import kotlin.time.Duration
 
 @Service
-class SSOSessionService(
+open class SSOSessionService(
     private val ssoSessionRepository: SSOSessionRepository,
     private val redisService: RedisService,
     private val userRepository: UserRepository,
@@ -27,8 +28,10 @@ class SSOSessionService(
      *     Sessions are bound to the User (that requests authentication) and Group (of the application that has authenticated the user)
      *
      */
-    fun create(user: User, app: App, httpSession: HttpSession) {
+    @Transactional
+    open fun create(user: User, app: App, httpSession: HttpSession) {
 
+        println("IS NEW: " + httpSession.isNew)
         if(httpSession.isNew){
             httpSession.setAttribute("user", user.id)
             httpSession.setAttribute("app", app.id)

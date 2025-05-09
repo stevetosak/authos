@@ -13,7 +13,9 @@ import com.tosak.authos.crypto.getHash
 import com.tosak.authos.crypto.getSecureRandomValue
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.User
+import com.tosak.authos.exceptions.AppGroupsNotFoundException
 import com.tosak.authos.exceptions.badreq.InvalidIDTokenException
+import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.service.PPIDService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.stereotype.Service
@@ -22,7 +24,8 @@ import java.util.*
 @Service
 class JwtUtils(
     private val rsaKeyPair: RSAKey,
-    private val ppidService: PPIDService
+    private val ppidService: PPIDService,
+    private val appGroupRepository: AppGroupRepository
 ) {
 
 
@@ -71,8 +74,10 @@ class JwtUtils(
     // todo ko ke expirenit tokenov da sa revokenit, t.e vo baza tabela za blacklisted/used tokens
 
     fun generateLoginToken(user: User,request: HttpServletRequest): SignedJWT {
+        val authosGroup = appGroupRepository.findByName("AUTHOS") ?: throw AppGroupsNotFoundException("")
+        val sub = ppidService.getOrCreatePPID(user,authosGroup)
         val claims: JWTClaimsSet = JWTClaimsSet.Builder()
-            .subject(user.id.toString())
+            .subject(sub)
             .issuer("http://localhost:9000")
             .expirationTime(Date(System.currentTimeMillis() * 1000 + 3600 )) // 1 sat
             .issueTime(Date())

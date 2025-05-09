@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository
 interface AppRepository : JpaRepository<App, Long> {
     @Query(nativeQuery = true,
         value = """
-            select app from App app 
+            select app.* from app 
             join redirect_uris ru
             on app.id = ru.app_id
             where app.client_id = :clientId
@@ -39,7 +39,7 @@ interface AppRepository : JpaRepository<App, Long> {
 
     @Query(nativeQuery = true,
         value = """
-            select exists (select app from App app 
+            select exists (select app.* from app 
             join redirect_uris ru
             on app.id = ru.app_id
             where app.client_id = :clientId

@@ -26,15 +26,15 @@ class App (
     @Column(name = "grant_types")
     var grantTypes: String = "",
     @Column(name = "logo_uri")
-    val logoUri: String = "",
+    val logoUri: String? = null,
     @Column(name = "scopes")
     var scopes : String = "",
     @Column(name = "client_uri")
-    val clientUri : String = "",
+    val clientUri : String? = null,
     @Column(name = "response_types")
     var responseTypes: String = "",
     @Column(name = "short_description")
-    val shortDescription : String = "",
+    val shortDescription : String? = null,
     @Column(name = "token_endpoint_auth_method")
     val tokenEndpointAuthMethod : String = "",
     @ManyToOne
@@ -43,7 +43,7 @@ class App (
     @ManyToOne
     @JoinColumn(name = "group_id", referencedColumnName = "id")
     val group: AppGroup = AppGroup(),
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "app", cascade = [jakarta.persistence.CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "app", cascade = [CascadeType.ALL], orphanRemoval = true)
     val redirectUris : MutableList<RedirectUri> = mutableListOf(),
 
 
@@ -65,17 +65,16 @@ class App (
     }
     fun addRedirectUris(uris: Collection<String>) {
         uris.forEach { uri ->
-            redirectUris.add(RedirectUri(RedirectUriId(this.id, uri)))
+            redirectUris.add(RedirectUri(RedirectUriId(this.id, uri),this))
         }
     }
 
     @PrePersist
     @PreUpdate
     fun prePersist() {
-
-        scopes = serializeTransientLists(scopesCollection," ")
-        grantTypes = serializeTransientLists(grantTypesCollection,";")
-        responseTypes = serializeTransientLists(responseTypesCollection,";")
+        scopesCollection = scopes.split(" ").toMutableList()
+        grantTypesCollection = grantTypes.split(";").toMutableList()
+        responseTypesCollection = responseTypes.split(";").toMutableList()
 
     }
 

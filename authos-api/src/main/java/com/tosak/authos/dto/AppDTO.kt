@@ -13,7 +13,7 @@ data class AppDTO(
     val redirectUris: List<String?> = listOf(),
     val clientId: String = "",
     val clientSecret: String = "",
-    val shortDescription: String = "",
+    val shortDescription: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val group: AppGroup,
     val logoUri: String? = "",

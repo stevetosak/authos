@@ -9,7 +9,6 @@ export default function RedirectUriFormInput({redirectUris,setRedirectUris} : {r
     const [inputValue, setInputValue] = useState("");
     const [error, setError] = useState("");
 
-    // Regex: Allow only https URLs, http://localhost, and http://127.0.0.1 on any port
     const urlRegex = /^(https:\/\/[^\s/$.?#].[^\s]*)$|^(http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?\/?.*)$/;
 
     const addRedirectUri = () => {
@@ -25,7 +24,7 @@ export default function RedirectUriFormInput({redirectUris,setRedirectUris} : {r
         if (!redirectUris.includes(trimmedUri)) {
             setRedirectUris([...redirectUris, trimmedUri]);
             setInputValue("");
-            setError(""); // Clear error on successful add
+            setError(""); 
         }
     };
 

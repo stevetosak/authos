@@ -46,8 +46,14 @@ export default function ClientRegistration() {
             scope: selectedScopes
         }
 
+        if(formData.appName.trim() == "") throw Error("app name empty")
+        if(formData.grantTypes.length == 0) throw Error("you need to add a grant type")
+
+
         try {
-            await axios.post("http://localhost:9000/connect/register", data)
+            await axios.post("http://localhost:9000/connect/register",data,{
+                withCredentials: true
+            })
             alert(`Successfully registered app: ${formData.appName}`)
         } catch (err) {
             console.error(err)

@@ -27,12 +27,8 @@ class AuthController(
     private val appService: AppService,
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
+    private val ppidService: PPIDService
 ) {
-
-
-    private fun oAuthParamsAbsent(clientId: String?, redirectUri: String?, state: String?, scope: String?): Boolean {
-        return clientId.isNullOrBlank() || redirectUri.isNullOrBlank() || state.isNullOrBlank() || scope.isNullOrBlank()
-    }
 
 
     //todo csrf
@@ -53,7 +49,7 @@ class AuthController(
 
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
-        val app = appService.getAppByClientIdAndRedirectUri(clientId!!, redirectUri!!)
+        val app = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
         ssoSessionService.create(user, app, httpSession)
 
 
@@ -138,7 +134,8 @@ class AuthController(
 
         try{
             val jwt = jwtUtils.verifyToken(token)
-            val user =  userService.getById(jwt.jwtClaimsSet.subject.toInt())
+            val userId = ppidService.getUserIdByHash(jwt.jwtClaimsSet.subject)
+            val user =  userService.getById(userId)
             val apps = appService.getAllAppsForUser(user.id!!)
             val groups = appGroupService.groupApps(apps)
 
