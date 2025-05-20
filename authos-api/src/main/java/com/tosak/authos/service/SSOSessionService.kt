@@ -2,6 +2,8 @@ package com.tosak.authos.service
 
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.User
+import com.tosak.authos.exceptions.InvalidAppIdException
+import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.SSOSessionRepository
 import com.tosak.authos.repository.UserRepository
@@ -44,8 +46,15 @@ open class SSOSessionService(
 
         val userId = httpSession.getAttribute("user") as Int?
         val appId = httpSession.getAttribute("app") as Int?
-        require(userId != null && appId != null) { "Required attributes not present" }
-        require(userId == user.id && appId == app.id) { "Provided values do not match attributes" }
+
+        if(userId == null || userId != user.id) {
+            httpSession.invalidate()
+            throw InvalidUserIdException("User Id missing or invalid. User id: $userId")
+        }
+        if(appId == null || appId != app.id) {
+            httpSession.invalidate()
+            throw InvalidAppIdException("App Id missing or invalid. App id: $appId")
+        }
         val ssoSession = redisService.tryGetValue("authos:sso:${user.id}:${app.group.id}")
 
         require(ssoSession == httpSession.id) { "No session found" }
@@ -53,7 +62,7 @@ open class SSOSessionService(
 
 
 
-    fun hasActiveSession(userId: Int, appId: Int): Boolean {
+    open fun hasActiveSession(userId: Int, appId: Int): Boolean {
         val user: User = userRepository.findUserById(userId)
             ?: throw IllegalArgumentException("Cant find user")
         val app = appRepository.findAppById(appId)
@@ -63,7 +72,6 @@ open class SSOSessionService(
             .getOrDefault("")
         println("SESSION ID: $sessionId")
         return redisService.hasKey("spring:session:sessions:$sessionId")
-
 
     }
 

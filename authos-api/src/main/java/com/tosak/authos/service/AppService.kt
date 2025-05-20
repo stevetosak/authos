@@ -29,13 +29,13 @@ open class AppService(
 
 )
 {
-    fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
+    open fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
         return appRepository.findAppByClientIdAndRedirectUri(clientId, redirectUri)
             ?: throw InvalidClientCredentialsException("Invalid client credentials.")
     }
 
 
-    fun verifyClientIdAndRedirectUri(clientId: String, redirectUri: String) {
+    open fun verifyClientIdAndRedirectUri(clientId: String, redirectUri: String) {
         if(!appRepository.existsByClientIdAndRedirectUri(clientId,redirectUri)){
             throw InvalidClientCredentialsException("Invalid client credentials")
         }
@@ -46,7 +46,7 @@ open class AppService(
     }
 
 
-    fun validateAppCredentials(clientId: String, clientSecret: String, redirectUri: String) : App{
+    open fun validateAppCredentials(clientId: String, clientSecret: String, redirectUri: String) : App{
         val app = getAppByClientIdAndRedirectUri(clientId,redirectUri)
         require(passwordEncoder.matches(clientSecret,app.clientSecret))
         return app;

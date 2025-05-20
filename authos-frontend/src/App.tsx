@@ -9,6 +9,8 @@ import ErrorPage from "@/Pages/ErrorPage/ErrorPage.tsx";
 import UserRegistrationPage from "@/Pages/UserRegistrationPage/UserRegistrationPage.tsx";
 import {AuthProvider} from "@/components/context/AuthProvider.tsx";
 import ProtectedRoute from "@/components/my/ProtectedRoute.tsx";
+import AppDetailsPage from "@/Pages/AppDetailsPage/AppDetails.tsx";
+
 
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
                 <Routes>
                     <Route element={<ProtectedRoute/>}>
                         <Route path={"/dashboard"} element={<Dashboard/>}/>
+                        <Route path={"/dashboard/:appId"} element={<AppDetailsPage/>}></Route>
                     </Route>
                     <Route path={"/login"} element={<LoginPage/>}/>
                     <Route path={"/"} element={<HomePage/>}/>

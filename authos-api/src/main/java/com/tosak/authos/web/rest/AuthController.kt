@@ -27,7 +27,8 @@ class AuthController(
     private val appService: AppService,
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
-    private val ppidService: PPIDService
+    private val ppidService: PPIDService,
+    private val redisService: RedisService,
 ) {
 
 
@@ -147,6 +148,15 @@ class AuthController(
             return ResponseEntity.status(401).build()
 
         }
+    }
+
+    @PostMapping("/sessions/clear")
+    fun clearSessions(session: HttpSession): ResponseEntity<Int>{
+        session.invalidate()
+        val count = redisService.clearSessions();
+
+
+        return ResponseEntity.ok(count)
     }
 
 

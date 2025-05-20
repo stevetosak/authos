@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface AuthorizationCodeRepository : JpaRepository<AuthorizationCode, Long> {
     @Query(nativeQuery = true, value = """
-        select * from authorization_code c
+        select c.* from authorization_code c
          join app a on c.client_id = a.client_id
          join redirect_uris ru on ru.redirect_uri = c.redirect_uri
          where c.redirect_uri in :redirectUris

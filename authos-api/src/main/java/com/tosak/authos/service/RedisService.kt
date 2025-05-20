@@ -27,4 +27,11 @@ class RedisService (private val redisTemplate: RedisTemplate<String,String>){
     fun delete(key:String){
         redisTemplate.delete(key)
     }
+    fun clearSessions() : Int{
+        val keys = redisTemplate.keys("*")
+        keys.forEach{ key -> redisTemplate.delete(key)}
+        val afterDel = redisTemplate.keys("*")
+        assert (afterDel.isEmpty())
+        return afterDel.count()
+    }
 }

@@ -7,14 +7,19 @@ export interface User{
     appGroups: AppGroup[]
 }
 
-
 export interface App {
     id: number,
     name: string,
-    redirectUri: string,
+    redirectUris: string[],
     clientId: string,
     clientSecret: string,
-    createdAt: string
+    createdAt: string,
+    shortDescription: string,
+    scopes: string[],
+    responseTypes: [string]
+    grantTypes: [string],
+    tokenEndpointAuthMethod: string,
+    logoUri: string,
     group: AppGroup
 }
 
