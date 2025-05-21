@@ -18,6 +18,7 @@ interface MultiSelectBadgeProps {
     options: string[];
     placeholder?: string;
     disabledItems?: string[];
+    className: string
 }
 
 export default function MultiSelectBadge({
@@ -26,6 +27,7 @@ export default function MultiSelectBadge({
                                              selected,
                                              setSelected,
                                              options,
+                                             className,
                                              placeholder = "Select...",
                                              disabledItems = [],
                                          }: MultiSelectBadgeProps) {
@@ -41,7 +43,7 @@ export default function MultiSelectBadge({
     };
 
     return (
-        <div className=" space-y-4">
+        <div className="space-y-4 ">
             <Label className="flex items-center gap-2 p-2">
                 {label}
                 {tooltip && (

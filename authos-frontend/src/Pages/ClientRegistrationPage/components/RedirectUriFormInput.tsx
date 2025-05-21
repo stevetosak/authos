@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function RedirectUriFormInput({redirectUris,setRedirectUris} : {redirectUris : string[]; setRedirectUris : (uris : string[]) => void}) {
+export default function RedirectUriFormInput({redirectUris,setRedirectUris,className} : {redirectUris : string[]; setRedirectUris : (uris : string[]) => void,className: string}) {
     const [inputValue, setInputValue] = useState("");
     const [error, setError] = useState("");
 
@@ -40,7 +40,7 @@ export default function RedirectUriFormInput({redirectUris,setRedirectUris} : {r
     };
 
     return (
-        <div>
+        <div className={className}>
             <label className="flex items-center gap-2 p-2 text-white">
                 Redirect URIs
                 <Tooltip>

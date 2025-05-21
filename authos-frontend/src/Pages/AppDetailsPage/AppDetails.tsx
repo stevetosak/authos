@@ -4,14 +4,24 @@ import {
     CardContent,
     CardFooter,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {Button} from "@/components/ui/button";
+import {Tabs, TabsList, TabsTrigger, TabsContent} from "@/components/ui/tabs";
 import Layout from "@/components/Layout.tsx";
-import {useEffect, useState} from "react";
-import { Label } from "@/components/ui/label";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "sonner";
-import {CheckIcon, CopyIcon, EditIcon, RefreshCwIcon, TrashIcon} from "lucide-react";
+import React, {useEffect, useState} from "react";
+import {Label} from "@/components/ui/label";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
+import {toast} from "sonner";
+import {
+    CheckIcon,
+    CodeIcon,
+    CopyIcon,
+    EditIcon,
+    GlobeIcon, Info, KeyIcon, LockIcon,
+    RefreshCwIcon, SettingsIcon,
+    ShieldIcon, SlidersIcon,
+    TrashIcon,
+    XIcon
+} from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {useParams} from "react-router";
 import {useNavigate} from "react-router-dom";
@@ -19,8 +29,11 @@ import {App} from "@/services/interfaces.ts";
 import {Factory} from "@/services/Factory.ts";
 import {DataWrapper, WrapperState} from "@/components/wrappers/DataWrapper.tsx";
 import {useAppEditor} from "@/hooks/use-app-editor.ts";
+import {Badge} from "@/components/ui/badge.tsx";
+import {api} from "@/components/config.ts";
 
 //TODO AUTHORIZATION PER USER
+// TODO GRAPHS AND METRICS IN GENERAL
 
 export default function AppDetails() {
     const {user} = useAuth()
@@ -34,23 +47,18 @@ export default function AppDetails() {
     const {
         editedApp,
         setEditedApp,
-        newRedirectUri,
-        setNewRedirectUri,
-        newScope,
-        setNewScope,
+        inputValues,
+        handleInputChange,
         handleChange,
-        addRedirectUri,
-        removeRedirectUri,
-        addScope,
-        removeScope
+        addToArrayField,
+        removeFromArrayField
     } = useAppEditor(app);
 
 
-
     useEffect(() => {
-        if(appId != undefined){
+        if (appId != undefined) {
             const targetApp = user.appGroups.flatMap(ag => ag.apps).find(a => a.id === (parseInt(appId)))
-            if(targetApp != undefined){
+            if (targetApp != undefined) {
                 setApp(targetApp);
                 setEditedApp(targetApp)
             }
@@ -62,25 +70,37 @@ export default function AppDetails() {
     }, []);
 
 
-
-
     const handleEdit = () => {
         setIsEditing(true);
         setEditedApp(app);
     };
 
+
     const handleSave = () => {
-        setApp(editedApp);
-        setIsEditing(false);
-        toast.success("Application updated successfully");
+        if (app === editedApp) return
+        const appDto = {
+            ...editedApp,
+            group: editedApp.group.id,
+        }
+        console.log("sending update request")
+        console.log(`${JSON.stringify(editedApp)}`)
+
+
+        api.post("/app/update", editedApp, {
+            withCredentials: true
+        }).then(resp => {
+            setApp(editedApp);
+            setIsEditing(false);
+            toast.success("Application updated successfully");
+        }).catch(err => {
+            toast.error(err)
+        })
+
+
     };
 
     const handleCancel = () => {
         setIsEditing(false);
-    };
-
-
-    const toggleStatus = () => {
     };
 
 
@@ -92,8 +112,8 @@ export default function AppDetails() {
         }, 1000);
     };
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
+    const copyToClipboard = async (text: string) => {
+        await navigator.clipboard.writeText(text);
         toast.success("Copied to clipboard");
     };
 
@@ -109,121 +129,135 @@ export default function AppDetails() {
             },
             cancel: {
                 label: "Cancel",
-                onClick: () => {}
+                onClick: () => {
+                }
             }
         });
     };
 
     const currentApp = isEditing ? editedApp : app;
 
-    const baseState : WrapperState = {
+    const baseState: WrapperState = {
         editing: isEditing,
         currentApp: currentApp,
-        editedApp: editedApp
+        editedApp: editedApp,
+        addElement: addToArrayField,
+        removeElement: removeFromArrayField,
+        handleInputChange: handleInputChange,
+        inputValues: inputValues
     }
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 md:p-10 font-sans">
-                <Card className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-4xl mx-auto">
+            <div
+                className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 md:p-10 font-sans">
+                <Card
+                    className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-4xl mx-auto">
+                    {/* Enhanced Header Section */}
                     <CardHeader className="border-b border-gray-700 p-6">
-                        <div className={"flex flex-row justify-between"}>
-                            <div
-                                className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                <div className="space-y-1">
-                                    <DataWrapper state={{...baseState, onChange: handleChange}} wrapper={"titleDesc"}>
-                                    </DataWrapper>
+                        <div className="flex flex-col md:flex-row justify-between gap-4">
+                            <div className="space-y-2">
+                                <DataWrapper state={{...baseState, onChange: handleChange}} wrapper={"titleDesc"}/>
+                            </div>
+
+                            <div className="flex flex-col gap-3 text-sm text-gray-400">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-300 min-w-[60px]">Group:</span>
+                                    <span className="truncate max-w-[180px] bg-gray-700 px-2 py-1 rounded">
+                {app.group.name}
+              </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-300 min-w-[60px]">Created:</span>
+                                    <span className="bg-gray-700 px-2 py-1 rounded">
+                {currentApp.createdAt}
+              </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-400">
-                                <span className="font-medium text-gray-300">Group:</span>
-                                <span className="truncate max-w-[150px]">{app.group.name}</span>
-                            </div>
-
                         </div>
-
                     </CardHeader>
 
+                    {/* Improved Tabs Navigation */}
                     <CardContent className="p-0 w-full">
                         <Tabs defaultValue="general" className="w-full">
-                            <TabsList
-                                className="bg-gray-800 rounded-none border-b border-gray-700 px-8 py-0 flex gap-0 w-full">
-                                <TabsTrigger
-                                    value="general"
-                                    className="flex-1 data-[state=active]:bg-gray-700 data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 py-4"
-                                >
-                                    General
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="credentials"
-                                    className="flex-1 data-[state=active]:bg-gray-700 data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 py-4"
-                                >
-                                    Credentials
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="settings"
-                                    className="flex-1 data-[state=active]:bg-gray-700 data-[state=active]:text-white rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 py-4"
-                                >
-                                    Settings
-                                </TabsTrigger>
-                            </TabsList>
+                            <div className="border-b border-gray-700 h-17">
+                                <TabsList className="grid grid-cols-3 bg-gray-800 rounded-none">
+                                    <TabsTrigger
+                                        value="general"
+                                        className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
+                                    >
+                                        <SettingsIcon className="w-4 h-4 mr-2"/>
+                                        General
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="credentials"
+                                        className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
+                                    >
+                                        <KeyIcon className="w-4 h-4 mr-2"/>
+                                        Credentials
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="settings"
+                                        className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
+                                    >
+                                        <SlidersIcon className="w-4 h-4 mr-2"/>
+                                        Settings
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
 
+                            {/* General Tab Content */}
                             <TabsContent value="general" className="p-6">
                                 <div className="space-y-6">
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-semibold">Redirect URIs</h3>
-                                        <div className="space-y-2">
-                                            <DataWrapper state={{...baseState,newRedirectUri: newRedirectUri,addRedirectUri,setNewRedirectUri,removeRedirectUri}} wrapper={"redirectUri"}/>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-semibold">Scopes</h3>
-                                        <div className="space-y-2">
-                                            <DataWrapper state={{...baseState,newScope,setNewScope,addScope,removeScope}} wrapper={"scope"}/>
-                                        </div>
-                                    </div>
+                                    {/* Add your general content here */}
                                 </div>
                             </TabsContent>
 
+                            {/* Credentials Tab Content - Improved Layout */}
                             <TabsContent value="credentials" className="p-6 space-y-6">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-gray-300">Client ID</Label>
+                                <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label className="text-gray-300 flex items-center gap-2">
+                                            <KeyIcon className="w-4 h-4"/>
+                                            Client ID
+                                        </Label>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    className="w-6 h-6"
+                                                    size="sm"
+                                                    className="w-8 h-8 hover:bg-gray-600"
                                                     onClick={() => copyToClipboard(currentApp.clientId)}
                                                 >
-                                                    <CopyIcon className="w-3 h-3" />
+                                                    <CopyIcon className="w-3 h-3"/>
+                                                    <span className="sr-only">Copy</span>
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>Copy to clipboard</TooltipContent>
                                         </Tooltip>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <code className="bg-gray-700 px-3 py-2 rounded-md text-sm flex-1 overflow-x-auto">
-                                            {currentApp.clientId}
-                                        </code>
-                                    </div>
+                                    <code className="block bg-gray-800 px-3 py-2 rounded text-sm font-mono break-all">
+                                        {currentApp.clientId}
+                                    </code>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-gray-300">Client Secret</Label>
+                                <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <Label className="text-gray-300 flex items-center gap-2">
+                                            <LockIcon className="w-4 h-4"/>
+                                            Client Secret
+                                        </Label>
                                         <div className="flex gap-1">
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <Button
                                                         variant="ghost"
-                                                        size="icon"
-                                                        className="w-6 h-6"
+                                                        size="sm"
+                                                        className="w-8 h-8 hover:bg-gray-600"
                                                         onClick={() => copyToClipboard(currentApp.clientSecret)}
                                                     >
-                                                        <CopyIcon className="w-3 h-3" />
+                                                        <CopyIcon className="w-3 h-3"/>
+                                                        <span className="sr-only">Copy</span>
                                                     </Button>
                                                 </TooltipTrigger>
                                                 <TooltipContent>Copy to clipboard</TooltipContent>
@@ -233,16 +267,17 @@ export default function AppDetails() {
                                                     <TooltipTrigger asChild>
                                                         <Button
                                                             variant="ghost"
-                                                            size="icon"
-                                                            className="w-6 h-6"
+                                                            size="sm"
+                                                            className="w-8 h-8 hover:bg-gray-600"
                                                             onClick={regenerateSecret}
                                                             disabled={isRegeneratingSecret}
                                                         >
                                                             {isRegeneratingSecret ? (
-                                                                <RefreshCwIcon className="w-3 h-3 animate-spin" />
+                                                                <RefreshCwIcon className="w-3 h-3 animate-spin"/>
                                                             ) : (
-                                                                <RefreshCwIcon className="w-3 h-3" />
+                                                                <RefreshCwIcon className="w-3 h-3"/>
                                                             )}
+                                                            <span className="sr-only">Regenerate</span>
                                                         </Button>
                                                     </TooltipTrigger>
                                                     <TooltipContent>Regenerate secret</TooltipContent>
@@ -250,25 +285,88 @@ export default function AppDetails() {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <code className="bg-gray-700 px-3 py-2 rounded-md text-sm flex-1 overflow-x-auto">
-                                            {currentApp.clientSecret}
-                                        </code>
-                                    </div>
-                                    <p className="text-xs text-gray-400">
+                                    <code className="block bg-gray-800 px-3 py-2 rounded text-sm font-mono break-all">
+                                        {currentApp.clientSecret}
+                                    </code>
+                                    <p className="mt-2 text-xs text-gray-400 italic">
                                         {isEditing
-                                            ? "This secret will only be shown once. Make sure to copy it now."
+                                            ? "⚠️ This secret will only be shown once. Make sure to copy it now."
                                             : "For security reasons, we can't show your client secret again."}
                                     </p>
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="settings" className="p-6 space-y-6">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <Label className="text-gray-300">Created At</Label>
-                                            <p className="text-sm text-gray-400">{currentApp.createdAt}</p>
+                            {/* Settings Tab Content - Better Organized */}
+                            <TabsContent value="settings" className="p-6 space-y-8">
+                                <div className="space-y-6">
+                                    <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                            <GlobeIcon className="w-4 h-4"/>
+                                            Redirect URIs
+                                        </h3>
+                                        <DataWrapper state={{...baseState}} wrapper={"redirectUri"}/>
+                                    </div>
+
+                                    <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                            <ShieldIcon className="w-4 h-4"/>
+                                            Permissions
+                                        </h3>
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <div className="space-y-4">
+                                                <h4 className="font-medium text-gray-300">Scopes</h4>
+                                                <DataWrapper state={{...baseState}} wrapper={"scope"}/>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <h4 className="font-medium text-gray-300">Grant Types</h4>
+                                                <DataWrapper state={{...baseState}} wrapper={"grantType"}/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                            <CodeIcon className="w-4 h-4"/>
+                                            Response Configuration
+                                        </h3>
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <div className="space-y-4">
+                                                <Label
+                                                    className="flex items-center gap-2">
+                                                    Response Types
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Info className="w-4 h-4 text-gray-400"/>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="bg-gray-800 text-white">
+                                                            The response the token endpoint returns.
+                                                            Can be code, id_token or both
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </Label>
+                                                <DataWrapper state={{...baseState}} wrapper={"responseType"}/>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <Label
+                                                className="flex items-center gap-2">
+                                                Token Endpoint Auth Method
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Info className="w-4 h-4 text-gray-400"/>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="bg-gray-800 text-white">
+                                                        The authentication method used at the token endpoint.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </Label>
+
+                                                <Badge
+                                                    variant="outline"
+                                                    className="bg-gray-700 border-gray-600 hover:bg-gray-600 px-3 py-1"
+                                                >
+                                                    {app.tokenEndpointAuthMethod}
+                                                </Badge>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -276,21 +374,24 @@ export default function AppDetails() {
                         </Tabs>
                     </CardContent>
 
-                    <CardFooter className="flex justify-end space-x-3 p-6 border-t border-gray-700">
+                    {/* Enhanced Footer Actions */}
+                    <CardFooter
+                        className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-gray-700 bg-gray-800/50">
                         {isEditing ? (
                             <>
                                 <Button
                                     variant="outline"
                                     onClick={handleCancel}
-                                    className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                                    className="text-gray-300 border-gray-600 hover:bg-gray-700 w-full sm:w-auto"
                                 >
+                                    <XIcon className="w-4 h-4 mr-2"/>
                                     Cancel
                                 </Button>
                                 <Button
                                     onClick={handleSave}
-                                    className="bg-emerald-600 hover:bg-emerald-500"
+                                    className="bg-emerald-600 hover:bg-emerald-500 w-full sm:w-auto"
                                 >
-                                    <CheckIcon className="w-4 h-4 mr-2" />
+                                    <CheckIcon className="w-4 h-4 mr-2"/>
                                     Save Changes
                                 </Button>
                             </>
@@ -299,18 +400,18 @@ export default function AppDetails() {
                                 <Button
                                     variant="outline"
                                     onClick={handleEdit}
-                                    className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
+                                    className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10 w-full sm:w-auto"
                                 >
-                                    <EditIcon className="w-4 h-4 mr-2" />
-                                    Edit
+                                    <EditIcon className="w-4 h-4 mr-2"/>
+                                    Edit Application
                                 </Button>
                                 <Button
                                     variant="destructive"
                                     onClick={deleteApp}
-                                    className="hover:bg-red-500/90"
+                                    className="hover:bg-red-500/90 w-full sm:w-auto"
                                 >
-                                    <TrashIcon className="w-4 h-4 mr-2" />
-                                    Delete
+                                    <TrashIcon className="w-4 h-4 mr-2"/>
+                                    Delete Application
                                 </Button>
                             </>
                         )}

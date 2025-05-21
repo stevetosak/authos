@@ -2,29 +2,21 @@ import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {TrashIcon} from "lucide-react";
-import React from "react";
 import {WrapperState} from "@/components/wrappers/DataWrapper.tsx";
 
-export interface scopeState extends WrapperState {
-    newScope: string,
-    setNewScope: React.Dispatch<React.SetStateAction<string>>,
-    addScope: () => void
-    removeScope: (scope: string) => void
-}
 
-
-export const ScopeWrapper = ({editing,currentApp,editedApp,newScope,setNewScope,addScope,removeScope} : scopeState) => {
+export const ScopeWrapper = ({editing,currentApp,editedApp,handleInputChange,addElement,removeElement,inputValues} : WrapperState) => {
     return (editing ? (
         <>
             <div className="flex gap-2">
                 <Input
-                    value={newScope}
-                    onChange={(e) => setNewScope(e.target.value)}
+                    value={inputValues.scopes}
+                    onChange={(e) => handleInputChange("scopes",e.target.value)}
                     placeholder="Add new scope"
                     className="bg-gray-700 border-gray-600 flex-1"
                 />
                 <Button
-                    onClick={addScope}
+                    onClick={() => addElement("scopes")}
                     variant="outline"
                     className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
                 >
@@ -40,7 +32,7 @@ export const ScopeWrapper = ({editing,currentApp,editedApp,newScope,setNewScope,
                     >
                         {scope}
                         <button
-                            onClick={() => removeScope(scope)}
+                            onClick={() => removeElement("scopes",scope)}
                             className="ml-2 text-gray-400 hover:text-red-400 p-1 rounded-full"
                         >
                             <TrashIcon className="w-3 h-3"/>

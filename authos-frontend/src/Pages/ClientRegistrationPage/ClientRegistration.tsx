@@ -1,11 +1,11 @@
-import {useState} from "react";
+import React, {useState} from "react";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
-import {Card, CardContent} from "@/components/ui/card";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Tooltip, TooltipTrigger, TooltipContent} from "@/components/ui/tooltip";
-import {Info} from "lucide-react";
+import {Check, Cpu, Globe, Info, Key, Reply, Shield, LockIcon, HelpCircle} from "lucide-react";
 import RedirectUriFormInput from "@/Pages/ClientRegistrationPage/components/RedirectUriFormInput.tsx";
 import axios from "axios";
 import {
@@ -16,6 +16,9 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import MultiSelectBadge from "@/components/my/MultiSelectBadge.tsx";
+import {motion} from "framer-motion";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
+import Layout from "@/components/Layout.tsx";
 
 export default function ClientRegistration() {
     const [formData, setFormData] = useState({
@@ -46,12 +49,12 @@ export default function ClientRegistration() {
             scope: selectedScopes
         }
 
-        if(formData.appName.trim() == "") throw Error("app name empty")
-        if(formData.grantTypes.length == 0) throw Error("you need to add a grant type")
+        if (formData.appName.trim() == "") throw Error("app name empty")
+        if (formData.grantTypes.length == 0) throw Error("you need to add a grant type")
 
 
         try {
-            await axios.post("http://localhost:9000/connect/register",data,{
+            await axios.post("http://localhost:9000/connect/register", data, {
                 withCredentials: true
             })
             alert(`Successfully registered app: ${formData.appName}`)
@@ -61,193 +64,293 @@ export default function ClientRegistration() {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="w-[50vw] max-h-screen overflow-y-auto bg-gray-800 rounded-xl shadow-lg flex-shrink-0">
-                <Card>
-                    <CardContent className="space-y-4 p-4 md:p-6">
-                        <h2 className="text-2xl font-bold text-green-400 text-center mb-6">Register OAuth App</h2>
+        <Layout>
+            <div className="inset-0 z-50 flex items-center justify-center ">
+                <motion.div
+                    initial={{opacity: 0, scale: 0.95}}
+                    animate={{opacity: 1, scale: 1}}
+                    transition={{duration: 0.2}}
+                    className="w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                >
+                    <Card
+                        className="bg-gray-800/70 backdrop-blur-md border border-gray-700/50 shadow-xl overflow-hidden">
+                        {/* Header with gradient accent */}
+                        <CardHeader
+                            className="border-b border-gray-700/50 bg-gradient-to-r from-gray-800/50 to-green-900/10">
+                            <div className="flex items-center justify-between p-4">
+                                <div>
+                                    <CardTitle className="text-2xl font-bold text-green-400 flex items-center gap-2">
+                                        <Key className="w-6 h-6"/>
+                                        Register OAuth Application
+                                    </CardTitle>
+                                    <CardDescription className="text-gray-400 mt-1">
+                                        Configure your application's authentication settings
+                                    </CardDescription>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" size="sm"
+                                            className="border-gray-600 hover:bg-gray-700/50">
+                                        <HelpCircle className="w-4 h-4 mr-2"/>
+                                        Guide
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardHeader>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* App Name */}
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    Application Name
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Info className="w-4 h-4 text-gray-400"/>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="bg-gray-800 text-white">The name of your
-                                            application.</TooltipContent>
-                                    </Tooltip>
-                                </Label>
-                                <Input
-                                    name="appName"
-                                    value={formData.appName}
-                                    onChange={handleChange}
-                                    className="bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-                                />
+                        <CardContent className="p-6 space-y-6">
+                            {/* Basic Info Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <Info className="w-5 h-5 text-green-400"/>
+                                    Basic Information
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* App Name */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                            Application Name
+                                            <Tooltip delayDuration={100}>
+                                                <TooltipTrigger asChild>
+                                                    <Info
+                                                        className="w-4 h-4 text-gray-400 hover:text-green-400 transition-colors"/>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="bg-gray-800 border border-gray-700 text-sm">
+                                                    The public-facing name of your application
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </Label>
+                                        <Input
+                                            name="appName"
+                                            value={formData.appName}
+                                            onChange={handleChange}
+                                            className="bg-gray-700/50 border-gray-600 focus:border-green-400/50 focus:ring-1 focus:ring-green-400/30"
+                                            placeholder="My Awesome App"
+                                        />
+                                    </div>
+
+                                    {/* App Icon URL */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                            Application Icon URL
+                                            <Tooltip delayDuration={100}>
+                                                <TooltipTrigger asChild>
+                                                    <Info
+                                                        className="w-4 h-4 text-gray-400 hover:text-green-400 transition-colors"/>
+                                                </TooltipTrigger>
+                                                <TooltipContent className="bg-gray-800 border border-gray-700 text-sm">
+                                                    HTTPS URL to a square image (512×512 recommended)
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                name="appIconUrl"
+                                                value={formData.appIconUrl}
+                                                onChange={handleChange}
+                                                className="bg-gray-700/50 border-gray-600 focus:border-green-400/50 focus:ring-1 focus:ring-green-400/30"
+                                                placeholder="https://example.com/logo.png"
+                                            />
+                                            {formData.appIconUrl && (
+                                                <Avatar className="h-10 w-10 border border-gray-600">
+                                                    <AvatarImage src={formData.appIconUrl}/>
+                                                    <AvatarFallback className="bg-gray-700">
+                                                        {formData.appName?.[0] || "A"}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                        Description
+                                        <Tooltip delayDuration={100}>
+                                            <TooltipTrigger asChild>
+                                                <Info
+                                                    className="w-4 h-4 text-gray-400 hover:text-green-400 transition-colors"/>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="bg-gray-800 border border-gray-700 text-sm">
+                                                Brief explanation of your application's purpose
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </Label>
+                                    <Textarea
+                                        name="shortDescription"
+                                        value={formData.shortDescription}
+                                        onChange={handleChange}
+                                        className="bg-gray-700/50 border-gray-600 focus:border-green-400/50 focus:ring-1 focus:ring-green-400/30 min-h-[100px]"
+                                        placeholder="Describe what your application does..."
+                                    />
+                                </div>
                             </div>
 
-                            {/* App Icon URL */}
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    Application Icon (URL)
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Info className="w-4 h-4 text-gray-400"/>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="bg-gray-800 text-white">URL to the application's
-                                            icon.</TooltipContent>
-                                    </Tooltip>
-                                </Label>
-                                <Input
-                                    name="appIconUrl"
-                                    value={formData.appIconUrl}
-                                    onChange={handleChange}
-                                    className="bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-                                />
+                            {/* OAuth Configuration Section */}
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <LockIcon className="w-5 h-5 text-green-400"/>
+                                    OAuth Configuration
+                                </h3>
+
+                                {/* Redirect URIs */}
+                                <div className="space-y-2">
+                                    <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                        Redirect URIs
+                                        <Tooltip delayDuration={100}>
+                                            <TooltipTrigger asChild>
+                                                <Info
+                                                    className="w-4 h-4 text-gray-400 hover:text-green-400 transition-colors"/>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="bg-gray-800 border border-gray-700 text-sm">
+                                                Approved callback locations (exact match required)
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </Label>
+                                    <RedirectUriFormInput
+                                        redirectUris={redirectUris}
+                                        setRedirectUris={setRedirectUris}
+                                        className="bg-gray-700/50 border-gray-600 focus-within:border-green-400/50 focus-within:ring-1 focus-within:ring-green-400/30 p-3 rounded"
+                                    />
+                                </div>
+
+                                {/* Protocol Settings Grid */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Grant Types */}
+                                    <Card
+                                        className="bg-gray-700/40 border border-gray-600/50 hover:border-green-400/30 transition-colors">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-green-400"/>
+                                                Grant Types
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <MultiSelectBadge
+                                                label={""}
+                                                selected={formData.grantTypes}
+                                                setSelected={(values) => handleArrayChange("grantTypes", values)}
+                                                options={[
+                                                    "authorization_code",
+                                                    "client_credentials",
+                                                    "refresh_token",
+                                                    "password",
+                                                    "implicit"
+                                                ]}
+                                                className="bg-gray-700/50 border-gray-600"
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Response Types */}
+                                    <Card
+                                        className="bg-gray-700/40 border border-gray-600/50 hover:border-green-400/30 transition-colors">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                                <Reply className="w-4 h-4 text-green-400"/>
+                                                Response Types
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <MultiSelectBadge
+                                                label={""}
+                                                selected={formData.responseTypes}
+                                                setSelected={(values) => handleArrayChange("responseTypes", values)}
+                                                options={["code", "token", "id_token"]}
+                                                className="bg-gray-700/50 border-gray-600"
+                                            />
+                                        </CardContent>
+                                    </Card>
+
+                                    {/* Scopes */}
+                                    <Card
+                                        className="bg-gray-700/40 border border-gray-600/50 hover:border-green-400/30 transition-colors">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                                <Key className="w-4 h-4 text-green-400"/>
+                                                OAuth Scopes
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <MultiSelectBadge
+                                                label={""}
+                                                selected={selectedScopes}
+                                                setSelected={setSelectedScopes}
+                                                options={["openid", "profile", "email", "offline_access"]}
+                                                disabledItems={["openid"]}
+                                                className=""
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                {/* Advanced Settings */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Token Endpoint Auth */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                            <Cpu className="w-4 h-4 text-green-400"/>
+                                            Token Endpoint Auth
+                                        </Label>
+                                        <Select
+                                            value={formData.tokenEndpointAuthMethod}
+                                            onValueChange={(value) => setFormData({
+                                                ...formData,
+                                                tokenEndpointAuthMethod: value
+                                            })}
+                                        >
+                                            <SelectTrigger
+                                                className="bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50">
+                                                <SelectValue placeholder="Select method"/>
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-gray-800 border-gray-700">
+                                                <SelectItem value="client_secret_basic" className="hover:bg-gray-700">
+                                                    Client Secret Basic
+                                                </SelectItem>
+                                                <SelectItem value="client_secret_post" className="hover:bg-gray-700">
+                                                    Client Secret Post
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* App Info URI */}
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                                            <Globe className="w-4 h-4 text-green-400"/>
+                                            App Info URL
+                                        </Label>
+                                        <Input
+                                            name="appInfoUri"
+                                            value={formData.appInfoUri}
+                                            onChange={handleChange}
+                                            className="bg-gray-700/50 border-gray-600 focus:border-green-400/50 focus:ring-1 focus:ring-green-400/30"
+                                            placeholder="https://example.com/about"
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Short Description */}
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-2">
-                                Short Description
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Info className="w-4 h-4 text-gray-400"/>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="bg-gray-800 text-white">Brief description of your
-                                        application.</TooltipContent>
-                                </Tooltip>
-                            </Label>
-                            <Textarea
-                                name="shortDescription"
-                                value={formData.shortDescription}
-                                onChange={handleChange}
-                                className="bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500 min-h-[100px]"
-                                rows={3}
-                            />
-                        </div>
-
-                        {/* Redirect URIs */}
-                        <div className="space-y-2">
-                            <RedirectUriFormInput redirectUris={redirectUris} setRedirectUris={setRedirectUris}/>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                            {/* Grant Types */}
-                            <div className="bg-gray-700 border border-gray-600 rounded-md p-4 space-y-2">
-                                <MultiSelectBadge
-                                    label="Grant Types"
-                                    tooltip="The OAuth 2.0 grant types your application will use."
-                                    selected={formData.grantTypes}
-                                    setSelected={(values) => handleArrayChange("grantTypes", values)}
-                                    options={[
-                                        "authorization_code",
-                                        "client_credentials",
-                                        "refresh_token",
-                                        "password",
-                                        "implicit"
-                                    ]}
-                                    placeholder="Select grant types..."
-                                />
-                            </div>
-
-                            {/* Response Types */}
-                            <div className="bg-gray-700 border border-gray-600 rounded-md p-4 space-y-2">
-                                <MultiSelectBadge
-                                    label="Response Types"
-                                    tooltip="The OAuth 2.0 response types your application will use."
-                                    selected={formData.responseTypes}
-                                    setSelected={(values) => handleArrayChange("responseTypes", values)}
-                                    options={["code", "token", "id_token"]}
-                                    placeholder="Select response types..."
-                                />
-                            </div>
-
-                            {/* OAuth Scopes */}
-                            <div className="bg-gray-700 border border-gray-600 rounded-md p-4 space-y-2">
-                                <MultiSelectBadge
-                                    label="OAuth Scopes"
-                                    tooltip="Select the permissions your application needs."
-                                    selected={selectedScopes}
-                                    setSelected={setSelectedScopes}
-                                    options={["openid", "profile", "email", "offline_access"]}
-                                    placeholder="Add a scope..."
-                                    disabledItems={["openid"]}
-                                />
-                            </div>
-                        </div>
-
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Token Endpoint Auth Method */}
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    Token Endpoint Auth Method
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Info className="w-4 h-4 text-gray-400"/>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="bg-gray-800 text-white">
-                                            How your application will authenticate with the token endpoint.
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </Label>
-                                <Select
-                                    value={formData.tokenEndpointAuthMethod}
-                                    onValueChange={(value) => setFormData({
-                                        ...formData,
-                                        tokenEndpointAuthMethod: value
-                                    })}
+                            {/* Footer Actions */}
+                            <div
+                                className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700/50">
+                                <Button variant="outline" className="border-gray-600 hover:bg-gray-700/50">
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={registerApp}
+                                    className="bg-green-600 hover:bg-green-500/90 shadow-[0_0_15px_-3px_rgba(74,222,128,0.3)] hover:shadow-[0_0_20px_-3px_rgba(74,222,128,0.4)] transition-all"
                                 >
-                                    <SelectTrigger
-                                        className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600">
-                                        <SelectValue placeholder="Select authentication method"/>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                                        <SelectItem value="client_secret_basic">Client Secret Basic</SelectItem>
-                                        <SelectItem value="client_secret_post">Client Secret Post</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                    <Check className="w-5 h-5 mr-2"/>
+                                    Register Application
+                                </Button>
                             </div>
-
-                            {/* App Info URI */}
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    App Info URI
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Info className="w-4 h-4 text-gray-400"/>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="bg-gray-800 text-white">A webpage that provides
-                                            information
-                                            about your application.</TooltipContent>
-                                    </Tooltip>
-                                </Label>
-                                <Input
-                                    name="appInfoUri"
-                                    value={formData.appInfoUri}
-                                    onChange={handleChange}
-                                    className="bg-gray-700 border-gray-600 text-white focus:ring-green-500 focus:border-green-500"
-                                />
-                            </div>
-                        </div>
-
-
-
-                        {/* Register Button */}
-                        <Button
-                            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-lg mt-6 transition-colors duration-200"
-                            onClick={registerApp}
-                        >
-                            Register Application
-                        </Button>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </motion.div>
             </div>
-        </div>
+        </Layout>
     );
 
 }

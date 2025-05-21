@@ -5,34 +5,28 @@ import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {TrashIcon} from "lucide-react";
 
-export interface GrantTypeState extends WrapperState {
-    newGrantType: string,
-    addGrantType: () => void,
-    setNewGrantType: React.Dispatch<React.SetStateAction<string>>,
-    removeGrantType: (gt: string) => void
-}
 
-export const RedirectUriWrapper = ({
+export const GrantTypeWrapper = ({
                                        editing,
                                        currentApp,
                                        editedApp,
-                                       newGrantType,
-                                       addGrantType,
-                                       setNewGrantType,
-                                       removeGrantType
-                                   }: GrantTypeState) => {
+                                       inputValues,
+                                       handleInputChange,
+                                       addElement,
+                                       removeElement
+                                   }: WrapperState) => {
     return (
         editing ? (
             <>
                 <div className="flex gap-2">
                     <Input
-                        value={newGrantType}
-                        onChange={(e) => setNewGrantType(e.target.value)}
+                        value={inputValues.grantTypes}
+                        onChange={(e) => handleInputChange("grantTypes",e.target.value)}
                         placeholder="Add new Grant Type"
                         className="bg-gray-700 border-gray-600 flex-1"
                     />
                     <Button
-                        onClick={addGrantType}
+                        onClick={() => addElement("grantTypes")}
                         variant="outline"
                         className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
                     >
@@ -40,7 +34,7 @@ export const RedirectUriWrapper = ({
                     </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {editedApp.redirectUris.map((gt: string) => (
+                    {editedApp.grantTypes.map((gt: string) => (
                         <Badge
                             key={gt}
                             variant="outline"
@@ -48,7 +42,7 @@ export const RedirectUriWrapper = ({
                         >
                             {gt}
                             <button
-                                onClick={() => removeGrantType(gt)}
+                                onClick={() => removeElement("grantTypes",gt)}
                                 className="ml-2 text-gray-400 hover:text-red-400 p-1 rounded-full"
                             >
                                 <TrashIcon className="w-3 h-3"/>

@@ -14,41 +14,39 @@ class App (
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "app_id_seq")
     @SequenceGenerator(name = "app_id_seq", sequenceName = "app_id_seq", allocationSize = 1)
     val id : Int? = null,
-    val name : String = "",
+    var name : String = "",
     @Column(name = "client_id")
-    val clientId : String = "",
+    var clientId : String = "",
     @Column(name = "client_secret")
-    val clientSecret : String = "",
+    var clientSecret : String = "",
     @Column(name = "client_secret_expires_at")
-    val clientSecretExpiresAt : LocalDateTime? = null,
+    var clientSecretExpiresAt : LocalDateTime? = null,
     @Column(name = "created_at")
-    val createdAt : LocalDateTime = LocalDateTime.now(),
+    var createdAt : LocalDateTime = LocalDateTime.now(),
     @Column(name = "grant_types")
     var grantTypes: String = "",
     @Column(name = "logo_uri")
-    val logoUri: String? = null,
+    var logoUri: String? = null,
     @Column(name = "scopes")
     var scopes : String = "",
     @Column(name = "client_uri")
-    val clientUri : String? = null,
+    var clientUri : String? = null,
     @Column(name = "response_types")
     var responseTypes: String = "",
     @Column(name = "short_description")
-    val shortDescription : String? = null,
+    var shortDescription : String? = null,
     @Column(name = "token_endpoint_auth_method")
-    val tokenEndpointAuthMethod : String = "",
+    var tokenEndpointAuthMethod : String = "",
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     val user: User = User(),
     @ManyToOne
     @JoinColumn(name = "group_id", referencedColumnName = "id")
-    val group: AppGroup = AppGroup(),
+    var group: AppGroup = AppGroup(),
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "app", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val redirectUris : MutableList<RedirectUri> = mutableListOf(),
-
+    var redirectUris : MutableList<RedirectUri> = mutableListOf(),
 
 ){
-
     @Transient
     lateinit var scopesCollection: MutableList<String>
     @Transient
@@ -56,11 +54,33 @@ class App (
     @Transient
     lateinit var responseTypesCollection: MutableList<String>
 
+    constructor(appDTO: AppDTO) : this(
+        id = appDTO.id,
+        name = appDTO.name,
+        clientId = appDTO.clientId,
+        clientSecret = appDTO.clientSecret,
+        clientSecretExpiresAt = null,
+        createdAt = appDTO.createdAt,
+        grantTypes = "",
+        logoUri = appDTO.logoUri,
+        scopes = "",
+        clientUri = appDTO.appUrl,
+        responseTypes = "",
+        shortDescription = appDTO.shortDescription,
+        tokenEndpointAuthMethod = appDTO.tokenEndpointAuthMethod ?: "",
+        group = appDTO.group,
+        redirectUris = appDTO.redirectUris.map { uri -> RedirectUri(RedirectUriId(appDTO.id,uri ?: "")) }.toMutableList(),
+    ) {
+        this.scopesCollection = appDTO.scopes.toMutableList()
+        this.grantTypesCollection = appDTO.grantTypes.toMutableList()
+        this.responseTypesCollection = appDTO.responseTypes.toMutableList()
+    }
+
 
     fun toDTO(): AppDTO {
         return AppDTO(id,name,redirectUris.map { uri -> uri.id?.redirectUri },
-            clientId,clientSecret,shortDescription,createdAt,
-            group,logoUri,scopesCollection,responseTypesCollection,grantTypesCollection,
+            clientId,clientSecret,clientSecretExpiresAt,shortDescription,createdAt,
+            group,logoUri,clientUri,scopesCollection,responseTypesCollection,grantTypesCollection,
             tokenEndpointAuthMethod)
     }
     fun addRedirectUris(uris: Collection<String>) {

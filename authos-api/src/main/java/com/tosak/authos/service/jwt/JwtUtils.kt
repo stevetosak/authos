@@ -74,7 +74,7 @@ class JwtUtils(
     // todo ko ke expirenit tokenov da sa revokenit, t.e vo baza tabela za blacklisted/used tokens
 
     fun generateLoginToken(user: User,request: HttpServletRequest): SignedJWT {
-        val authosGroup = appGroupRepository.findByName("AUTHOS") ?: throw AppGroupsNotFoundException("")
+        val authosGroup = appGroupRepository.findByName("AUTHOS_2") ?: throw AppGroupsNotFoundException("")
         val sub = ppidService.getOrCreatePPID(user,authosGroup)
         val claims: JWTClaimsSet = JWTClaimsSet.Builder()
             .subject(sub)

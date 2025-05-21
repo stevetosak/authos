@@ -13,6 +13,7 @@ export interface App {
     redirectUris: string[],
     clientId: string,
     clientSecret: string,
+    clientSecretExpiresAt: string,
     createdAt: string,
     shortDescription: string,
     scopes: string[],
@@ -20,6 +21,7 @@ export interface App {
     grantTypes: [string],
     tokenEndpointAuthMethod: string,
     logoUri: string,
+    appUrl: string
     group: AppGroup
 }
 

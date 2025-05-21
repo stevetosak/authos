@@ -18,7 +18,7 @@ class AppGroupService (private val appGroupRepository: AppGroupRepository) {
 
         apps.forEach{app ->
             if(!groupMap.containsKey(app.group.id!!)){
-                groupMap[app.group.id] = AppGroupDTO(app.group.id,app.group.name, mutableListOf(),app.group.createdAt)
+                groupMap[app.group.id!!] = AppGroupDTO(app.group.id,app.group.name, mutableListOf(),app.group.createdAt)
             }
             groupMap[app.group.id]?.apps?.add(app.toDTO())
         }

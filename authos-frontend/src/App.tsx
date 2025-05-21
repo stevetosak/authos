@@ -10,6 +10,7 @@ import UserRegistrationPage from "@/Pages/UserRegistrationPage/UserRegistrationP
 import {AuthProvider} from "@/components/context/AuthProvider.tsx";
 import ProtectedRoute from "@/components/my/ProtectedRoute.tsx";
 import AppDetailsPage from "@/Pages/AppDetailsPage/AppDetails.tsx";
+import ClientRegistration from "@/Pages/ClientRegistrationPage/ClientRegistration.tsx";
 
 
 
@@ -23,6 +24,8 @@ function App() {
                     <Route element={<ProtectedRoute/>}>
                         <Route path={"/dashboard"} element={<Dashboard/>}/>
                         <Route path={"/dashboard/:appId"} element={<AppDetailsPage/>}></Route>
+                        <Route path={"/connect/register"} element={<ClientRegistration/>}></Route>
+
                     </Route>
                     <Route path={"/login"} element={<LoginPage/>}/>
                     <Route path={"/"} element={<HomePage/>}/>

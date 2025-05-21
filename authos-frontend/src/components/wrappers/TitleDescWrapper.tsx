@@ -1,7 +1,8 @@
 import {Input} from "@/components/ui/input.tsx";
-import {CardDescription, CardTitle} from "@/components/ui/card.tsx";
+import {CardDescription, CardFooter, CardTitle} from "@/components/ui/card.tsx";
 import React from "react";
 import {WrapperState} from "@/components/wrappers/DataWrapper.tsx";
+import {Label} from "@/components/ui/label.tsx";
 
 
 export interface TitleDescState extends WrapperState {

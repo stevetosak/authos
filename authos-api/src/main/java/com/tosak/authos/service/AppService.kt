@@ -16,8 +16,10 @@ import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.RedirectUriRepository
 import com.tosak.authos.repository.UserRepository
 import jakarta.transaction.Transactional
+import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 open class AppService(
@@ -45,6 +47,9 @@ open class AppService(
         return appRepository.findByUserId(userId) ?: throw InvalidUserIdException("No apps found for user")
     }
 
+    open fun getAppById(appId: Int): App {
+        return appRepository.findAppById(appId) ?: throw InvalidUserIdException("No app found for user")
+    }
 
     open fun validateAppCredentials(clientId: String, clientSecret: String, redirectUri: String) : App{
         val app = getAppByClientIdAndRedirectUri(clientId,redirectUri)
@@ -78,6 +83,27 @@ open class AppService(
         val savedApp = appRepository.save(app)
         savedApp.addRedirectUris(appDto.redirectUris)
         return savedApp.toDTO()
+    }
+
+    @Transactional
+    open fun updateApp(user:User, appDto: AppDTO): App {
+        val app = appDto.id?.let { getAppById(it) }
+
+        require(app != null)
+
+        println("USER: ${user.id} APP ${appDto}")
+        if(app.user.id !== user.id) throw ResponseStatusException(HttpStatus.FORBIDDEN,"Authenticated user does not have access to app")
+        app.name = appDto.name
+        app.grantTypes = appDto.grantTypes.joinToString(";")
+        app.scopes = appDto.scopes.joinToString(" ")
+        app.responseTypes = appDto.responseTypes.joinToString(";")
+        app.shortDescription = appDto.shortDescription
+        app.clientUri = appDto.appUrl
+        app.redirectUris.clear()
+        app.addRedirectUris(appDto.redirectUris.filterNotNull())
+        app.logoUri = appDto.logoUri
+//        app.tokenEndpointAuthMethod = appDto.tokenEndpointAuthMethod?
+        return appRepository.save(app)
     }
 
 

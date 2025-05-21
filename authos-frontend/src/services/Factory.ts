@@ -12,6 +12,8 @@ export class Factory {
 
     static appDefault = (): App => {
         return {
+            appUrl: "",
+            clientSecretExpiresAt: "",
             id: -1,
             name: "",
             clientId: "",

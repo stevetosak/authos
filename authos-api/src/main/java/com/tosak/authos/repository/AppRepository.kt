@@ -49,4 +49,5 @@ interface AppRepository : JpaRepository<App, Long> {
     fun existsByGroupId(@Param("groupId") groupId: Int): Boolean
     fun findAppById(appId: Int): App?
     fun findByUserId(userId: Int): List<App>?
+    fun findByIdAndUserId(appId: Int, userId: Int): App?
 }
