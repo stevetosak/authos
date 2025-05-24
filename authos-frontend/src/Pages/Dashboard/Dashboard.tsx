@@ -1,29 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {Plus, Grid, Users, FolderOpen, Settings} from "lucide-react";
-import { useAuth } from "@/services/useAuth.ts";
-import { UserSidebar } from "@/components/my/user-sidebar.tsx";
-import ClientRegistration from "@/Pages/ClientRegistrationPage/ClientRegistration.tsx";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog.tsx";
+import {Button} from "@/components/ui/button";
+import {Plus, Grid, Users, FolderOpen, Settings, CheckCircle, Shield, Key, Calendar, Pencil} from "lucide-react";
+import {useAuth} from "@/services/useAuth.ts";
 import {motion} from "framer-motion"
 import Layout from "@/components/Layout.tsx";
 import {useNavigate} from "react-router-dom";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {AddGroupModal} from "@/components/my/AddGroupModal.tsx";
+import {AppGroup, defaultAppGroup} from "@/services/interfaces.ts";
+import {Label} from "@/components/ui/label.tsx";
 
 const Dashboard: React.FC = () => {
-    const { user, isAuthenticated } = useAuth();
+    const {user, isAuthenticated, groups, apps} = useAuth();
     const [showUserSidebar, setShowUserSidebar] = useState(true);
     const nav = useNavigate();
-    const [selectedGroup,setSelectedGroup] = useState<number>(0)
+    const [selectedGroup, setSelectedGroup] = useState<AppGroup>(defaultAppGroup)
+
+
+    const handleGroupClick = (group: AppGroup) => {
+        if (selectedGroup && selectedGroup === group) {
+            setSelectedGroup(defaultAppGroup)
+        } else {
+            setSelectedGroup(group)
+        }
+
+
+    }
 
     useEffect(() => {
         console.log("USER:::   " + JSON.stringify(user));
         console.log("IS AUTH:" + isAuthenticated);
     }, [user, isAuthenticated]);
+
+    const handleEditGroup = (gr) => {
+
+    }
 
     const toggleSidebar = () => setShowUserSidebar(prev => !prev);
 
@@ -33,50 +48,51 @@ const Dashboard: React.FC = () => {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white p-4 sm:p-8 w-full">
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 max-w-7xl mx-auto">
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white py-8 w-full">
+                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Groups Sidebar - Sticky with fade effect */}
                     <div className="lg:w-72 flex-shrink-0">
                         <div className="sticky top-6 h-[calc(100vh-3rem)] overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-b from-gray-800/50 to-transparent pointer-events-none" />
-                            <Card className="h-full bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 overflow-hidden">
+                            <div
+                                className="absolute inset-0 bg-gradient-to-b from-gray-800/50 to-transparent pointer-events-none"/>
+                            <Card className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 overflow-hidden">
                                 <CardHeader className="border-b border-gray-700/50 pb-3">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="flex items-center gap-2 text-lg">
-                                            <Users className="w-5 h-5 text-green-400" />
+                                            <Users className="w-5 h-5 text-green-400"/>
                                             Application Groups
                                         </CardTitle>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="w-8 h-8">
-                                                    <Plus className="w-4 h-4 text-gray-400 hover:text-green-400" />
-                                                </Button>
+                                                <AddGroupModal/>
                                             </TooltipTrigger>
                                             <TooltipContent>Create new group</TooltipContent>
                                         </Tooltip>
+
+
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-2">
                                     <ScrollArea className="h-[calc(100%-60px)] pr-2">
                                         <div className="space-y-1">
-                                            {user.appGroups.map((group) => (
+                                            {groups.map((group) => (
                                                 <Button
                                                     key={group.id}
-                                                    onClick={() => setSelectedGroup(group.id)}
-                                                    variant={selectedGroup === group.id ? "secondary" : "ghost"}
+                                                    onClick={() => handleGroupClick(group)}
+                                                    variant={selectedGroup.id === group.id ? "secondary" : "ghost"}
                                                     className={`w-full justify-start h-12 px-4 transition-all ${
-                                                        selectedGroup === group.id
+                                                        selectedGroup.id === group.id
                                                             ? "bg-gray-700/80 border border-gray-600 shadow-lg"
                                                             : "hover:bg-gray-700/40"
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-3 w-full">
                                                         <div className={`w-2 h-2 rounded-full ${
-                                                            selectedGroup === group.id ? "bg-green-400" : "bg-gray-500"
-                                                        }`} />
+                                                            selectedGroup.id === group.id ? "bg-green-400" : "bg-gray-500"
+                                                        }`}/>
                                                         <span className="truncate flex-1 text-left">{group.name}</span>
                                                         <span className="text-xs bg-gray-700/70 rounded-full px-2 py-1">
-                          {group.apps.length}
+                          {apps.filter(app => app.group == group.id).length}
                         </span>
                                                     </div>
                                                 </Button>
@@ -93,43 +109,161 @@ const Dashboard: React.FC = () => {
                         <div className="sticky top-0 z-10 bg-gradient-to-b from-gray-900/90 to-transparent pb-6 pt-2">
                             <Card className="border border-gray-700/50 bg-gray-800/50 backdrop-blur-sm">
                                 <CardHeader className="pb-3">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <CardTitle className="text-xl">
-                                                {selectedGroup
-                                                    ? user.appGroups.find((g) => g.id === selectedGroup)?.name
-                                                    : "All Applications"}
-                                            </CardTitle>
-                                            <CardDescription className="text-gray-400">
-                                                {selectedGroup
-                                                    ? "Single Sign-On enabled for these applications"
-                                                    : "All registered applications"}
-                                            </CardDescription>
+                                    <div id="group-section" className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                                            {/* Column 1: Title and Description */}
+                                            {selectedGroup !== defaultAppGroup && (
+                                                <>
+                                                    <div className="md:col-span-2 space-y-2">
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"/>
+                                                            <CardTitle className="text-xl text-white">
+                                                                {selectedGroup.name}
+                                                            </CardTitle>
+                                                            {selectedGroup && (
+                                                                <Tooltip>
+                                                                    <TooltipTrigger asChild>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-8 w-8 text-gray-400 hover:text-emerald-400 hover:bg-gray-700/50"
+                                                                            onClick={() => handleEditGroup(selectedGroup)}
+                                                                        >
+                                                                            <Pencil className="w-4 h-4"/>
+                                                                        </Button>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>Edit group details</TooltipContent>
+                                                                </Tooltip>
+                                                            )}
+                                                        </div>
+                                                        <CardDescription className="text-gray-400">
+                                                            {selectedGroup
+                                                                ? "Single Sign-On enabled for these applications"
+                                                                : "All registered applications"}
+                                                        </CardDescription>
+                                                    </div>
+
+                                                    {/* Column 2: Action Buttons */}
+                                                    <div className="flex justify-end items-start gap-2">
+                                                        {selectedGroup && (
+                                                            <Button
+                                                                variant="outline"
+                                                                className="flex items-center gap-2 border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white"
+                                                                onClick={() => handleEditGroup(selectedGroup)}
+                                                            >
+                                                                <Pencil className="w-4 h-4"/>
+                                                                <span className="hidden md:inline">Edit Group</span>
+                                                            </Button>
+                                                        )}
+                                                        <Button
+                                                            variant="outline"
+                                                            className="flex items-center gap-2 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"
+                                                            onClick={() => nav("/connect/register")}
+                                                        >
+                                                            <Plus className="w-4 h-4"/>
+                                                            <span>New Application</span>
+                                                        </Button>
+                                                    </div>
+
+                                                    {/* Column 3: Group Details */}
+                                                    <div
+                                                        className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 md:col-span-3">
+                                                        <div
+                                                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                            <div className="space-y-1">
+                                                                <Label
+                                                                    className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <CheckCircle className="w-4 h-4 text-emerald-400"/>
+                                                                    Default Group
+                                                                </Label>
+                                                                <p className="text-white font-medium">
+                                                                    {selectedGroup?.isDefault ? "Yes" : "No"}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="space-y-1">
+                                                                <Label
+                                                                    className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <Shield className="w-4 h-4 text-blue-400"/>
+                                                                    MFA Policy
+                                                                </Label>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-white border-gray-600 bg-gray-700/50"
+                                                                >
+                                                                    {selectedGroup?.mfaPolicy || "Not set"}
+                                                                </Badge>
+                                                            </div>
+
+                                                            <div className="space-y-1">
+                                                                <Label
+                                                                    className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <Key className="w-4 h-4 text-purple-400"/>
+                                                                    SSO Policy
+                                                                </Label>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="text-white border-gray-600 bg-gray-700/50"
+                                                                >
+                                                                    {selectedGroup?.ssoPolicy || "Not set"}
+                                                                </Badge>
+                                                            </div>
+
+                                                            <div className="space-y-1">
+                                                                <Label
+                                                                    className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <Calendar className="w-4 h-4 text-yellow-400"/>
+                                                                    Created At
+                                                                </Label>
+                                                                <p className="text-white font-medium">
+                                                                    {selectedGroup?.createdAt
+                                                                        ? new Date(selectedGroup.createdAt).toLocaleDateString()
+                                                                        : "N/A"}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                            {selectedGroup === defaultAppGroup && (
+                                                <div className="md:col-span-2 space-y-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <div
+                                                            className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"/>
+                                                        <CardTitle className="text-xl text-white">
+                                                            All Apps
+                                                        </CardTitle>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                         </div>
                                     </div>
                                 </CardHeader>
                             </Card>
                         </div>
 
-                        {/* Applications Grid with animated cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {(selectedGroup
-                                    ? user.appGroups.find((g) => g.id === selectedGroup)?.apps
-                                    : user.appGroups.flatMap((g) => g.apps)
+                            {(selectedGroup !== defaultAppGroup
+                                    ? apps.filter((app) => app.group === selectedGroup.id)
+                                    : apps
                             )?.map((app) => (
                                 <motion.div
                                     key={app.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    whileHover={{ y: -3 }}
+                                    initial={{opacity: 0, y: 10}}
+                                    animate={{opacity: 1, y: 0}}
+                                    transition={{duration: 0.2}}
+                                    whileHover={{y: -3}}
                                 >
-                                    <Card className="h-full bg-gray-800/60 border border-gray-700/50 hover:border-green-400/30 transition-colors group overflow-hidden">
+                                    <Card
+                                        className="h-full bg-gray-800/60 border border-gray-700/50 hover:border-green-400/30 transition-colors group overflow-hidden">
                                         <CardHeader className="pb-3">
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0" />
+                                                        <div
+                                                            className="w-3 h-3 rounded-full bg-green-400 flex-shrink-0"/>
                                                         {app.name}
                                                     </CardTitle>
                                                     <CardDescription className="text-gray-400 mt-1 line-clamp-2">
@@ -137,7 +271,8 @@ const Dashboard: React.FC = () => {
                                                     </CardDescription>
                                                 </div>
                                                 <Avatar className="h-10 w-10 border border-gray-600">
-                                                    <AvatarFallback className="bg-gray-700/50 group-hover:bg-green-400/10 transition-colors">
+                                                    <AvatarFallback
+                                                        className="bg-gray-700/50 group-hover:bg-green-400/10 transition-colors">
                                                         {app.name.charAt(0)}
                                                     </AvatarFallback>
                                                 </Avatar>
@@ -145,10 +280,12 @@ const Dashboard: React.FC = () => {
                                         </CardHeader>
                                         <CardContent className="pb-4">
                                             <div className="flex gap-2 flex-wrap">
-                                                <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">
+                                                <Badge variant="outline"
+                                                       className="text-xs border-gray-600 text-gray-300">
                                                     {app.type || "OIDC"}
                                                 </Badge>
-                                                <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
+                                                <Badge variant="outline"
+                                                       className="text-xs border-blue-500/30 text-blue-400">
                                                     {app.status || "Active"}
                                                 </Badge>
                                             </div>
@@ -159,7 +296,8 @@ const Dashboard: React.FC = () => {
                                                 className="w-full border-gray-600 hover:bg-gray-700/50 hover:border-green-400/30 group-hover:shadow-[0_0_15px_-3px_rgba(74,222,128,0.3)] transition-all"
                                                 onClick={() => handleAppClick(app.id)}
                                             >
-                                                <Settings className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 transition-opacity" />
+                                                <Settings
+                                                    className="w-4 h-4 mr-2 opacity-70 group-hover:opacity-100 transition-opacity"/>
                                                 Manage
                                             </Button>
                                         </CardFooter>
@@ -168,22 +306,22 @@ const Dashboard: React.FC = () => {
                             ))}
                         </div>
 
-                        {/* Empty state */}
-                        {!user.appGroups.some((g) => g.apps.length > 0) && (
+
+                        {!(apps.filter(app => app.group == selectedGroup.id).length > 0) && (
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
+                                initial={{opacity: 0}}
+                                animate={{opacity: 1}}
                                 className="flex flex-col items-center justify-center py-16 text-center"
                             >
                                 <div className="bg-gray-800/50 border border-gray-700/50 rounded-full p-6 mb-6">
-                                    <FolderOpen className="w-10 h-10 text-gray-500" />
+                                    <FolderOpen className="w-10 h-10 text-gray-500"/>
                                 </div>
                                 <h3 className="text-xl font-medium mb-2">No applications found</h3>
                                 <p className="text-gray-400 max-w-md mb-6">
                                     Get started by adding your first application to this group
                                 </p>
-                                <Button  className="gap-2 bg-green-600 hover:bg-green-500/90">
-                                    <Plus className="w-4 h-4" />
+                                <Button className="gap-2 bg-green-600 hover:bg-green-500/90">
+                                    <Plus className="w-4 h-4"/>
                                     Add Application
                                 </Button>
                             </motion.div>

@@ -9,17 +9,18 @@ import com.tosak.authos.entity.User
 import com.tosak.authos.entity.compositeKeys.PPIDKey
 import com.tosak.authos.exceptions.unauthorized.InvalidPPIDHashException
 import com.tosak.authos.repository.PPIDRepository
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class PPIDService (
+open class PPIDService (
     private val ppidRepository: PPIDRepository
 )
 
 {
 
-    fun getOrCreatePPID(user: User, group: AppGroup) : String{
+    open fun getOrCreatePPID(user: User, group: AppGroup) : String{
         val ppidOpt = ppidRepository.findById(PPIDKey(group.id,user.id))
 
         if(ppidOpt.isPresent){
@@ -38,7 +39,8 @@ class PPIDService (
 
 
     }
-    fun getUserIdByHash(hash: String) : Int {
+//    @Cacheable(value = ["ppidUsers"], key = "#hash")
+    open fun getUserIdByHash(hash: String) : Int {
         val ppid = ppidRepository.findByPpidHash(hash) ?: throw InvalidPPIDHashException(
             "Cant find ppid with matching hash value"
         )

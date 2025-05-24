@@ -1,19 +1,20 @@
 package com.tosak.authos.web.rest
 
-import com.tosak.authos.dto.AppGroupDTO
 import com.tosak.authos.dto.CreateUserAccountDTO
-import com.tosak.authos.dto.UserLoginDTO
+import com.tosak.authos.dto.LoginDTO
+import com.tosak.authos.dto.UserDTO
 import com.tosak.authos.entity.User
-import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.service.*
 import com.tosak.authos.service.jwt.JwtUtils
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
+import lombok.extern.java.Log
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
@@ -21,7 +22,7 @@ import java.time.Duration
 
 
 @RestController
-class AuthController(
+open class AuthController(
     private val userService: UserService,
     private val jwtUtils: JwtUtils,
     private val appService: AppService,
@@ -43,7 +44,7 @@ class AuthController(
         @RequestParam(name = "scope") scope: String,
         request: HttpServletRequest,
         httpSession: HttpSession
-    ): ResponseEntity<UserLoginDTO?> {
+    ): ResponseEntity<UserDTO?> {
 
 
         val user = userService.verifyCredentials(email, password);
@@ -73,10 +74,9 @@ class AuthController(
         @RequestParam email: String,
         @RequestParam password: String,
         request: HttpServletRequest
-    ): ResponseEntity<UserLoginDTO> {
+    ): ResponseEntity<LoginDTO> {
 
         val user = userService.verifyCredentials(email, password);
-
 
         val token = jwtUtils.generateLoginToken(user, request)
         val jwtCookie = ResponseCookie
@@ -98,14 +98,14 @@ class AuthController(
 
 
         val apps = appService.getAllAppsForUser(user.id!!)
-        val groups = appGroupService.groupApps(apps)
+        val groups = appGroupService.getAllGroupsForUser(user.id)
 
 
         return ResponseEntity
             .status(201)
             .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
             .header(HttpHeaders.SET_COOKIE, xsrfCookie.toString())
-            .body(UserLoginDTO(user.email, user.givenName, user.familyName, user.phone,groups));
+            .body(LoginDTO(user.toDTO(),apps.map { app -> app.toDTO() },groups.map { group -> group.toDTO() }));
 
     }
 
@@ -125,29 +125,13 @@ class AuthController(
 
     // todo da ne sa zemat userot na sekoe poso nepotrebno e ako vekje e logiran
     @GetMapping("/verify")
-    fun verify(@CookieValue(name = "AUTH_TOKEN", required = false) token: String?): ResponseEntity<UserLoginDTO> {
+    fun verify(authentication: Authentication?): ResponseEntity<LoginDTO> {
 
-        println("VERIFY")
-        if(token == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
-        }
-        println("POMINA")
+        val user = userService.getUserFromAuthentication(authentication);
+        val apps = appService.getAllAppsForUser(user.id!!)
+        val groups = appGroupService.getAllGroupsForUser(user.id)
+        return ResponseEntity.ok(LoginDTO(user.toDTO(),apps.map { app -> app.toDTO() },groups.map { group -> group.toDTO() }))
 
-        try{
-            val jwt = jwtUtils.verifyToken(token)
-            val userId = ppidService.getUserIdByHash(jwt.jwtClaimsSet.subject)
-            val user =  userService.getById(userId)
-            val apps = appService.getAllAppsForUser(user.id!!)
-            val groups = appGroupService.groupApps(apps)
-
-            println("AUTH USER ID: " + user.id +  " APPS: " + apps.map { app -> app.toDTO() })
-            val userDto = UserLoginDTO(user.email, user.givenName, user.familyName, user.phone, groups)
-            return ResponseEntity.ok(userDto)
-        } catch (e : Exception){
-            e.printStackTrace()
-            return ResponseEntity.status(401).build()
-
-        }
     }
 
     @PostMapping("/sessions/clear")

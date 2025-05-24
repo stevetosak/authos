@@ -2,11 +2,9 @@ package com.tosak.authos.dto
 
 import java.time.LocalDateTime
 
-data class AppGroupDTO (
-    val id: Int?,
+data class CreateAppGroupDTO (
     val name: String,
     val isDefault: Boolean,
-    val createdAt: LocalDateTime,
     val ssoPolicy: String = "Partial",
     val mfaPolicy: String = "Disabled",
 )

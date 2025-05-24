@@ -1,8 +1,13 @@
 package com.tosak.authos.entity
 
 
-import com.tosak.authos.dto.UserLoginDTO
+import com.tosak.authos.dto.UserDTO
+import com.tosak.authos.pojo.DTO
 import jakarta.persistence.*
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
+import java.io.Serializable
 import java.time.LocalDateTime
 
 @Entity
@@ -17,7 +22,7 @@ class User(
     val email: String = "",
 
     @Column(nullable = false)
-    val password: String = "",
+    private val password: String = "",
 
     val phone: String? = "",
     @Column(name = "avatar_url")
@@ -49,4 +54,20 @@ class User(
 
     @Column(name = "locked_until")
     val lockedUntil: LocalDateTime? = null
-)
+) : DTO<UserDTO>, UserDetails, Serializable{
+    override fun toDTO(): UserDTO {
+        return UserDTO(email,givenName,familyName,phone)
+    }
+
+    override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
+        return mutableListOf(SimpleGrantedAuthority("ROLE_USER"))
+    }
+
+    override fun getPassword(): String {
+        return password;
+    }
+
+    override fun getUsername(): String {
+        return email;
+    }
+}

@@ -1,6 +1,9 @@
 package com.tosak.authos.entity
 
+import com.tosak.authos.dto.AppGroupDTO
+import com.tosak.authos.pojo.DTO
 import jakarta.persistence.*
+import java.io.Serializable
 import java.time.Instant
 import java.time.LocalDateTime
 
@@ -17,4 +20,15 @@ class AppGroup (
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id",nullable = false)
     val user: User = User(),
-)
+    @Column(name = "is_default")
+    var isDefault : Boolean = false,
+    @Column(name = "mfa_policy")
+    val mfaPolicy: String = "Disabled",
+    @Column(name = "sso_policy")
+    val ssoPolicy: String = "Partial"
+) : DTO<AppGroupDTO>, Serializable{
+    override fun toDTO(): AppGroupDTO {
+        return AppGroupDTO(id,name,isDefault,createdAt,ssoPolicy,mfaPolicy)
+    }
+
+}

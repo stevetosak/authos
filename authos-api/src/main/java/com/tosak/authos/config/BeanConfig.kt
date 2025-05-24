@@ -1,25 +1,23 @@
 package com.tosak.authos.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+//import org.springframework.data.redis.connection.RedisConnectionFactory
+//import org.springframework.data.redis.connection.jedis.JedisConnection
+//import org.springframework.data.redis.core.RedisTemplate
 import com.nimbusds.jose.Algorithm
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.tosak.authos.exceptions.KeyLoadException
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
-//import org.springframework.data.redis.connection.RedisConnectionFactory
-//import org.springframework.data.redis.connection.jedis.JedisConnection
-//import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.io.FileInputStream
-import java.lang.IllegalStateException
 import java.security.Key
 import java.security.KeyPair
 import java.security.KeyStore
@@ -29,6 +27,7 @@ import java.security.cert.X509Certificate
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.util.*
+
 
 @Configuration
 open class BeanConfig (

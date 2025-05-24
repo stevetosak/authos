@@ -20,7 +20,7 @@ data class AppDTO(
     var clientSecretExpiresAt: LocalDateTime? = null,
     var shortDescription: String? = null,
     var createdAt: LocalDateTime = LocalDateTime.now(),
-    var group: AppGroup = AppGroup(),
+    var group: Int,
     var logoUri: String? = "",
     var appUrl: String? = "",
     var scopes: List<String> = listOf(),

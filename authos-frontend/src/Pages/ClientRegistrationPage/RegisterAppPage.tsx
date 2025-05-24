@@ -19,8 +19,12 @@ import MultiSelectBadge from "@/components/my/MultiSelectBadge.tsx";
 import {motion} from "framer-motion";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import Layout from "@/components/Layout.tsx";
+import {useNavigate} from "react-router-dom";
+import {api} from "@/components/config";
+import {toast} from "sonner";
+import {useAuth} from "@/services/useAuth.ts";
 
-export default function ClientRegistration() {
+export default function RegisterAppPage() {
     const [formData, setFormData] = useState({
         appName: "",
         appIconUrl: "",
@@ -30,9 +34,11 @@ export default function ClientRegistration() {
         responseTypes: ["code"],
         appInfoUri: "",
     });
+    const {refreshAuth} = useAuth()
 
     const [selectedScopes, setSelectedScopes] = useState<string[]>(["openid"])
     const [redirectUris, setRedirectUris] = useState<string[]>([])
+    const nav = useNavigate()
 
     const handleChange = (e) => {
         setFormData({...formData, [e.target.name]: e.target.value});
@@ -54,10 +60,16 @@ export default function ClientRegistration() {
 
 
         try {
-            await axios.post("http://localhost:9000/connect/register", data, {
+            await api.post("/app/register", data, {
                 withCredentials: true
             })
-            alert(`Successfully registered app: ${formData.appName}`)
+            await refreshAuth()
+            toast.success(`Successfully registered app: ${formData.appName}`)
+            setTimeout(() => {
+                nav("/dashboard")
+            },500)
+
+
         } catch (err) {
             console.error(err)
         }
@@ -65,7 +77,7 @@ export default function ClientRegistration() {
 
     return (
         <Layout>
-            <div className="inset-0 z-50 flex items-center justify-center ">
+            <div className="inset-0 z-50 flex items-center justify-center my-5">
                 <motion.div
                     initial={{opacity: 0, scale: 0.95}}
                     animate={{opacity: 1, scale: 1}}
@@ -335,7 +347,8 @@ export default function ClientRegistration() {
                             {/* Footer Actions */}
                             <div
                                 className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700/50">
-                                <Button variant="outline" className="border-gray-600 hover:bg-gray-700/50">
+                                <Button variant="outline" className="border-gray-600 hover:bg-gray-700/50"
+                                        onClick={() => nav("/dashboard")}>
                                     Cancel
                                 </Button>
                                 <Button

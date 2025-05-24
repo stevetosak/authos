@@ -1,9 +1,11 @@
 package com.tosak.authos.entity
 import com.tosak.authos.dto.AppDTO
 import com.tosak.authos.entity.compositeKeys.RedirectUriId
+import com.tosak.authos.pojo.DTO
 import jakarta.persistence.*
 import org.hibernate.annotations.Type
 import org.springframework.boot.convert.Delimiter
+import java.io.Serializable
 import java.time.LocalDateTime
 import kotlin.jvm.Transient
 
@@ -46,7 +48,7 @@ class App (
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "app", cascade = [CascadeType.ALL], orphanRemoval = true)
     var redirectUris : MutableList<RedirectUri> = mutableListOf(),
 
-){
+) : DTO<AppDTO>, Serializable {
     @Transient
     lateinit var scopesCollection: MutableList<String>
     @Transient
@@ -68,7 +70,6 @@ class App (
         responseTypes = "",
         shortDescription = appDTO.shortDescription,
         tokenEndpointAuthMethod = appDTO.tokenEndpointAuthMethod ?: "",
-        group = appDTO.group,
         redirectUris = appDTO.redirectUris.map { uri -> RedirectUri(RedirectUriId(appDTO.id,uri ?: "")) }.toMutableList(),
     ) {
         this.scopesCollection = appDTO.scopes.toMutableList()
@@ -77,10 +78,10 @@ class App (
     }
 
 
-    fun toDTO(): AppDTO {
+    override fun toDTO(): AppDTO {
         return AppDTO(id,name,redirectUris.map { uri -> uri.id?.redirectUri },
             clientId,clientSecret,clientSecretExpiresAt,shortDescription,createdAt,
-            group,logoUri,clientUri,scopesCollection,responseTypesCollection,grantTypesCollection,
+            group.id!!,logoUri,clientUri,scopesCollection,responseTypesCollection,grantTypesCollection,
             tokenEndpointAuthMethod)
     }
     fun addRedirectUris(uris: Collection<String>) {

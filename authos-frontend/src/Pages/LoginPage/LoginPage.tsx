@@ -1,17 +1,19 @@
 import React from "react";
 import {LoginForm} from "@/components/my/login-form.tsx";
-
+import Layout from "@/components/Layout.tsx";
 
 
 const LoginPage: React.FC = () => {
 
 
     return (
-        <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-            <div className="w-full max-w-sm">
-                <LoginForm />
+        <Layout>
+            <div className="flex min-h-screen w-full items-center justify-center">
+                <div className="w-full max-w-3xl">
+                    <LoginForm/>
+                </div>
             </div>
-        </div>
+        </Layout>
     );
 };
 

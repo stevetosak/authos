@@ -3,27 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, Lock, Settings, LogIn, LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Layout from "@/components/Layout";
 
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-            {/* Header */}
-            <header className="w-full flex justify-between items-center p-6 bg-gray-800 text-white shadow-md">
-                <h1 className="text-2xl font-bold">Authos</h1>
-                <div>
-                    <Button
-                        className="bg-green-600 text-white hover:bg-green-500 flex items-center"
-                        onClick={() => navigate("/login")}
-                    >
-                        <LogIn className="w-5 h-5 mr-2" />
-                        Login
-                    </Button>
-                </div>
-            </header>
+        <Layout>
 
-            {/* Hero Section */}
+
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+            
             <section className="text-center my-12">
                 <h1 className="text-4xl font-bold">Enable SSO & OAuth Effortlessly</h1>
                 <p className="mt-4 text-lg text-gray-300">
@@ -76,6 +66,7 @@ const HomePage: React.FC = () => {
                 &copy; {new Date().getFullYear()} Authos. All rights reserved.
             </footer>
         </div>
+        </Layout>
     );
 };
 

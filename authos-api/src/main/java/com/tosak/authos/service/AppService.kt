@@ -16,6 +16,7 @@ import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.RedirectUriRepository
 import com.tosak.authos.repository.UserRepository
 import jakarta.transaction.Transactional
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -43,6 +44,7 @@ open class AppService(
         }
     }
 
+//    @Cacheable(value = ["userApps"], key = "#userId")
     open fun getAllAppsForUser(userId: Int) : List<App> {
         return appRepository.findByUserId(userId) ?: throw InvalidUserIdException("No apps found for user")
     }
@@ -57,12 +59,14 @@ open class AppService(
         return app;
     }
 
+
+
     @Transactional
     open fun registerApp(appDto: RegisterAppDTO, userLoggedIn: User): AppDTO {
-        val clientId = hex(getSecureRandomValue(64))
-        val clientSecret = hex(getSecureRandomValue(64))
+        val clientId = hex(getSecureRandomValue(32))
+        val clientSecret = hex(getSecureRandomValue(32))
 
-        val authosGroup = appGroupRepository.findByName("AUTHOS") ?: throw AppGroupsNotFoundException("")
+        val authosGroup = appGroupRepository.findAppGroupByIsDefault(true) ?: throw AppGroupsNotFoundException("the user should have exactly one default group...")
 
         // Create the App entity
         val app = App(

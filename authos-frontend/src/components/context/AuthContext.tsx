@@ -1,5 +1,5 @@
 import React, {createContext, Dispatch, SetStateAction} from "react";
-import {AppGroup, User} from "@/services/interfaces.ts";
+import {App, AppGroup, LoginResponse, User} from "@/services/interfaces.ts";
 
 interface AuthContextType{
     user: User,
@@ -8,6 +8,13 @@ interface AuthContextType{
     setIsAuthenticated: Dispatch<SetStateAction<boolean>>
     loading: boolean
     setLoading: Dispatch<SetStateAction<boolean>>
+    apps: App[]
+    setApps: Dispatch<SetStateAction<App[]>>
+    groups: AppGroup[]
+    setGroups: Dispatch<SetStateAction<AppGroup[]>>
+    refreshAuth: () => Promise<void>,
+    setContext: (resp : LoginResponse) => void
+    resetContext: () => void
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null)

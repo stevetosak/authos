@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import {Grid, Key, LayoutDashboard, LogOut, Plus, Settings, User, Users} from "lucide-react";
+import {Link, useLocation, useNavigate} from "react-router-dom";
+import {Grid, Key, LayoutDashboard, LogInIcon, LogOut, Plus, Settings, User, Users} from "lucide-react";
 import React from "react";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -10,16 +10,36 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-import ClientRegistration from "@/Pages/ClientRegistrationPage/ClientRegistration.tsx";
+import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
 import {useAuth} from "@/services/useAuth.ts";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
+import {api} from "@/components/config.ts";
+import {toast} from "sonner";
+import {defaultUser} from "@/services/interfaces.ts";
+import { motion } from "framer-motion";
 
 const Navbar = () => {
     const location = useLocation();
-    const {user} = useAuth();
+    const {user, isAuthenticated,setUser,setIsAuthenticated} = useAuth();
+    const nav = useNavigate()
+
+    const logOut = () => {
+        console.log("LOGOUT")
+        api.post("/logout", {}, {
+            withCredentials: true
+        }).then(resp => {
+            toast.warning("Logging Out...")
+            setTimeout(() => {
+                setUser(defaultUser)
+                setIsAuthenticated(false)
+            }, 1000)
+        }).catch(err => {
+            console.error(err)
+        })
+    }
 
     return (
-        <nav className="sticky top-0 z-50 border-b border-gray-700/50 bg-gray-800/80 backdrop-blur-md rounded-t-2xl">
+        <nav className="sticky top-0 z-50 border-b border-gray-700/50 bg-gray-800/80 backdrop-blur-md rounded-2xl">
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
@@ -27,8 +47,9 @@ const Navbar = () => {
                     <div className="flex items-center space-x-4">
                         {/* Logo/Brand */}
                         <Link to="/" className="flex items-center space-x-2">
-                            <Key className="w-6 h-6 text-green-400" />
-                            <span className="text-xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
+                            <Key className="w-6 h-6 text-green-400"/>
+                            <span
+                                className="text-xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
                 AuthOS
               </span>
                         </Link>
@@ -38,21 +59,21 @@ const Navbar = () => {
                             <NavLink
                                 to="/dashboard"
                                 isActive={location.pathname === '/dashboard'}
-                                icon={<LayoutDashboard className="w-5 h-5" />}
+                                icon={<LayoutDashboard className="w-5 h-5"/>}
                             >
                                 Dashboard
                             </NavLink>
                             <NavLink
-                                to="/applications"
+                                to="/analytics"
                                 isActive={location.pathname.startsWith('/applications')}
-                                icon={<Grid className="w-5 h-5" />}
+                                icon={<Grid className="w-5 h-5"/>}
                             >
-                                Applications
+                                Analytics
                             </NavLink>
                             <NavLink
                                 to="/users"
                                 isActive={location.pathname.startsWith('/users')}
-                                icon={<Users className="w-5 h-5" />}
+                                icon={<Users className="w-5 h-5"/>}
                             >
                                 Users
                             </NavLink>
@@ -60,27 +81,29 @@ const Navbar = () => {
                     </div>
 
                     {/* Right side - Actions + User */}
-                    <div className="flex items-center space-x-3">
+                    {isAuthenticated && <div className="flex items-center space-x-3">
                         {/* App Registration Button (highlighted) */}
-                        <Button
-                            variant="outline"
-                            className="hidden md:flex items-center gap-2 border-green-400/30 text-green-400 hover:bg-green-400/10 hover:text-green-300"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>New Application</span>
-                        </Button>
+
 
                         {/* User dropdown */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    whileHover={{ y: -3 }}>
+
+
                                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                    <Avatar className="h-8 w-8 border border-gray-600">
-                                        <AvatarImage src={user?.email} />
+                                    <Avatar className="h-8 w-8 border border-gray-600 hover:border-green-600">
+                                        <AvatarImage src={user?.email}/>
                                         <AvatarFallback className="bg-gray-700">
                                             {user.firstName.charAt(0) || "U"}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>
+                                </motion.div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                                 className="w-56 bg-gray-800 border border-gray-700 text-white"
@@ -89,27 +112,48 @@ const Navbar = () => {
                             >
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{user?.name}</p>
+                                        <p className="text-sm font-medium leading-none">{user?.firstName}</p>
                                         <p className="text-xs leading-none text-gray-400">{user?.email}</p>
                                     </div>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-gray-700" />
+                                <DropdownMenuSeparator className="bg-gray-700"/>
                                 <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700">
-                                    <User className="mr-2 h-4 w-4" />
+                                    <User className="mr-2 h-4 w-4"/>
                                     Profile
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700">
-                                    <Settings className="mr-2 h-4 w-4" />
+                                    <Settings className="mr-2 h-4 w-4"/>
                                     Settings
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-gray-700" />
+                                <DropdownMenuSeparator className="bg-gray-700"/>
                                 <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700 text-red-400">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Log out
+                                    <Button onClick={logOut}>
+                                        <LogOut className="mr-2 h-4 w-4"/>
+                                        Log out
+                                    </Button>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                    </div>
+                    </div>}
+
+                    {!isAuthenticated &&
+                        <div className={'flex items-center space-x-5'}>
+                            <NavLink
+                                to="/login"
+                                isActive={location.pathname.startsWith('/login')}
+                                icon={<LogInIcon className="w-5 h-5"/>}
+                            >
+                                Log In
+                            </NavLink>
+                            <NavLink
+                                to="/register-user"
+                                isActive={location.pathname.startsWith('/register-user')}
+                                icon={<LogInIcon className="w-5 h-5"/>}
+                            >
+                                Sign Up
+                            </NavLink>
+                        </div>
+                    }
                 </div>
             </div>
 
@@ -119,12 +163,12 @@ const Navbar = () => {
                     <MobileNavLink
                         to="/dashboard"
                         isActive={location.pathname === '/dashboard'}
-                        icon={<LayoutDashboard className="w-5 h-5" />}
+                        icon={<LayoutDashboard className="w-5 h-5"/>}
                     />
                     <MobileNavLink
                         to="/applications"
                         isActive={location.pathname.startsWith('/applications')}
-                        icon={<Grid className="w-5 h-5" />}
+                        icon={<Grid className="w-5 h-5"/>}
                     />
                     <Dialog>
                         <DialogTrigger asChild>
@@ -133,17 +177,17 @@ const Navbar = () => {
                                 variant="ghost"
                                 className="text-gray-400 hover:text-green-400"
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-5 h-5"/>
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl bg-gray-800 border border-gray-700 p-0 overflow-hidden">
-                            <ClientRegistration />
+                            <RegisterAppPage/>
                         </DialogContent>
                     </Dialog>
                     <MobileNavLink
                         to="/users"
                         isActive={location.pathname.startsWith('/users')}
-                        icon={<Users className="w-5 h-5" />}
+                        icon={<Users className="w-5 h-5"/>}
                     />
                 </div>
             </div>
@@ -152,7 +196,7 @@ const Navbar = () => {
 };
 
 // Reusable nav link component
-const NavLink = ({ to, children, isActive, icon }) => (
+const NavLink = ({to, children, isActive, icon}) => (
     <Link
         to={to}
         className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -167,7 +211,7 @@ const NavLink = ({ to, children, isActive, icon }) => (
 );
 
 // Mobile version (icon only)
-const MobileNavLink = ({ to, isActive, icon }) => (
+const MobileNavLink = ({to, isActive, icon}) => (
     <Link
         to={to}
         className={`flex-1 flex justify-center py-2 px-1 rounded-md transition-colors ${

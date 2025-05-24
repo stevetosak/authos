@@ -36,7 +36,7 @@ import {api} from "@/components/config.ts";
 // TODO GRAPHS AND METRICS IN GENERAL
 
 export default function AppDetails() {
-    const {user} = useAuth()
+    const {user,apps} = useAuth()
     const {appId} = useParams();
     const [app, setApp] = useState<App>(Factory.appDefault());
 
@@ -57,7 +57,7 @@ export default function AppDetails() {
 
     useEffect(() => {
         if (appId != undefined) {
-            const targetApp = user.appGroups.flatMap(ag => ag.apps).find(a => a.id === (parseInt(appId)))
+            const targetApp = apps.find(a => a.id === (parseInt(appId)))
             if (targetApp != undefined) {
                 setApp(targetApp);
                 setEditedApp(targetApp)
@@ -78,15 +78,11 @@ export default function AppDetails() {
 
     const handleSave = () => {
         if (app === editedApp) return
-        const appDto = {
-            ...editedApp,
-            group: editedApp.group.id,
-        }
+
         console.log("sending update request")
         console.log(`${JSON.stringify(editedApp)}`)
 
-
-        api.post("/app/update", editedApp, {
+        api.post<App>("/app/update", editedApp, {
             withCredentials: true
         }).then(resp => {
             setApp(editedApp);
@@ -162,10 +158,10 @@ export default function AppDetails() {
 
                             <div className="flex flex-col gap-3 text-sm text-gray-400">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-300 min-w-[60px]">Group:</span>
-                                    <span className="truncate max-w-[180px] bg-gray-700 px-2 py-1 rounded">
-                {app.group.name}
-              </span>
+              {/*                      <span className="font-medium text-gray-300 min-w-[60px]">Group:</span>*/}
+              {/*                      <span className="truncate max-w-[180px] bg-gray-700 px-2 py-1 rounded">*/}
+              {/*  {app.group.name}*/}
+              {/*</span>*/}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium text-gray-300 min-w-[60px]">Created:</span>

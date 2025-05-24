@@ -4,7 +4,6 @@ export interface User{
     firstName: string,
     lastName: string,
     phone?: string,
-    appGroups: AppGroup[]
 }
 
 export interface App {
@@ -22,12 +21,56 @@ export interface App {
     tokenEndpointAuthMethod: string,
     logoUri: string,
     appUrl: string
-    group: AppGroup
+    group: number
 }
 
 export interface AppGroup {
     id: number,
     name: string,
     createdAt: string,
+    isDefault: boolean,
+    ssoPolicy: SSOPolicyValue,
+    mfaPolicy: MFAPolicyValue
+}
+export type SSOPolicyValue =  "Full" | "Partial" | "Same Domain" | "Disabled";
+export type MFAPolicyValue = "Email" | "Phone" | "Disabled";
+export interface CreateAppGroupDTO {
+    name: string,
+    isDefault: boolean,
+    ssoPolicy: SSOPolicyValue,
+    mfaPolicy: MFAPolicyValue
+}
+
+export const defaultUser: User = {id: -1,email: "",firstName: "",lastName: "", phone: ""}
+export const defaultApp: App = {
+    id: -1,
+    name: "",
+    redirectUris: [],
+    clientId: "",
+    clientSecret: "",
+    clientSecretExpiresAt: "",
+    createdAt: "",
+    shortDescription: "",
+    scopes: [],
+    responseTypes: [""],
+    grantTypes: [""],
+    tokenEndpointAuthMethod: "",
+    logoUri: "",
+    appUrl: "",
+    group: -1
+};
+
+export const defaultAppGroup: AppGroup = {
+    id: -1,
+    name: "",
+    createdAt: "",
+    isDefault: false,
+    ssoPolicy: "Disabled",
+    mfaPolicy: "Disabled"
+};
+
+export type LoginResponse = {
+    user: User,
     apps: App[],
+    groups: AppGroup[]
 }
