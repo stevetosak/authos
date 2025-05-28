@@ -16,4 +16,6 @@ interface AuthorizationCodeRepository : JpaRepository<AuthorizationCode, Long> {
          AND c.code_hash = :codeHash
         """)
     fun findByClientIdAndRedirectUriAndCodeHash(clientId: String, @Param("redirectUris") redirectUris: List<String>, @Param("codeHash") value:String): AuthorizationCode?
+
+    fun findAuthorizationCodeById(id: Int)
 }

@@ -1,6 +1,7 @@
 package com.tosak.authos.service
 
 import com.tosak.authos.entity.App
+import com.tosak.authos.entity.SSOSession
 import com.tosak.authos.entity.User
 import com.tosak.authos.exceptions.InvalidAppIdException
 import com.tosak.authos.exceptions.InvalidUserIdException
@@ -24,6 +25,18 @@ open class SSOSessionService(
     @Value("\${spring.session.timeout}")
     private lateinit var sessionTimeout: String
 
+
+    @Transactional
+    open fun createSession(user: User, httpSession: HttpSession,app: App){
+        httpSession.setAttribute("user", user.id)
+        httpSession.setAttribute("app", app.id)
+        httpSession.setAttribute("created_at", LocalDateTime.now())
+
+        val key = "authos:sso:${user.id}:${app.group.id}"
+        val timeoutS = Duration.parse(sessionTimeout)
+        redisService.setWithTTL(key, httpSession.id.toString(), timeoutS.inWholeSeconds)
+    }
+
     /**
      * Creates a new session or validates the existing one.
      *
@@ -31,33 +44,26 @@ open class SSOSessionService(
      *
      */
     @Transactional
-    open fun create(user: User, app: App, httpSession: HttpSession) {
+    open fun validate(user: User, app: App, httpSession: HttpSession) {
 
         println("IS NEW: " + httpSession.isNew)
         if(httpSession.isNew){
-            httpSession.setAttribute("user", user.id)
-            httpSession.setAttribute("app", app.id)
-            httpSession.setAttribute("created_at", LocalDateTime.now())
-
-            val key = "authos:sso:${user.id}:${app.group.id}"
-            val timeoutS = Duration.parse(sessionTimeout)
-            redisService.setWithTTL(key, httpSession.id.toString(), timeoutS.inWholeSeconds)
+         createSession(user, httpSession,app)
         }
 
-        val userId = httpSession.getAttribute("user") as Int?
-        val appId = httpSession.getAttribute("app") as Int?
+        validateSessionParams(httpSession,user,app)
 
-        if(userId == null || userId != user.id) {
-            httpSession.invalidate()
-            throw InvalidUserIdException("User Id missing or invalid. User id: $userId")
-        }
-        if(appId == null || appId != app.id) {
-            httpSession.invalidate()
-            throw InvalidAppIdException("App Id missing or invalid. App id: $appId")
-        }
-        val ssoSession = redisService.tryGetValue("authos:sso:${user.id}:${app.group.id}")
+        try{
+            val ssoSession = redisService.tryGetValue("authos:sso:${user.id}:${app.group.id}")
+            require(ssoSession == httpSession.id) { "No session found" }
 
-        require(ssoSession == httpSession.id) { "No session found" }
+        } catch (e: Exception) {
+            httpSession.invalidate();
+
+        }
+
+
+
     }
 
 
@@ -73,6 +79,20 @@ open class SSOSessionService(
         println("SESSION ID: $sessionId")
         return redisService.hasKey("spring:session:sessions:$sessionId")
 
+    }
+
+    fun validateSessionParams(httpSession: HttpSession,user: User,app: App) {
+        val userId = httpSession.getAttribute("user") as Int?
+        val appId = httpSession.getAttribute("app") as Int?
+
+        if(userId == null || userId != user.id) {
+            httpSession.invalidate()
+            throw InvalidUserIdException("User Id missing or invalid. User id: $userId")
+        }
+        if(appId == null || appId != app.id) {
+            httpSession.invalidate()
+            throw InvalidAppIdException("App Id missing or invalid. App id: $appId")
+        }
     }
 
 }

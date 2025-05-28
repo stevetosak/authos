@@ -27,8 +27,6 @@ const Dashboard: React.FC = () => {
         } else {
             setSelectedGroup(group)
         }
-
-
     }
 
     useEffect(() => {
@@ -39,8 +37,6 @@ const Dashboard: React.FC = () => {
     const handleEditGroup = (gr) => {
 
     }
-
-    const toggleSidebar = () => setShowUserSidebar(prev => !prev);
 
     const handleAppClick = (appId: number) => {
         nav(`/dashboard/${appId}`)
@@ -104,7 +100,6 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Main Content Area */}
                     <div className="flex-1">
                         <div className="sticky top-0 z-10 bg-gradient-to-b from-gray-900/90 to-transparent pb-6 pt-2">
                             <Card className="border border-gray-700/50 bg-gray-800/50 backdrop-blur-sm">
@@ -307,7 +302,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
 
-                        {!(apps.filter(app => app.group == selectedGroup.id).length > 0) && (
+                        {!(apps.filter(app => app.group == selectedGroup.id).length > 0) && selectedGroup !== defaultAppGroup && (
                             <motion.div
                                 initial={{opacity: 0}}
                                 animate={{opacity: 1}}

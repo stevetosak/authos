@@ -1,0 +1,3 @@
+claims_aliases:
+  family_name: "last_name"
+  given_name: "first_name"

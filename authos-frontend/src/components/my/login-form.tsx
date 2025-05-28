@@ -5,10 +5,11 @@ import {Input} from "@/components/ui/input.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import React, {useState} from "react";
 import axios from "axios";
-import {LoginResponse, User} from "@/services/interfaces.ts";
+import {LoginResponse} from "@/services/interfaces.ts";
 import {useAuth} from "@/services/useAuth.ts";
 import {Link, useNavigate} from "react-router-dom";
 import {Chrome, LockIcon, LogInIcon, MailIcon} from "lucide-react";
+import {validateResponse} from "@/services/jwtService.ts";
 
 export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     const [email, setEmail] = useState<string>("");
@@ -39,7 +40,7 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     }
 
     const handleOauthLogin = async (formData: URLSearchParams) => {
-        return await axios.post("http://localhost:9000/oauth-login", formData, {
+        return await axios.post<LoginResponse>("http://localhost:9000/oauth-login", formData, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
@@ -47,7 +48,7 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
         });
     }
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
 
@@ -71,11 +72,12 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
         setLoading(true);
 
         if (oauthRequest) {
-            handleOauthLogin(formData)
-                .then(resp => {
-                    //dopolnitelna validacija na linkot
-                    window.location.href = resp.headers.get("Location") || ""
-                })
+            const resp = await handleOauthLogin(formData)
+            if(resp.data.signature == null || resp.data.redirectUri == null) throw Error("No signature")
+            const valid = await validateResponse(resp.data.signature)
+            console.warn("VALID:",valid)
+            window.location.href = valid ? resp.data.redirectUri : ""
+
         } else {
             handleNativeLogin(formData)
                 .then(resp => {

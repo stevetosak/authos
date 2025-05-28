@@ -27,6 +27,7 @@ open class PPIDService (
             val existingPpid = ppidOpt.get();
             return hex(getHash("${existingPpid.id.groupId}${existingPpid.id.userId}${existingPpid.salt}"))
         }
+
         val salt = getSecureRandomValue(8);
         val ppidHash = getHash("${group.id}${user.id}${hex(salt)}")
 

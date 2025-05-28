@@ -23,8 +23,11 @@ fun getSecureRandomValue(numBytes: Int) : ByteArray {
 fun hex(bytes: ByteArray) : String {
     return bytes.joinToString("") { "%02x".format(it) }
 }
-fun b64UrlSafe(bytes: ByteArray) : String {
+fun b64UrlSafeEncoder(bytes: ByteArray) : String {
     return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+}
+fun b64UrlSafeDecoder(value: String) : ByteArray {
+    return Base64.getUrlDecoder().decode(value)
 }
 
 

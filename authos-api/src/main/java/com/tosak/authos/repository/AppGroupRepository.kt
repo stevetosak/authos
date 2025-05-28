@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository
 interface AppGroupRepository : JpaRepository<AppGroup, Int> {
     fun findByUserId(userId: Int): List<AppGroup>?
     fun findByName(name: String) : AppGroup?
-    fun findAppGroupByIsDefault(isDefault: Boolean): AppGroup?
+    fun findAppGroupByUserIdAndIsDefault(userId: Int,isDefault: Boolean): AppGroup?
 }

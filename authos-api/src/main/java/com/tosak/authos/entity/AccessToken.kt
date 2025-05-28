@@ -22,6 +22,9 @@ class AccessToken (
     @Column(name = "created_at")
     val createdAt : LocalDateTime = LocalDateTime.now(),
     val revoked : Boolean = false,
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    val user: User = User(),
     ){
 
 

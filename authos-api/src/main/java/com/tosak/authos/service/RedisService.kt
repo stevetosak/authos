@@ -4,10 +4,12 @@ import com.tosak.authos.exceptions.RedisKeyNotFoundException
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import kotlin.jvm.Throws
 
 @Service
 class RedisService (private val redisTemplate: RedisTemplate<String,String>){
 
+    @Throws(RedisKeyNotFoundException::class)
     fun tryGetValue(key: String) : String{
        val result =  redisTemplate.opsForValue().get(key)
         if(result != null){

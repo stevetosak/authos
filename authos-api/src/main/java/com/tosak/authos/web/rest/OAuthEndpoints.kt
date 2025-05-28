@@ -1,15 +1,15 @@
 package com.tosak.authos.web.rest
 
-import com.nimbusds.jose.jwk.JWKSet
-import com.nimbusds.jose.jwk.RSAKey
 import com.tosak.authos.PromptType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
 import com.tosak.authos.entity.App
 import com.tosak.authos.exceptions.oauth.InvalidScopeException
 import com.tosak.authos.exceptions.oauth.LoginRequiredException
+import com.tosak.authos.pojo.IdTokenStrategy
 import com.tosak.authos.service.*
-import com.tosak.authos.service.jwt.JwtUtils
+import com.tosak.authos.service.JwtService
+import com.tosak.authos.utils.JwtTokenFactory
 import com.tosak.authos.utils.redirectToLogin
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpSession
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.net.URI
@@ -25,14 +26,15 @@ import java.net.URLEncoder
 @RestController
 @RequestMapping("/oauth")
 class OAuthEndpoints(
-    private val rsaKeyDEV: RSAKey,
-    private val jwtUtils: JwtUtils,
+    private val jwtService: JwtService,
     private val authorizationCodeService: AuthorizationCodeService,
     private val appService: AppService,
     private val accessTokenService: AccessTokenService,
     private val userService: UserService,
     private val ppidService: PPIDService,
-    private val sessionService: SSOSessionService
+    private val sessionService: SSOSessionService,
+    private val claimService: ClaimService,
+    private val factory: JwtTokenFactory
 ) {
 
     @GetMapping("/authorize")
@@ -63,9 +65,8 @@ class OAuthEndpoints(
         if (prompt == "login") return redirectToLogin(clientId, redirectUri, state)
 
 
-
         if (idTokenHint != null) {
-            val idToken = jwtUtils.verifyToken(idTokenHint)
+            val idToken = jwtService.verifyToken(idTokenHint)
             val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
             val app: App = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
             val hasActiveSession = sessionService.hasActiveSession(userId, app.id!!)
@@ -113,11 +114,6 @@ class OAuthEndpoints(
     }
 
 
-    @GetMapping("/.well-known/jwks.json")
-    fun jwks(): Map<String, Any> {
-        val jwkSet = JWKSet(rsaKeyDEV)
-        return jwkSet.toJSONObject();
-    }
 
 
     // povekje nacini na avtentikacija: private_key_jwt, client_secret.
@@ -141,21 +137,24 @@ class OAuthEndpoints(
         val uid = httpSession.getAttribute("user") as Int;
         val user = userService.getById(uid);
 
-        val accessToken = accessTokenService.generateAccessToken(tokenRequestDto.clientId, code)
-        val idToken = jwtUtils.generateIdToken(user, request, app)
+        val accessToken = accessTokenService.generateAccessToken(tokenRequestDto.clientId, code,user)
+        val idToken = factory.createToken(IdTokenStrategy(ppidService,app,user,request))
 
         val headers = HttpHeaders();
         headers.contentType = MediaType.APPLICATION_JSON;
         headers.cacheControl = "no-store";
 
 
-        return ResponseEntity(TokenResponse(accessToken, "Bearer", idToken, 3600), headers, HttpStatus.OK);
+        return ResponseEntity(TokenResponse(accessToken, "Bearer", idToken.serialize(), 3600), headers, HttpStatus.OK);
 
 
     }
 
-    @GetMapping("/userinfo")
-    fun userinfo(@RequestParam("client_id") clientId: String, @RequestHeader("Authorization") authorization: String) {
-
+    @GetMapping("/userinfo", produces = [APPLICATION_JSON_VALUE])
+    @PostMapping("/userinfo",produces = [APPLICATION_JSON_VALUE])
+    fun userinfo(@RequestHeader("Authorization") authorization: String) : ResponseEntity<Map<String,Any?>>{
+        val accessToken = accessTokenService.validateAccessToken(authorization.substring(7, authorization.length))
+        val claims = claimService.resolve(accessToken.authorizationCode.scope,accessToken.user,accessToken.clientId)
+        return ResponseEntity.status(200).body(claims)
     }
 }

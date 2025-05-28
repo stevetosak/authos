@@ -72,5 +72,21 @@ export const defaultAppGroup: AppGroup = {
 export type LoginResponse = {
     user: User,
     apps: App[],
-    groups: AppGroup[]
+    groups: AppGroup[],
+    redirectUri?: string,
+    signature?: string
+}
+
+export interface JwkKey {
+    kty: string;
+    e: string;
+    use: string;
+    kid: string;
+    alg: string;
+    iat?: number;
+    n: string;
+}
+
+export interface JwksResponse {
+    keys: JwkKey[];
 }

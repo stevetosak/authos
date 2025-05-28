@@ -15,25 +15,36 @@ import java.time.LocalDateTime
 
 // todo mozda mapa da vrakjam namesto vo appgroup dto da sa apps
 @Service
-open class AppGroupService (private val appGroupRepository: AppGroupRepository) {
+open class AppGroupService(private val appGroupRepository: AppGroupRepository) {
 
-//    @Cacheable(value = ["userGroups"], key = "#userId")
-    open fun getAllGroupsForUser(userId: Int) : List<AppGroup> {
-        return appGroupRepository.findByUserId(userId) ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
+    //    @Cacheable(value = ["userGroups"], key = "#userId")
+    open fun getAllGroupsForUser(userId: Int): List<AppGroup> {
+        return appGroupRepository.findByUserId(userId)
+            ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
     }
+
     @Transactional
     open fun createAppGroup(dto: CreateAppGroupDTO, user: User): AppGroupDTO {
-        val group = AppGroup(name = dto.name, createdAt = LocalDateTime.now(), user = user, isDefault = dto.isDefault,
-            mfaPolicy = dto.mfaPolicy, ssoPolicy = dto.ssoPolicy)
-        if(group.isDefault){
-           val defaultGroup = appGroupRepository.findAppGroupByIsDefault(true) ?: throw AppGroupsNotFoundException("Could not find app group")
+        val group = AppGroup(
+            name = dto.name, createdAt = LocalDateTime.now(), user = user, isDefault = dto.isDefault,
+            mfaPolicy = dto.mfaPolicy, ssoPolicy = dto.ssoPolicy
+        )
+        if (group.isDefault) {
+            val defaultGroup = getDefaultGroupForUser(user);
             defaultGroup.isDefault = false;
             appGroupRepository.save(defaultGroup);
         }
         val savedGr = appGroupRepository.save(group)
-        return AppGroupDTO(savedGr.id,savedGr.name,
-            savedGr.isDefault,savedGr.createdAt,
-            savedGr.ssoPolicy,savedGr.mfaPolicy
+        return AppGroupDTO(
+            savedGr.id, savedGr.name,
+            savedGr.isDefault, savedGr.createdAt,
+            savedGr.ssoPolicy, savedGr.mfaPolicy
+        )
+    }
+
+    open fun getDefaultGroupForUser(user: User): AppGroup {
+        return appGroupRepository.findAppGroupByUserIdAndIsDefault(user.id!!, true) ?: throw AppGroupsNotFoundException(
+            "No default group found"
         )
     }
 }

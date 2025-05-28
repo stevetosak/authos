@@ -5,10 +5,7 @@ import com.tosak.authos.crypto.hex
 import com.tosak.authos.dto.AppDTO
 import com.tosak.authos.dto.RegisterAppDTO
 import com.tosak.authos.entity.App
-import com.tosak.authos.entity.RedirectUri
 import com.tosak.authos.entity.User
-import com.tosak.authos.entity.compositeKeys.RedirectUriId
-import com.tosak.authos.exceptions.AppGroupsNotFoundException
 import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
 import com.tosak.authos.repository.AppGroupRepository
@@ -16,7 +13,6 @@ import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.RedirectUriRepository
 import com.tosak.authos.repository.UserRepository
 import jakarta.transaction.Transactional
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -28,7 +24,8 @@ open class AppService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val redirectUriRepository: RedirectUriRepository,
-    private val appGroupRepository: AppGroupRepository
+    private val appGroupRepository: AppGroupRepository,
+    private val appGroupService: AppGroupService
 
 )
 {
@@ -52,6 +49,9 @@ open class AppService(
     open fun getAppById(appId: Int): App {
         return appRepository.findAppById(appId) ?: throw InvalidUserIdException("No app found for user")
     }
+    open fun getAppByClientId(clientId: String) : App{
+        return appRepository.findByClientId(clientId) ?: throw Exception("bad client id")
+    }
 
     open fun validateAppCredentials(clientId: String, clientSecret: String, redirectUri: String) : App{
         val app = getAppByClientIdAndRedirectUri(clientId,redirectUri)
@@ -66,7 +66,7 @@ open class AppService(
         val clientId = hex(getSecureRandomValue(32))
         val clientSecret = hex(getSecureRandomValue(32))
 
-        val authosGroup = appGroupRepository.findAppGroupByIsDefault(true) ?: throw AppGroupsNotFoundException("the user should have exactly one default group...")
+        val authosGroup = appGroupService.getDefaultGroupForUser(userLoggedIn)
 
         // Create the App entity
         val app = App(

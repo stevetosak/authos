@@ -30,9 +30,9 @@ import java.util.*
 
 
 @Configuration
-open class BeanConfig (
+open class BeanConfig(
 
-){
+) {
     @Bean
     open fun passwordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder(12);
@@ -41,29 +41,18 @@ open class BeanConfig (
     @Bean
     open fun rsaKeyGen(): RSAKey {
 
-//        val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-//        keyPairGenerator.initialize(2048)
-//        val keyPair = keyPairGenerator.generateKeyPair();
-//        return RSAKey
-//            .Builder(keyPair.public as RSAPublicKey)
-//            .privateKey(keyPair.private as RSAPrivateKey)
-//            .keyID(UUID.randomUUID().toString())
-//            .algorithm(Algorithm.parse("RS256"))
-//            .issueTime(Date())
-//            .keyUse(KeyUse.SIGNATURE)
-//            .build();
-
-        val ks : KeyStore = KeyStore.getInstance("PKCS12")
+        val ks: KeyStore = KeyStore.getInstance("PKCS12")
         val fis = FileInputStream("/home/stevetosak/private/keystore.p12")
-        val keystorePass = DotEnvConfig.dotenv["KEYSTORE_PASS"] ?: throw IllegalStateException("Keystore password not loaded")
+        val keystorePass =
+            DotEnvConfig.dotenv["KEYSTORE_PASS"] ?: throw IllegalStateException("Keystore password not loaded")
 
         var key: Key? = null
         var cert: Certificate? = null
-        ks.load(fis,keystorePass.toCharArray())
+        ks.load(fis, keystorePass.toCharArray())
         val aliasEnumeration: Enumeration<String> = ks.aliases()
         while (aliasEnumeration.hasMoreElements()) {
             val keyName = aliasEnumeration.nextElement()
-            key = ks.getKey(keyName,keystorePass.toCharArray())
+            key = ks.getKey(keyName, keystorePass.toCharArray())
             cert = ks.getCertificate(keyName)
         }
 
@@ -72,7 +61,7 @@ open class BeanConfig (
         }
 
 
-        val keyPair = KeyPair(cert.publicKey,key as PrivateKey);
+        val keyPair = KeyPair(cert.publicKey, key as PrivateKey);
         val x509 = cert as X509Certificate
 
         return RSAKey

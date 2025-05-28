@@ -50,4 +50,5 @@ interface AppRepository : JpaRepository<App, Long> {
     fun findAppById(appId: Int): App?
     fun findByUserId(userId: Int): List<App>?
     fun findByIdAndUserId(appId: Int, userId: Int): App?
+    fun findByClientId(clientId: String): App?
 }

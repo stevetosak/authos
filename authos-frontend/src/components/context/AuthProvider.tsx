@@ -8,15 +8,15 @@ type AuthProviderProps = {
 }
 
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({children}: AuthProviderProps) => {
     const [user, setUser] = useState<User>(defaultUser);
-    const [apps,setApps] = useState<App[]>([])
-    const [groups,setGroups] = useState<AppGroup[]>([])
+    const [apps, setApps] = useState<App[]>([])
+    const [groups, setGroups] = useState<AppGroup[]>([])
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
 
-    const setContext = (resp : LoginResponse) => {
+    const setContext = (resp: LoginResponse) => {
         setUser(resp.user)
         setApps(resp.apps)
         setGroups(resp.groups)
@@ -51,10 +51,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
 
     useEffect(() => {
-        refreshAuth();
+        refreshAuth()
 
         const interval = setInterval(() => {
-            if(isAuthenticated){
+            if (isAuthenticated) {
                 refreshAuth()
             }
         }, 5 * 60 * 1000);

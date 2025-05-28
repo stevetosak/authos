@@ -10,11 +10,10 @@ import com.tosak.authos.service.AppGroupService
 import com.tosak.authos.service.AppService
 import com.tosak.authos.service.PPIDService
 import com.tosak.authos.service.UserService
-import com.tosak.authos.service.jwt.JwtUtils
+import com.tosak.authos.service.JwtService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
-import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class ApplicationController(
     private val appService: AppService,
-    private val jwtUtils: JwtUtils,
+    private val jwtService: JwtService,
     private val userService: UserService,
     private val ppidService: PPIDService,
     private val appRepository: AppRepository,

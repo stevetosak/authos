@@ -2,20 +2,19 @@ package com.tosak.authos.web.filter
 
 import com.tosak.authos.exceptions.NoTokenPresentException
 import com.tosak.authos.service.CachingUserDetailsService
-import com.tosak.authos.service.jwt.JwtUtils
+import com.tosak.authos.service.JwtService
 import jakarta.annotation.PostConstruct
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
-open class JwtFilter(private val jwtUtils: JwtUtils,private val userDetailsService: CachingUserDetailsService) : OncePerRequestFilter() {
+open class JwtFilter(private val jwtService: JwtService, private val userDetailsService: CachingUserDetailsService) : OncePerRequestFilter() {
     private val excludedPaths = ArrayList<String>()
 
     @PostConstruct
@@ -26,6 +25,7 @@ open class JwtFilter(private val jwtUtils: JwtUtils,private val userDetailsServi
         excludedPaths.add("/authorize")
         excludedPaths.add("/approve")
         excludedPaths.add("/token")
+        excludedPaths.add("/.well-known/jwks.json")
     }
 
     override fun doFilterInternal(
@@ -34,14 +34,14 @@ open class JwtFilter(private val jwtUtils: JwtUtils,private val userDetailsServi
         filterChain: FilterChain
     ) {
         if(excludedPaths.contains(request.requestURI)){
-            println("Request uri: " + request.requestURI)
+            println("JWT FILTER EXCLUDED: Request uri: " + request.requestURI)
             filterChain.doFilter(request, response)
             return
         }
         println("VLEZE FILTER")
         try{
             val token = getJwtFromRequest(request)
-            val jwt = jwtUtils.verifyToken(token);
+            val jwt = jwtService.verifyToken(token);
             val userDetails = userDetailsService.loadById(jwt.jwtClaimsSet.subject)
             val authentication = UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)

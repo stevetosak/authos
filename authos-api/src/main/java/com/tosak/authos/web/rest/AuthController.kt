@@ -2,15 +2,15 @@ package com.tosak.authos.web.rest
 
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.dto.LoginDTO
-import com.tosak.authos.dto.UserDTO
-import com.tosak.authos.entity.User
+import com.tosak.authos.dto.RedirectResponse
+import com.tosak.authos.pojo.LoginTokenStrategy
+import com.tosak.authos.pojo.RedirectResponseTokenStrategy
 import com.tosak.authos.service.*
-import com.tosak.authos.service.jwt.JwtUtils
+import com.tosak.authos.service.JwtService
+import com.tosak.authos.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
-import lombok.extern.java.Log
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
@@ -24,7 +24,8 @@ import java.time.Duration
 @RestController
 open class AuthController(
     private val userService: UserService,
-    private val jwtUtils: JwtUtils,
+    private val jwtService: JwtService,
+    private val tokenFactory: JwtTokenFactory,
     private val appService: AppService,
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
@@ -44,7 +45,7 @@ open class AuthController(
         @RequestParam(name = "scope") scope: String,
         request: HttpServletRequest,
         httpSession: HttpSession
-    ): ResponseEntity<UserDTO?> {
+    ): ResponseEntity<LoginDTO> {
 
 
         val user = userService.verifyCredentials(email, password);
@@ -52,19 +53,18 @@ open class AuthController(
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
         val app = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
-        ssoSessionService.create(user, app, httpSession)
+        val headers = userService.generateLoginCredentials(user, request)
+        val apps = appService.getAllAppsForUser(user.id!!)
+        val groups = appGroupService.getAllGroupsForUser(user.id)
+        ssoSessionService.validate(user, app, httpSession)
+
+        val url = "http://localhost:5173/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
+                "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
+        val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url))
 
 
-        return ResponseEntity.status(201).location(
-            URI(
-                "http://localhost:5173/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=${
-                    URLEncoder.encode(
-                        scope,
-                        Charsets.UTF_8
-                    )
-                }"
-            )
-        ).build()
+
+        return ResponseEntity.status(200).headers(headers).body(LoginDTO(user.toDTO(),apps.map{a -> a.toDTO()},groups.map { gr -> gr.toDTO() },URI(url),token.serialize()))
 
 
     }
@@ -77,35 +77,15 @@ open class AuthController(
     ): ResponseEntity<LoginDTO> {
 
         val user = userService.verifyCredentials(email, password);
-
-        val token = jwtUtils.generateLoginToken(user, request)
-        val jwtCookie = ResponseCookie
-            .from("AUTH_TOKEN", token.serialize())
-            .httpOnly(true)
-            .secure(true)
-            .path("/")
-            .sameSite("None")
-            .maxAge(Duration.ofHours(1))
-            .build()
-
-        val xsrfCookie = ResponseCookie.from("XSRF-TOKEN", token.jwtClaimsSet.getStringClaim("xsrf_token"))
-            .httpOnly(false)
-            .secure(true)
-            .path("/")
-            .sameSite("None")
-            .maxAge(Duration.ofHours(1))
-            .build()
-
-
+        val headers = userService.generateLoginCredentials(user, request)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
 
 
         return ResponseEntity
             .status(201)
-            .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-            .header(HttpHeaders.SET_COOKIE, xsrfCookie.toString())
-            .body(LoginDTO(user.toDTO(),apps.map { app -> app.toDTO() },groups.map { group -> group.toDTO() }));
+            .headers(headers)
+            .body(LoginDTO(user.toDTO(), apps.map { app -> app.toDTO() }, groups.map { group -> group.toDTO() }));
 
     }
 
@@ -116,10 +96,7 @@ open class AuthController(
         @RequestParam("redirect_uri", required = false) redirectUri: String?,
         @RequestParam("state", required = false) state: String?
     ): ResponseEntity<Void> {
-
-
-        userService.createUser(createUserAccountDTO)
-
+        userService.register(createUserAccountDTO)
         return ResponseEntity.status(201).location(URI("http://localhost:5173/login")).build()
     }
 
@@ -130,12 +107,17 @@ open class AuthController(
         val user = userService.getUserFromAuthentication(authentication);
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        return ResponseEntity.ok(LoginDTO(user.toDTO(),apps.map { app -> app.toDTO() },groups.map { group -> group.toDTO() }))
+        return ResponseEntity.ok(
+            LoginDTO(
+                user.toDTO(),
+                apps.map { app -> app.toDTO() },
+                groups.map { group -> group.toDTO() })
+        )
 
     }
 
     @PostMapping("/sessions/clear")
-    fun clearSessions(session: HttpSession): ResponseEntity<Int>{
+    fun clearSessions(session: HttpSession): ResponseEntity<Int> {
         session.invalidate()
         val count = redisService.clearSessions();
 

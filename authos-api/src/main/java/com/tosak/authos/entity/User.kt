@@ -9,6 +9,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.io.Serializable
 import java.time.LocalDateTime
+import java.util.*
+import kotlin.jvm.Transient
 
 @Entity
 @Table(name = "users")
@@ -24,7 +26,8 @@ class User(
     @Column(nullable = false)
     private val password: String = "",
 
-    val phone: String? = "",
+    @Column(name= "phone_number")
+    val phoneNumber: String? = "",
     @Column(name = "avatar_url")
     val avatarUrl: String? = null,
     @Column(name = "given_name")
@@ -48,6 +51,8 @@ class User(
     val mfaEnabled: Boolean = false,
 
     val recoveryCodes: String? = null,
+    @Column(name = "middle_name")
+    val middleName: String = "",
 
     @Column(name = "failed_login_attempts", nullable = false)
     val failedLoginAttempts: Int = 0,
@@ -55,8 +60,19 @@ class User(
     @Column(name = "locked_until")
     val lockedUntil: LocalDateTime? = null
 ) : DTO<UserDTO>, UserDetails, Serializable{
+
+    @Transient
+    var name: String = ""
+
+
+    @PostLoad
+    fun init(){
+        name = "$givenName $middleName $familyName"
+    }
+
+
     override fun toDTO(): UserDTO {
-        return UserDTO(email,givenName,familyName,phone)
+        return UserDTO(email,givenName,familyName,phoneNumber)
     }
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {

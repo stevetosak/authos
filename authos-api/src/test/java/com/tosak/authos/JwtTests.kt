@@ -1,7 +1,7 @@
 package com.tosak.authos
 
 import com.tosak.authos.config.BeanConfig
-import com.tosak.authos.service.jwt.JwtUtils
+import com.tosak.authos.service.JwtService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,7 +14,7 @@ import java.security.interfaces.RSAKey
 @ContextConfiguration(classes = [BeanConfig::class])
 class JwtTests (private val rsaKey: RSAKey) {
     @Autowired
-    private lateinit var jwtUtils: JwtUtils;
+    private lateinit var jwtUtils: JwtService;
 
 
     @Test

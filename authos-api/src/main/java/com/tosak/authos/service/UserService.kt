@@ -5,15 +5,21 @@ import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
 import com.tosak.authos.exceptions.AuthenticationNotPresentException
 import com.tosak.authos.exceptions.unauthorized.UserNotFoundException
+import com.tosak.authos.pojo.LoginTokenStrategy
 import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.repository.UserRepository
+import com.tosak.authos.utils.JwtTokenFactory
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cache.annotation.Cacheable
+import org.springframework.http.ResponseCookie
 import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.web.servlet.function.ServerRequest.Headers
+import org.springframework.http.HttpHeaders
 import java.security.InvalidParameterException
+import java.time.Duration
 import java.util.Optional
 
 @Service
@@ -21,7 +27,9 @@ open class UserService @Autowired constructor(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val appGroupRepository: AppGroupRepository,
-    private val ppidService: PPIDService
+    private val ppidService: PPIDService,
+    private val tokenFactory: JwtTokenFactory,
+    private val appGroupService: AppGroupService
 ) {
 
     open fun verifyCredentials(email: String, password: String): User {
@@ -52,10 +60,34 @@ open class UserService @Autowired constructor(
         return authentication.principal as User
     }
 
+    open fun generateLoginCredentials(user:User,request: HttpServletRequest): HttpHeaders {
+        val token = tokenFactory.createToken(LoginTokenStrategy(appGroupService,user,ppidService,request))
+        val jwtCookie = ResponseCookie
+            .from("AUTH_TOKEN", token.serialize())
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .sameSite("None")
+            .maxAge(Duration.ofHours(1))
+            .build()
+
+        val xsrfCookie = ResponseCookie.from("XSRF-TOKEN", token.jwtClaimsSet.getStringClaim("xsrf_token"))
+            .httpOnly(false)
+            .secure(true)
+            .path("/")
+            .sameSite("None")
+            .maxAge(Duration.ofHours(1))
+            .build()
+        val headers = HttpHeaders()
+        headers.add("Set-Cookie",jwtCookie.toString())
+        headers.add("Set-Cookie",xsrfCookie.toString())
+        return headers;
+    }
+
 
 
     @Transactional
-    open fun createUser(
+    open fun register(
         dto: CreateUserAccountDTO
     ): User {
 
