@@ -30,11 +30,11 @@ open class WebSecurityConfig (private val jwtFilter: JwtFilter, private val user
            .csrf { csrf -> csrf.disable() }
            .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
            .authorizeHttpRequests { req -> req.anyRequest().permitAll() }
-           .sessionManagement{session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)}
            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
            .logout{logout ->
                logout.logoutUrl("/logout")
                    .deleteCookies("AUTH_TOKEN")
+                   .deleteCookies("XSRF_TOKEN")
                    .clearAuthentication(true)
                    .invalidateHttpSession(true)
                    .logoutSuccessHandler{request, response, authentication ->

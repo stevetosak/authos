@@ -2,7 +2,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {TrashIcon} from "lucide-react";
-import {WrapperState} from "@/components/wrappers/DataWrapper.tsx";
+import {WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 
 
 export const ScopeWrapper = ({editing,currentApp,editedApp,handleInputChange,addElement,removeElement,inputValues} : WrapperState) => {

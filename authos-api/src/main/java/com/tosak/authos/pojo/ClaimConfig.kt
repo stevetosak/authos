@@ -15,10 +15,7 @@ class ClaimConfig {
 
             val yaml = Yaml()
             val loaded: Map<String, Map<String, List<String>>> = yaml.load(inputStream)
-
-            // Now extract the nested map under "scopes_to_claims"
             data = loaded["scopes_to_claims"] as HashMap<String, List<String>>
-
             println("data: $data")
         } catch (error: Exception) {
             println("YAML load error: ${error.message}")

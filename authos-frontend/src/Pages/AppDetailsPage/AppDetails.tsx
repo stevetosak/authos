@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Tabs, TabsList, TabsTrigger, TabsContent} from "@/components/ui/tabs";
-import Layout from "@/components/Layout.tsx";
+import Layout from "@/Pages/components/Layout.tsx";
 import React, {useEffect, useState} from "react";
 import {Label} from "@/components/ui/label";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
@@ -27,10 +27,10 @@ import {useParams} from "react-router";
 import {useNavigate} from "react-router-dom";
 import {App} from "@/services/interfaces.ts";
 import {Factory} from "@/services/Factory.ts";
-import {DataWrapper, WrapperState} from "@/components/wrappers/DataWrapper.tsx";
-import {useAppEditor} from "@/hooks/use-app-editor.ts";
+import {DataWrapper, WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
+import {useAppEditor} from "@/Pages/components/hooks/use-app-editor.ts";
 import {Badge} from "@/components/ui/badge.tsx";
-import {api} from "@/components/config.ts";
+import {api, apiPostAuthenticated} from "@/services/config.ts";
 
 //TODO AUTHORIZATION PER USER
 // TODO GRAPHS AND METRICS IN GENERAL
@@ -82,9 +82,8 @@ export default function AppDetails() {
         console.log("sending update request")
         console.log(`${JSON.stringify(editedApp)}`)
 
-        api.post<App>("/app/update", editedApp, {
-            withCredentials: true
-        }).then(resp => {
+        apiPostAuthenticated<App>("/app/update", editedApp)
+            .then(resp => {
             setApp(editedApp);
             setIsEditing(false);
             toast.success("Application updated successfully");
@@ -102,7 +101,6 @@ export default function AppDetails() {
 
     const regenerateSecret = () => {
         setIsRegeneratingSecret(true);
-        // Simulate API call
         setTimeout(() => {
             toast.success("Client secret regenerated");
         }, 1000);
@@ -146,7 +144,7 @@ export default function AppDetails() {
     return (
         <Layout>
             <div
-                className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 md:p-10 font-sans">
+                className="min-h-screen bg-gradient-to-br text-gray-100 p-4 md:p-10 font-sans">
                 <Card
                     className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-4xl mx-auto">
                     {/* Enhanced Header Section */}
@@ -202,14 +200,11 @@ export default function AppDetails() {
                                 </TabsList>
                             </div>
 
-                            {/* General Tab Content */}
                             <TabsContent value="general" className="p-6">
                                 <div className="space-y-6">
-                                    {/* Add your general content here */}
                                 </div>
                             </TabsContent>
 
-                            {/* Credentials Tab Content - Improved Layout */}
                             <TabsContent value="credentials" className="p-6 space-y-6">
                                 <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
                                     <div className="flex items-center justify-between mb-2">

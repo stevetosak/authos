@@ -15,12 +15,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import MultiSelectBadge from "@/components/my/MultiSelectBadge.tsx";
+import MultiSelectBadge from "@/Pages/components/MultiSelectBadge.tsx";
 import {motion} from "framer-motion";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-import Layout from "@/components/Layout.tsx";
+import Layout from "@/Pages/components/Layout.tsx";
 import {useNavigate} from "react-router-dom";
-import {api} from "@/components/config";
+import {api} from "@/services/config.ts";
 import {toast} from "sonner";
 import {useAuth} from "@/services/useAuth.ts";
 

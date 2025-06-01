@@ -1,5 +1,6 @@
 package com.tosak.authos.service
 
+import com.tosak.authos.crypto.generateClientSecret
 import com.tosak.authos.crypto.getSecureRandomValue
 import com.tosak.authos.crypto.hex
 import com.tosak.authos.dto.AppDTO
@@ -59,6 +60,12 @@ open class AppService(
         return app;
     }
 
+    open fun regenerateSecret(dto: AppDTO){
+        val app = getAppById(dto.id!!);
+        app.clientSecret = generateClientSecret();
+        appRepository.save(app)
+    }
+
 
 
     @Transactional
@@ -68,7 +75,6 @@ open class AppService(
 
         val authosGroup = appGroupService.getDefaultGroupForUser(userLoggedIn)
 
-        // Create the App entity
         val app = App(
             name = appDto.appName,
             clientId = clientId,

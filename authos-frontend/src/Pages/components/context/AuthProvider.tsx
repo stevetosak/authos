@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from "react";
 import {App, AppGroup, defaultApp, defaultUser, LoginResponse, User} from "@/services/interfaces.ts";
-import axios from "axios";
-import {AuthContext} from "@/components/context/AuthContext.tsx";
+import axios, {AxiosResponse} from "axios";
+import {AuthContext} from "@/Pages/components/context/AuthContext.tsx";
+import {apiGetAuthenticated} from "@/services/config.ts";
 
 type AuthProviderProps = {
     children: React.ReactNode
@@ -16,10 +17,10 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
     const [loading, setLoading] = useState<boolean>(true);
 
 
-    const setContext = (resp: LoginResponse) => {
-        setUser(resp.user)
-        setApps(resp.apps)
-        setGroups(resp.groups)
+    const setContext = (data: LoginResponse) => {
+        setUser(data.user)
+        setApps(data.apps)
+        setGroups(data.groups)
     }
     const resetContext = () => {
         setUser(defaultUser)
@@ -28,24 +29,22 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
     }
 
     const verifyToken = async (): Promise<LoginResponse> => {
-        const response = await axios.get("http://localhost:9000/verify", {
-            withCredentials: true,
-        });
+        const response = await apiGetAuthenticated<LoginResponse>("/verify")
         return response.data;
     };
 
     const refreshAuth = async () => {
         setLoading(true);
         try {
-            const resp = await verifyToken();
-            setContext(resp)
+            const respData = await verifyToken();
+            setContext(respData)
             setIsAuthenticated(true);
         } catch (err) {
             console.error(err);
             setUser(defaultUser);
             setIsAuthenticated(false);
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
     };
 

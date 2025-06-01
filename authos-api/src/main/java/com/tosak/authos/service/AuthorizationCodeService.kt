@@ -6,6 +6,7 @@ import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AuthorizationCode
 import com.tosak.authos.entity.RedirectUri
+import com.tosak.authos.entity.User
 import com.tosak.authos.exceptions.badreq.InvalidScopeException
 import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeExpiredException
 import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeUsedException
@@ -23,12 +24,12 @@ class AuthorizationCodeService (
     private val redirectUriService: RedirectUriService
 ) {
 
-    fun generateAuthorizationCode(clientId: String,redirectUri: String,scope: String): String {
+    fun generateAuthorizationCode(clientId: String,redirectUri: String,scope: String,user:User): String {
         val randomBytes = ByteArray(64)
         SecureRandom().nextBytes(randomBytes)
         val authorizationCodeValue = URLEncoder.encode(Base64.getEncoder().encodeToString(randomBytes).replace("=",""), Charsets.UTF_8);
         val codeHash = hex(getHash(authorizationCodeValue));
-        val authorizationCode = AuthorizationCode(null,codeHash,clientId,redirectUri,scope = scope)
+        val authorizationCode = AuthorizationCode(null,codeHash,clientId,redirectUri,scope = scope, user = user)
         authorizationCodeRepository.save(authorizationCode)
 
         return authorizationCodeValue;

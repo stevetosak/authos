@@ -60,8 +60,8 @@ open class UserService @Autowired constructor(
         return authentication.principal as User
     }
 
-    open fun generateLoginCredentials(user:User,request: HttpServletRequest): HttpHeaders {
-        val token = tokenFactory.createToken(LoginTokenStrategy(appGroupService,user,ppidService,request))
+    open fun generateLoginCredentials(user:User,request: HttpServletRequest,group:AppGroup? = null): HttpHeaders {
+        val token = tokenFactory.createToken(LoginTokenStrategy(user,ppidService,request,group,appGroupService))
         val jwtCookie = ResponseCookie
             .from("AUTH_TOKEN", token.serialize())
             .httpOnly(true)

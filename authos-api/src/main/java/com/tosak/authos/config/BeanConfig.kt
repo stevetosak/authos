@@ -7,16 +7,19 @@ import com.nimbusds.jose.Algorithm
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.tosak.authos.exceptions.KeyLoadException
-import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
+import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
+import org.springframework.session.FlushMode
+import org.springframework.session.data.redis.RedisIndexedSessionRepository
+import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession
 import java.io.FileInputStream
 import java.security.Key
 import java.security.KeyPair
@@ -80,6 +83,8 @@ open class BeanConfig(
         template.connectionFactory = connectionFactory
         template.keySerializer = StringRedisSerializer()
         template.valueSerializer = GenericJackson2JsonRedisSerializer()
+        template.afterPropertiesSet()
         return template
     }
+
 }

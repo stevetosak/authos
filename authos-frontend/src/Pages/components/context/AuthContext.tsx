@@ -13,7 +13,7 @@ interface AuthContextType{
     groups: AppGroup[]
     setGroups: Dispatch<SetStateAction<AppGroup[]>>
     refreshAuth: () => Promise<void>,
-    setContext: (resp : LoginResponse) => void
+    setContext: (resp: LoginResponse) => void
     resetContext: () => void
 }
 

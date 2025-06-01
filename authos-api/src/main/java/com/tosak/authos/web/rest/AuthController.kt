@@ -2,23 +2,18 @@ package com.tosak.authos.web.rest
 
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.dto.LoginDTO
-import com.tosak.authos.dto.RedirectResponse
-import com.tosak.authos.pojo.LoginTokenStrategy
 import com.tosak.authos.pojo.RedirectResponseTokenStrategy
 import com.tosak.authos.service.*
 import com.tosak.authos.service.JwtService
 import com.tosak.authos.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
-import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
-import java.time.Duration
 
 
 @RestController
@@ -43,8 +38,8 @@ open class AuthController(
         @RequestParam(name = "redirect_uri") redirectUri: String,
         @RequestParam(name = "state") state: String,
         @RequestParam(name = "scope") scope: String,
+        httpSession: HttpSession,
         request: HttpServletRequest,
-        httpSession: HttpSession
     ): ResponseEntity<LoginDTO> {
 
 
@@ -53,10 +48,10 @@ open class AuthController(
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
         val app = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
-        val headers = userService.generateLoginCredentials(user, request)
+        val headers = userService.generateLoginCredentials(user, request,app.group)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        ssoSessionService.validate(user, app, httpSession)
+        ssoSessionService.createSession(user,app,httpSession)
 
         val url = "http://localhost:5173/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
@@ -119,7 +114,7 @@ open class AuthController(
     @PostMapping("/sessions/clear")
     fun clearSessions(session: HttpSession): ResponseEntity<Int> {
         session.invalidate()
-        val count = redisService.clearSessions();
+        val count = redisService.clearDb();
 
 
         return ResponseEntity.ok(count)

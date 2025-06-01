@@ -1,6 +1,6 @@
 import React, {useState} from "react";
-import {App} from "@/services/interfaces";
-import {fieldValidations} from "@/components/wrappers/DataWrapper.tsx";
+import {App} from "@/services/interfaces.ts";
+import {fieldValidations} from "@/Pages/components/wrappers/DataWrapper.tsx";
 
 
 export function useAppEditor(initialApp: App) {
@@ -22,7 +22,6 @@ export function useAppEditor(initialApp: App) {
 
         const validation = fieldValidations[field];
 
-        // Run validation if it exists
         if (validation) {
             if (validation.validate && !validation.validate(newValue)) {
                 // setErrors(prev => ({

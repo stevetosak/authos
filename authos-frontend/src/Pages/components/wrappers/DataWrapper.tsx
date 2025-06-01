@@ -1,10 +1,10 @@
 import {App} from "@/services/interfaces.ts";
 import {JSX} from "react";
-import {TitleDescState, TitleDescWrapper} from "@/components/wrappers/TitleDescWrapper.tsx";
-import {RedirectUriWrapper} from "@/components/wrappers/RedirectUriWrapper.tsx";
-import {ScopeWrapper} from "@/components/wrappers/ScopeWrapper.tsx";
-import {GrantTypeWrapper} from "@/components/wrappers/GrantTypesWrapper.tsx";
-import {ResponseTypesWrapper} from "@/components/wrappers/ResponseTypesWrapper.tsx";
+import {TitleDescState, TitleDescWrapper} from "@/Pages/components/wrappers/TitleDescWrapper.tsx";
+import {RedirectUriWrapper} from "@/Pages/components/wrappers/RedirectUriWrapper.tsx";
+import {ScopeWrapper} from "@/Pages/components/wrappers/ScopeWrapper.tsx";
+import {GrantTypeWrapper} from "@/Pages/components/wrappers/GrantTypesWrapper.tsx";
+import {ResponseTypesWrapper} from "@/Pages/components/wrappers/ResponseTypesWrapper.tsx";
 
 
 export interface WrapperState {

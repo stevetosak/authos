@@ -1,6 +1,5 @@
 package com.tosak.authos.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tosak.authos.crypto.b64UrlSafeDecoder
 import com.tosak.authos.crypto.b64UrlSafeEncoder
 import com.tosak.authos.crypto.getHash
@@ -14,12 +13,13 @@ import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeUsedException
 import com.tosak.authos.repository.AccessTokenRepository
 import com.tosak.authos.repository.AuthorizationCodeRepository
 import org.springframework.stereotype.Service
-import org.yaml.snakeyaml.Yaml
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.time.LocalDateTime
 
 // val atHash = b64UrlSafe(tokenHash.take(tokenHash.size / 2).toByteArray())
+
+class AccessTokenWrapper(val tokenVal: String, val accessToken: AccessToken)
 
 @Service
 class AccessTokenService(
@@ -29,7 +29,7 @@ class AccessTokenService(
 
 
     // access tokens are opaque tokens
-    fun generateAccessToken(clientId: String, authorizationCode: AuthorizationCode,user: User): String {
+    fun generateAccessToken(clientId: String, authorizationCode: AuthorizationCode): AccessTokenWrapper{
 
         if (authorizationCode.used) {
             throw AuthorizationCodeUsedException("Authorization code was used. Revoking access.")
@@ -51,11 +51,12 @@ class AccessTokenService(
             authorizationCode.expiresAt,
             authorizationCode.scope,
             true,
+            authorizationCode.user
         ))
 
-        val accessToken = AccessToken(null, b64UrlSafeEncoder(tokenHash), clientId, usedCode, user = user)
-        accessTokenRepository.save(accessToken)
-        return b64UrlSafeEncoder(tokenBytes);
+        val accessToken = AccessToken(null, b64UrlSafeEncoder(tokenHash), clientId, usedCode, user = authorizationCode.user)
+        val saved = accessTokenRepository.save(accessToken)
+        return AccessTokenWrapper(b64UrlSafeEncoder(tokenBytes), saved);
 
     }
 

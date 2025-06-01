@@ -7,10 +7,11 @@ import Dashboard from "@/Pages/Dashboard/Dashboard.tsx";
 import ConsentForm from "@/Pages/ConsentPage/ConsentForm.tsx";
 import ErrorPage from "@/Pages/ErrorPage/ErrorPage.tsx";
 import UserRegistrationPage from "@/Pages/UserRegistrationPage/UserRegistrationPage.tsx";
-import {AuthProvider} from "@/components/context/AuthProvider.tsx";
-import ProtectedRoute from "@/components/my/ProtectedRoute.tsx";
+import {AuthProvider} from "@/Pages/components/context/AuthProvider.tsx";
+import ProtectedRoute from "@/Pages/components/ProtectedRoute.tsx";
 import AppDetailsPage from "@/Pages/AppDetailsPage/AppDetails.tsx";
 import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
+import {ProfilePage} from "@/Pages/UserProfilePage/UserProfilePage.tsx";
 
 
 
@@ -25,13 +26,14 @@ function App() {
                         <Route path={"/dashboard"} element={<Dashboard/>}/>
                         <Route path={"/dashboard/:appId"} element={<AppDetailsPage/>}></Route>
                         <Route path={"/connect/register"} element={<RegisterAppPage/>}></Route>
+                        <Route path={"/profile"} element={<ProfilePage/>}></Route>
 
                     </Route>
                     <Route path={"/login"} element={<LoginPage/>}/>
                     <Route path={"/"} element={<HomePage/>}/>
                     <Route path="/oauth/user-consent" element={<ConsentForm/>}/>
                     <Route path="/error" element={<ErrorPage/>}/>
-                    <Route path={"/register-user"} element={<UserRegistrationPage/>}></Route>
+                    <Route path={"/register-user"} element={<UserRegistrationPage/>}/>
                 </Routes>
             </Router>
         </AuthProvider>

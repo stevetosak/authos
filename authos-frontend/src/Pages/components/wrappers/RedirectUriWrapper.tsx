@@ -3,7 +3,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {TrashIcon} from "lucide-react";
 import React from "react";
-import {WrapperState} from "@/components/wrappers/DataWrapper.tsx";
+import {WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 
 export interface redirectUriState extends WrapperState {
     newRedirectUri: string,

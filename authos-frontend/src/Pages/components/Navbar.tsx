@@ -13,7 +13,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
 import {useAuth} from "@/services/useAuth.ts";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
-import {api} from "@/components/config.ts";
+import {api} from "@/services/config.ts";
 import {toast} from "sonner";
 import {defaultUser} from "@/services/interfaces.ts";
 import { motion } from "framer-motion";
@@ -43,9 +43,7 @@ const Navbar = () => {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    {/* Left side - Logo + Main nav */}
                     <div className="flex items-center space-x-4">
-                        {/* Logo/Brand */}
                         <Link to="/" className="flex items-center space-x-2">
                             <Key className="w-6 h-6 text-green-400"/>
                             <span
@@ -54,7 +52,6 @@ const Navbar = () => {
               </span>
                         </Link>
 
-                        {/* Main navigation */}
                         <div className="hidden md:flex items-center space-x-1">
                             <NavLink
                                 to="/dashboard"
@@ -80,12 +77,9 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Right side - Actions + User */}
                     {isAuthenticated && <div className="flex items-center space-x-3">
-                        {/* App Registration Button (highlighted) */}
 
 
-                        {/* User dropdown */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <motion.div
@@ -117,10 +111,12 @@ const Navbar = () => {
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator className="bg-gray-700"/>
-                                <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700">
+                                <Link to={"/profile"}>
+                                <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700" >
                                     <User className="mr-2 h-4 w-4"/>
                                     Profile
                                 </DropdownMenuItem>
+                                </Link>
                                 <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700">
                                     <Settings className="mr-2 h-4 w-4"/>
                                     Settings
@@ -157,7 +153,6 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Mobile menu (simplified) */}
             <div className="md:hidden border-t border-gray-700/50 px-4 py-2">
                 <div className="flex items-center justify-around space-x-1">
                     <MobileNavLink
@@ -195,7 +190,6 @@ const Navbar = () => {
     );
 };
 
-// Reusable nav link component
 const NavLink = ({to, children, isActive, icon}) => (
     <Link
         to={to}
@@ -210,7 +204,6 @@ const NavLink = ({to, children, isActive, icon}) => (
     </Link>
 );
 
-// Mobile version (icon only)
 const MobileNavLink = ({to, isActive, icon}) => (
     <Link
         to={to}

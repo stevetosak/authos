@@ -10,6 +10,7 @@ import {useAuth} from "@/services/useAuth.ts";
 import {Link, useNavigate} from "react-router-dom";
 import {Chrome, LockIcon, LogInIcon, MailIcon} from "lucide-react";
 import {validateResponse} from "@/services/jwtService.ts";
+import {api} from "@/services/config.ts";
 
 export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     const [email, setEmail] = useState<string>("");
@@ -29,7 +30,7 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     const handleNativeLogin = async (formData: URLSearchParams) => {
 
 
-        return await axios.post<LoginResponse>("http://localhost:9000/native-login", formData, {
+        return await api.post<LoginResponse>("native-login", formData, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             },
@@ -40,7 +41,7 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
     }
 
     const handleOauthLogin = async (formData: URLSearchParams) => {
-        return await axios.post<LoginResponse>("http://localhost:9000/oauth-login", formData, {
+        return await api.post<LoginResponse>("/oauth-login", formData, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             },

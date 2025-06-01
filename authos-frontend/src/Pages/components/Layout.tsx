@@ -1,8 +1,8 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar.tsx"
 import { AppSidebar } from "@/components/ui/app-sidebar.tsx"
 import React from "react";
-import Navbar from "@/components/Navbar.tsx";
-import {SidebarTriggerWrapper} from "@/components/wrappers/SidebarTriggerWrapper.tsx";
+import Navbar from "@/Pages/components/Navbar.tsx";
+import {SidebarTriggerWrapper} from "@/Pages/components/wrappers/SidebarTriggerWrapper.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
 
 export default function Layout({ children }: { children: React.ReactNode }) {

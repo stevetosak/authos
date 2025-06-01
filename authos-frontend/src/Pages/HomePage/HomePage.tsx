@@ -11,7 +11,7 @@ import {
     Shield, EyeOff, Key, UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Layout from "@/components/Layout";
+import Layout from "@/Pages/components/Layout.tsx";
 import { motion } from "framer-motion";
 import {Badge} from "@/components/ui/badge.tsx";
 
@@ -21,7 +21,6 @@ const HomePage: React.FC = () => {
     return (
         <Layout>
             <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white">
-                {/* Hero Section */}
                 <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-7xl mx-auto text-center">
                         <motion.div
@@ -34,7 +33,6 @@ const HomePage: React.FC = () => {
                             </h1>
                             <p className="mt-6 text-xl text-gray-300 max-w-3xl mx-auto">
                                 Secure, scalable authentication with SSO, OAuth, and advanced user management.
-                                Built for developers, trusted by enterprises.
                             </p>
                             <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                                 <Button
@@ -89,7 +87,7 @@ const HomePage: React.FC = () => {
                                             </li>
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-emerald-400 mr-2" />
-                                                Just-in-time provisioning
+                                                Analytics
                                             </li>
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-emerald-400 mr-2" />
@@ -165,15 +163,14 @@ const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Enterprise Section */}
                 <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-gray-950">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <Badge className="bg-indigo-500/10 text-indigo-400 px-4 py-1.5 text-sm font-medium mb-4">
-                                SECURITY FIRST
+                                PRIVACY FIRST
                             </Badge>
                             <h2 className="text-3xl md:text-4xl font-bold text-white">
-                                Advanced Security Features
+                                Your privacy is important
                             </h2>
                         </div>
 
@@ -187,9 +184,9 @@ const HomePage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="ml-4">
-                                            <h3 className="text-lg font-medium text-white">MFA & Risk-Based Auth</h3>
+                                            <h3 className="text-lg font-medium text-white">Pairwise identifiers</h3>
                                             <p className="mt-1 text-gray-300">
-                                                Adaptive multi-factor authentication that responds to risk levels and user behavior.
+                                                No one can correlate your activity between verified Authos applications
                                             </p>
                                         </div>
                                     </div>

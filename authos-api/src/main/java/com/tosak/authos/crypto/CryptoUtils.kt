@@ -30,4 +30,8 @@ fun b64UrlSafeDecoder(value: String) : ByteArray {
     return Base64.getUrlDecoder().decode(value)
 }
 
+fun generateClientSecret() : String {
+    return hex(getSecureRandomValue(32))
+}
+
 

@@ -40,6 +40,7 @@
     "cmdk": "^1.1.1",
     "framer-motion": "^12.12.1",
     "jose": "^6.0.11",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.483.0",
     "next-themes": "^0.4.6",
@@ -47,6 +48,7 @@
     "react-dom": "^19.0.0",
     "react-router": "^7.3.0",
     "react-router-dom": "^7.6.0",
+    "react-spinners": "^0.17.0",
     "recharts": "^2.15.1",
     "shadcn": "^2.4.0-canary.17",
     "shadcn-ui": "^0.9.5",
@@ -61,6 +63,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.10",

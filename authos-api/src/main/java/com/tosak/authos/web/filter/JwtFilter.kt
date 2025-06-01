@@ -1,39 +1,44 @@
 package com.tosak.authos.web.filter
 
+import com.nimbusds.jwt.SignedJWT
 import com.tosak.authos.exceptions.NoTokenPresentException
 import com.tosak.authos.service.CachingUserDetailsService
 import com.tosak.authos.service.JwtService
 import jakarta.annotation.PostConstruct
 import jakarta.servlet.FilterChain
+import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
+import org.springframework.util.AntPathMatcher
+import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 open class JwtFilter(private val jwtService: JwtService, private val userDetailsService: CachingUserDetailsService) : OncePerRequestFilter() {
-    private val excludedPaths = ArrayList<String>()
+    private val excludedPaths = listOf(
+        "/native-login",
+        "/oauth-login",
+        "/register",
+        "/authorize",
+        "/approve",
+        "/token",
+        "/.well-known/**"
+    )
+    private val pathMatcher: AntPathMatcher = AntPathMatcher()
 
-    @PostConstruct
-    open fun initMap(){
-        excludedPaths.add("/native-login")
-        excludedPaths.add("/oauth-login")
-        excludedPaths.add("/register")
-        excludedPaths.add("/authorize")
-        excludedPaths.add("/approve")
-        excludedPaths.add("/token")
-        excludedPaths.add("/.well-known/jwks.json")
-    }
+
+    private fun isExcluded(path: String): Boolean = excludedPaths.any { pathMatcher.match(path, it) }
 
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        if(excludedPaths.contains(request.requestURI)){
+        if(isExcluded(request.requestURI)){
             println("JWT FILTER EXCLUDED: Request uri: " + request.requestURI)
             filterChain.doFilter(request, response)
             return
@@ -42,6 +47,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         try{
             val token = getJwtFromRequest(request)
             val jwt = jwtService.verifyToken(token);
+            verifyXsrf(jwt, request)
             val userDetails = userDetailsService.loadById(jwt.jwtClaimsSet.subject)
             val authentication = UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
@@ -49,9 +55,20 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
             println("VO RED E")
         } catch (err : Exception){
             SecurityContextHolder.clearContext()
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, err.message)
+            return
         }
 
         filterChain.doFilter(request, response)
+    }
+
+    private fun verifyXsrf(jwt: SignedJWT,request: HttpServletRequest){
+        val xsrfCookie = jwt.jwtClaimsSet.getStringClaim("xsrf_token");
+        val xsrfHeader = request.getHeader("X-XSRF-TOKEN");
+
+        if(xsrfCookie == null || xsrfHeader == null || xsrfHeader != xsrfCookie)
+            throw ServletException("Forbidden")
+
     }
 
     private fun getJwtFromRequest(request: HttpServletRequest): String {

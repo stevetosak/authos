@@ -1,6 +1,6 @@
 import React from "react";
-import {LoginForm} from "@/components/my/login-form.tsx";
-import Layout from "@/components/Layout.tsx";
+import {LoginForm} from "@/Pages/components/login-form.tsx";
+import Layout from "@/Pages/components/Layout.tsx";
 
 
 const LoginPage: React.FC = () => {

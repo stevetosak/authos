@@ -8,7 +8,7 @@ import {Link, useNavigate, useSearchParams} from "react-router-dom";
 import {Tabs, TabsContent} from "@/components/ui/tabs.tsx";
 import {TabsList, TabsTrigger} from "@radix-ui/react-tabs";
 import {InfoIcon, KeyIcon, LockIcon, MailIcon, UserIcon, UserPlusIcon, UsersIcon} from "lucide-react";
-import Layout from "@/components/Layout";
+import Layout from "@/Pages/components/Layout.tsx";
 
 export default function UserRegistration() {
     const [formData, setFormData] = useState({
@@ -92,7 +92,6 @@ export default function UserRegistration() {
                                 </TabsList>
                             </div>
 
-                            {/* Native Registration Tab */}
                             <TabsContent value="native" className="pt-6">
                                 <form onSubmit={handleSubmit} className="space-y-5">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -203,12 +202,52 @@ export default function UserRegistration() {
                             {/* OAuth Registration Tab */}
                             <TabsContent value="oauth" className="pt-6">
                                 <form onSubmit={handleOAuthSubmit} className="space-y-5">
+                                    {/* OAuth Provider Buttons */}
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-gray-400 text-center">Sign up with</p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="border-gray-600 hover:bg-gray-700/50 h-11"
+                                                onClick={() => handleOAuthProvider('google')}
+                                            >
+                                                <img
+                                                    src="https://authjs.dev/img/providers/google.svg"
+                                                    alt="Google"
+                                                    className="w-5 h-5 mr-2"
+                                                />
+                                                Google
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="border-gray-600 hover:bg-gray-700/50 h-11"
+                                                onClick={() => handleOAuthProvider('github')}
+                                            >
+                                                <img
+                                                    src="https://authjs.dev/img/providers/github.svg"
+                                                    alt="GitHub"
+                                                    className="w-5 h-5 mr-2 dark:invert"
+                                                />
+                                                GitHub
+                                            </Button>
+                                        </div>
+                                        <div className="relative my-4">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <div className="w-full border-t border-gray-700"></div>
+                                            </div>
+                                            <div className="relative flex justify-center">
+                                                <span className="px-2 bg-gray-800 text-sm text-gray-400">Or continue manually</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Auto-filled when provider selected */}
                                     <div>
-                                        <Label className="text-gray-300 mb-2 block">
-                                <span className="flex items-center gap-2">
-                                    <MailIcon className="w-4 h-4"/>
-                                    Email
-                                </span>
+                                        <Label className="text-gray-300 mb-2 block flex items-center gap-2">
+                                            <MailIcon className="w-4 h-4"/>
+                                            Email
                                         </Label>
                                         <Input
                                             name="email"
@@ -218,15 +257,15 @@ export default function UserRegistration() {
                                             className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
                                             required
                                             placeholder="your@email.com"
+                                            readOnly={!!oauthFormData.provider} // Lock when provider selected
                                         />
                                     </div>
 
+                                    {/* Password field - always required for your native auth */}
                                     <div>
-                                        <Label className="text-gray-300 mb-2 block">
-                                <span className="flex items-center gap-2">
-                                    <LockIcon className="w-4 h-4"/>
-                                    Password
-                                </span>
+                                        <Label className="text-gray-300 mb-2 block flex items-center gap-2">
+                                            <LockIcon className="w-4 h-4"/>
+                                            Create Password
                                         </Label>
                                         <Input
                                             name="password"
@@ -240,15 +279,51 @@ export default function UserRegistration() {
                                         <p className="mt-1 text-xs text-gray-400">Minimum 8 characters</p>
                                     </div>
 
+                                    {/* Name fields - shown only when no provider selected */}
+                                    {!oauthFormData.provider && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="text-gray-300 mb-2 block flex items-center gap-2">
+                                                    <UserIcon className="w-4 h-4"/>
+                                                    First Name
+                                                </Label>
+                                                <Input
+                                                    name="firstName"
+                                                    value={oauthFormData.firstName}
+                                                    onChange={handleOAuthChange}
+                                                    type="text"
+                                                    className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                                    required
+                                                    placeholder="John"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-gray-300 mb-2 block flex items-center gap-2">
+                                                    <UsersIcon className="w-4 h-4"/>
+                                                    Last Name
+                                                </Label>
+                                                <Input
+                                                    name="lastName"
+                                                    value={oauthFormData.lastName}
+                                                    onChange={handleOAuthChange}
+                                                    type="text"
+                                                    className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                                    required
+                                                    placeholder="Doe"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
                                         <h3 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                                             <InfoIcon className="w-4 h-4"/>
                                             Quick Registration Notice
                                         </h3>
                                         <p className="text-xs text-gray-400">
-                                            By creating an account through OAuth, you agree to share basic profile
-                                            information with the requesting application.
-                                            You can manage these permissions later in your account settings.
+                                            {oauthFormData.provider
+                                                ? `We'll use your ${oauthFormData.provider} profile to create your account. You'll authenticate natively after registration.`
+                                                : 'By creating an account, you agree to share basic profile information with the requesting application.'}
                                         </p>
                                     </div>
 
@@ -257,8 +332,9 @@ export default function UserRegistration() {
                                             type="submit"
                                             className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-medium"
                                         >
-                                            <KeyIcon className="w-5 h-5 mr-2"/>
-                                            Continue with OAuth Registration
+                                            {oauthFormData.provider
+                                                ? `Register with ${oauthFormData.provider} Account`
+                                                : 'Continue with Manual Registration'}
                                         </Button>
                                     </div>
                                 </form>

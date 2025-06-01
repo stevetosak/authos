@@ -4,13 +4,13 @@ import {Button} from "@/components/ui/button";
 import {Plus, Grid, Users, FolderOpen, Settings, CheckCircle, Shield, Key, Calendar, Pencil} from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {motion} from "framer-motion"
-import Layout from "@/components/Layout.tsx";
+import Layout from "@/Pages/components/Layout.tsx";
 import {useNavigate} from "react-router-dom";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {AddGroupModal} from "@/components/my/AddGroupModal.tsx";
+import {AddGroupModal} from "@/Pages/components/AddGroupModal.tsx";
 import {AppGroup, defaultAppGroup} from "@/services/interfaces.ts";
 import {Label} from "@/components/ui/label.tsx";
 

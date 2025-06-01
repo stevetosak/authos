@@ -1,32 +1,30 @@
-import {WrapperState} from "@/components/wrappers/DataWrapper.tsx";
-import React from "react";
+import {WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {TrashIcon} from "lucide-react";
 
-
-export const GrantTypeWrapper = ({
-                                       editing,
-                                       currentApp,
-                                       editedApp,
-                                       inputValues,
-                                       handleInputChange,
-                                       addElement,
-                                       removeElement
-                                   }: WrapperState) => {
+export const ResponseTypesWrapper = ({
+                                     editing,
+                                     currentApp,
+                                     editedApp,
+                                     inputValues,
+                                     handleInputChange,
+                                     addElement,
+                                     removeElement
+                                 }: WrapperState) => {
     return (
         editing ? (
             <>
                 <div className="flex gap-2">
                     <Input
-                        value={inputValues.grantTypes}
-                        onChange={(e) => handleInputChange("grantTypes",e.target.value)}
-                        placeholder="Add new Grant Type"
+                        value={inputValues.responseTypes}
+                        onChange={(e) => handleInputChange("responseTypes",e.target.value)}
+                        placeholder="Add new Response Type"
                         className="bg-gray-700 border-gray-600 flex-1"
                     />
                     <Button
-                        onClick={() => addElement("grantTypes")}
+                        onClick={() => addElement("responseTypes")}
                         variant="outline"
                         className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
                     >
@@ -34,15 +32,15 @@ export const GrantTypeWrapper = ({
                     </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {editedApp.grantTypes.map((gt: string) => (
+                    {editedApp.responseTypes.map((rt: string) => (
                         <Badge
-                            key={gt}
+                            key={rt}
                             variant="outline"
                             className="bg-gray-700 border-gray-600 hover:bg-gray-600 group pr-1"
                         >
-                            {gt}
+                            {rt}
                             <button
-                                onClick={() => removeElement("grantTypes",gt)}
+                                onClick={() => removeElement("responseTypes",rt)}
                                 className="ml-2 text-gray-400 hover:text-red-400 p-1 rounded-full"
                             >
                                 <TrashIcon className="w-3 h-3"/>
@@ -53,13 +51,13 @@ export const GrantTypeWrapper = ({
             </>
         ) : (
             <div className="flex flex-wrap gap-2">
-                {currentApp.grantTypes.map((gt: string) => (
+                {currentApp.responseTypes.map((rt: string) => (
                     <Badge
-                        key={gt}
+                        key={rt}
                         variant="outline"
                         className="bg-gray-700 border-gray-600 hover:bg-gray-600"
                     >
-                        {gt}
+                        {rt}
                     </Badge>
                 ))}
             </div>

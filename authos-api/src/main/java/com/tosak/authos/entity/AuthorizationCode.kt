@@ -21,7 +21,10 @@ class AuthorizationCode (
     @Column(name = "expires_at")
     val expiresAt: LocalDateTime = LocalDateTime.now().plusSeconds(600),
     val scope : String = "",
-    val used : Boolean = false
+    val used : Boolean = false,
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    val user: User = User(),
 
 ){
 

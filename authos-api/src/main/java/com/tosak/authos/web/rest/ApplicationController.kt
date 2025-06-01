@@ -12,19 +12,18 @@ import com.tosak.authos.service.PPIDService
 import com.tosak.authos.service.UserService
 import com.tosak.authos.service.JwtService
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class ApplicationController(
     private val appService: AppService,
-    private val jwtService: JwtService,
     private val userService: UserService,
-    private val ppidService: PPIDService,
-    private val appRepository: AppRepository,
     private val appGroupService: AppGroupService,
 )
 {
@@ -32,7 +31,9 @@ class ApplicationController(
     //todo input validation
 
     @PostMapping("/app/register")
-    fun registerApp(@RequestBody appDto: RegisterAppDTO,authentication: Authentication?): ResponseEntity<AppDTO> {
+    fun registerApp(@RequestBody appDto: RegisterAppDTO,
+                    authentication: Authentication?,
+                    @RequestHeader(name = "X-XSRF-TOKEN") xsrfToken: String ): ResponseEntity<AppDTO> {
         val user = userService.getUserFromAuthentication(authentication)
         val response = appService.registerApp(appDto,user)
 
@@ -46,6 +47,10 @@ class ApplicationController(
         val app = appService.updateApp(user,appDto)
 
         return ResponseEntity.status(201).body(app.toDTO())
+
+    }
+    @PostMapping("app/regenerate-secret")
+    fun regenerateSecret(@RequestBody app: AppDTO){
 
     }
     @PostMapping("/group/add")
