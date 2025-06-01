@@ -6,8 +6,10 @@ interface AuthContextType{
     setUser: React.Dispatch<React.SetStateAction<User>>
     isAuthenticated: boolean,
     setIsAuthenticated: Dispatch<SetStateAction<boolean>>
-    loading: boolean
-    setLoading: Dispatch<SetStateAction<boolean>>
+    authLoading: boolean
+    setAuthLoading: Dispatch<SetStateAction<boolean>>
+    pageLoading: boolean
+    setPageLoading: Dispatch<SetStateAction<boolean>>
     apps: App[]
     setApps: Dispatch<SetStateAction<App[]>>
     groups: AppGroup[]
@@ -16,5 +18,7 @@ interface AuthContextType{
     setContext: (resp: LoginResponse) => void
     resetContext: () => void
 }
+
+
 
 export const AuthContext = createContext<AuthContextType | null>(null)

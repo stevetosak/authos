@@ -14,7 +14,8 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
     const [apps, setApps] = useState<App[]>([])
     const [groups, setGroups] = useState<AppGroup[]>([])
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [authLoading, setAuthLoading] = useState<boolean>(true);
+    const [pageLoading,setPageLoading] = useState<boolean>(true);
 
 
     const setContext = (data: LoginResponse) => {
@@ -34,7 +35,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
     };
 
     const refreshAuth = async () => {
-        setLoading(true);
+        setAuthLoading(true);
         try {
             const respData = await verifyToken();
             setContext(respData)
@@ -44,7 +45,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
             setUser(defaultUser);
             setIsAuthenticated(false);
         } finally {
-            setLoading(false)
+            setAuthLoading(false)
         }
     };
 
@@ -58,7 +59,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
             }
         }, 5 * 60 * 1000);
         return () => clearInterval(interval)
-    }, [isAuthenticated]);
+    },[]);
 
     return (
         <AuthContext.Provider
@@ -72,10 +73,12 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
                 setContext,
                 isAuthenticated,
                 setIsAuthenticated,
-                loading,
-                setLoading,
+                authLoading: authLoading,
+                setAuthLoading: setAuthLoading,
                 refreshAuth,
-                resetContext
+                resetContext,
+                setPageLoading,
+                pageLoading
             }}
         >
             {children}

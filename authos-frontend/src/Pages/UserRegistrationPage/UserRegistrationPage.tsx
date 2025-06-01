@@ -52,11 +52,9 @@ export default function UserRegistration() {
             alert("Cant register user. Error Occured")
             console.error(e)
         }
-        // Handle form submission logic here
     };
 
     return (
-        <Layout>
 
             <div
                 className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-gray-100 p-4 md:p-10 font-sans">
@@ -352,6 +350,5 @@ export default function UserRegistration() {
                     </CardFooter>
                 </Card>
             </div>
-        </Layout>
     );
 }

@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
+import org.springframework.util.PatternMatchUtils
 import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -23,15 +24,17 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/native-login",
         "/oauth-login",
         "/register",
-        "/authorize",
-        "/approve",
-        "/token",
-        "/.well-known/**"
+        "/oauth/*",
+        "/.well-known/*"
     )
     private val pathMatcher: AntPathMatcher = AntPathMatcher()
 
 
-    private fun isExcluded(path: String): Boolean = excludedPaths.any { pathMatcher.match(path, it) }
+    private fun isExcluded(path: String): Boolean{
+        println("REQUEST URI: $path")
+       return excludedPaths.any { PatternMatchUtils.simpleMatch(it,path) }
+    }
+
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -56,7 +59,6 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         } catch (err : Exception){
             SecurityContextHolder.clearContext()
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, err.message)
-            return
         }
 
         filterChain.doFilter(request, response)

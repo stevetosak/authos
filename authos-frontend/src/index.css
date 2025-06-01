@@ -3,12 +3,12 @@
 
 
 :root {
-    --background-color: #111827; /* Dark background */
-    --card-background: #1f2937;  /* Dark gray card */
-    --text-primary: #ffffff;     /* White text */
-    --text-secondary: #d1d5db;   /* Light gray text */
+    --background-color: #111827;
+    --card-background: #1f2937;
+    --text-primary: #ffffff;
+    --text-secondary: #d1d5db;
     --accent-color: #10b981;
-    font-family: Ubuntu, sans-serif;/* Green accent */     --sidebar: hsl(0 0% 98%);     --sidebar-foreground: hsl(240 5.3% 26.1%);     --sidebar-primary: hsl(240 5.9% 10%);     --sidebar-primary-foreground: hsl(0 0% 98%);     --sidebar-accent: hsl(240 4.8% 95.9%);     --sidebar-accent-foreground: hsl(240 5.9% 10%);     --sidebar-border: hsl(220 13% 91%);     --sidebar-ring: hsl(217.2 91.2% 59.8%);
+    font-family: Ubuntu, sans-serif;    --sidebar: hsl(0 0% 98%);     --sidebar-foreground: hsl(240 5.3% 26.1%);     --sidebar-primary: hsl(240 5.9% 10%);     --sidebar-primary-foreground: hsl(0 0% 98%);     --sidebar-accent: hsl(240 4.8% 95.9%);     --sidebar-accent-foreground: hsl(240 5.9% 10%);     --sidebar-border: hsl(220 13% 91%);     --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
 body {

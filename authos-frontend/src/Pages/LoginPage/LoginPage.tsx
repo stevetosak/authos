@@ -7,13 +7,11 @@ const LoginPage: React.FC = () => {
 
 
     return (
-        <Layout>
-            <div className="flex min-h-screen w-full items-center justify-center">
-                <div className="w-full max-w-3xl">
-                    <LoginForm/>
-                </div>
+        <div className="flex min-h-screen w-full items-center justify-center">
+            <div className="w-full max-w-3xl">
+                <LoginForm/>
             </div>
-        </Layout>
+        </div>
     );
 };
 

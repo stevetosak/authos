@@ -76,7 +76,6 @@ export default function RegisterAppPage() {
     }
 
     return (
-        <Layout>
             <div className="inset-0 z-50 flex items-center justify-center my-5">
                 <motion.div
                     initial={{opacity: 0, scale: 0.95}}
@@ -363,7 +362,6 @@ export default function RegisterAppPage() {
                     </Card>
                 </motion.div>
             </div>
-        </Layout>
     );
 
 }

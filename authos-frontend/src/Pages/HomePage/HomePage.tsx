@@ -19,7 +19,6 @@ const HomePage: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <Layout>
             <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white">
                 <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-7xl mx-auto text-center">
@@ -272,7 +271,6 @@ const HomePage: React.FC = () => {
                     </div>
                 </footer>
             </div>
-        </Layout>
     );
 };
 

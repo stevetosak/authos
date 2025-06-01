@@ -142,7 +142,6 @@ export default function AppDetails() {
     }
 
     return (
-        <Layout>
             <div
                 className="min-h-screen bg-gradient-to-br text-gray-100 p-4 md:p-10 font-sans">
                 <Card
@@ -409,6 +408,5 @@ export default function AppDetails() {
                     </CardFooter>
                 </Card>
             </div>
-        </Layout>
     );
 }

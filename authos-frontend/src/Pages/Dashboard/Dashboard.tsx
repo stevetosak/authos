@@ -43,7 +43,6 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <Layout>
             <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white py-8 w-full">
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     {/* Groups Sidebar - Sticky with fade effect */}
@@ -324,7 +323,6 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </Layout>
     );
 };
 
