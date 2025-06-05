@@ -1,19 +1,14 @@
 package com.tosak.authos.web.rest
 
-import com.tosak.authos.PromptType
 import com.tosak.authos.TokenType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
-import com.tosak.authos.entity.App
-import com.tosak.authos.entity.AuthorizationCode
 import com.tosak.authos.exceptions.InvalidUserIdException
-import com.tosak.authos.exceptions.oauth.InvalidScopeException
-import com.tosak.authos.exceptions.oauth.LoginRequiredException
+import com.tosak.authos.pojo.AuthorizeRequestParams
 import com.tosak.authos.pojo.IdTokenStrategy
 import com.tosak.authos.service.*
 import com.tosak.authos.service.JwtService
 import com.tosak.authos.utils.JwtTokenFactory
-import com.tosak.authos.utils.redirectToLogin
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
@@ -36,7 +31,9 @@ class OAuthEndpoints(
     private val claimService: ClaimService,
     private val factory: JwtTokenFactory,
     private val idTokenService: IdTokenService,
+    private val authorizationHandler: AuthorizationHandler,
 ) {
+
 
     @GetMapping("/authorize")
     fun authorize(
@@ -51,54 +48,7 @@ class OAuthEndpoints(
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
-
-        appService.verifyClientIdAndRedirectUri(clientId,redirectUri)
-
-
-        if (scope.isEmpty() || !scope.contains("openid")) {
-            throw InvalidScopeException(redirectUri,state)
-        }
-
-        if(idTokenHint == null && PromptType.parse(prompt) == PromptType.NONE ) {
-           throw LoginRequiredException(redirectUri,state)
-        }
-
-        if (prompt == "login")
-            return ResponseEntity
-                .status(303)
-                .location(URI("http://localhost:5173/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}"))
-                .build()
-
-
-
-        if (idTokenHint != null) {
-            val idToken = jwtService.verifyToken(idTokenHint)
-            val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
-            val app: App = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
-            val hasActiveSession = sessionService.hasActiveSession(userId, app.id!!)
-
-            println("HAS ACTIVE SESSION: $hasActiveSession")
-
-
-            if (hasActiveSession && prompt == "consent") {
-                return ResponseEntity.status(303)
-                    .location(URI("http://localhost:5173/oauth/user-consent?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}"))
-                    .build();
-            } else if (hasActiveSession && prompt == "select_account") {
-                // todo account selection page
-            } else if (hasActiveSession && prompt == "none") {
-                println("vleze none")
-                return ResponseEntity.status(303)
-                    .location(URI("http://localhost:9000/oauth/approve?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}"))
-                    .build();
-            }
-
-        }
-
-        return redirectToLogin(clientId, redirectUri, state)
-
-
-
+        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType))
 
         TODO("RSA KEY HANDLING")
 

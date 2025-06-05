@@ -37,7 +37,6 @@ open class TokenService(
     private val accessTokenRepository: AccessTokenRepository,
     private val authorizationCodeRepository: AuthorizationCodeRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val appService: AppService,
     private val authorizationCodeService: AuthorizationCodeService
 ) {
 
@@ -86,37 +85,6 @@ open class TokenService(
         return AccessTokenWrapper(b64UrlSafeEncoder(tokenBytes), accessToken)
 
     }
-
-//    @Transactional
-//    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto, app: App): TokenWrapper {
-//        if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
-//            || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
-//        ) throw InvalidParameterException("parameters do not match grant type")
-//
-//
-//        if (tokenRequestDto.grantType == "authorization_code") {
-//            val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, tokenRequestDto)
-//            code.used = true;
-//            authorizationCodeRepository.save(code)
-//            val accessTokenWrapper =
-//                generateAccessToken(clientId = tokenRequestDto.clientId, authorizationCode = code, null)
-//            val refreshTokenWrapper = generateRefreshToken(tokenRequestDto.clientId, code)
-//            return TokenWrapper(accessTokenWrapper, refreshTokenWrapper)
-//        } else if (tokenRequestDto.grantType == "refresh_token") {
-//            if (tokenRequestDto.refreshToken == null) throw InvalidParameterException("no refresh token present")
-//            val refreshTokenWrapper = validateRefreshToken(tokenRequestDto.refreshToken,tokenRequestDto.clientId)
-//            val accessTokenWrapper = generateAccessToken(
-//                clientId = tokenRequestDto.clientId,
-//                refreshToken = refreshTokenWrapper.refreshToken,
-//                authorizationCode = null
-//            )
-//            return TokenWrapper(accessTokenWrapper, refreshTokenWrapper)
-//        }
-//
-//        println(tokenRequestDto)
-//        throw InvalidParameterException("invalid token request")
-//
-//    }
 
 
      fun validateRefreshToken(token: String, clientId: String): RefreshTokenWrapper {
