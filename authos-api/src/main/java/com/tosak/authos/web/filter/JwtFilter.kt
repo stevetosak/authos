@@ -27,7 +27,6 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/oauth/*",
         "/.well-known/*"
     )
-    private val pathMatcher: AntPathMatcher = AntPathMatcher()
 
 
     private fun isExcluded(path: String): Boolean{

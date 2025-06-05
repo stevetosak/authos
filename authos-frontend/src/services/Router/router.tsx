@@ -22,7 +22,7 @@ export const router = createBrowserRouter(
         <Route path="/" element={<Layout/>}>
             <Route index element={<HomePage />} />
             <Route path="login" element={<LoginPage />} />
-            <Route path="register-user" element={<UserRegistrationPage />} />
+            <Route path="register" element={<UserRegistrationPage />} />
             <Route path="oauth/user-consent" element={<ConsentForm />} />
             <Route path="error" element={<ErrorPage />} />
 

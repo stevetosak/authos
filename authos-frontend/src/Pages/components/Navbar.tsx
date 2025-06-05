@@ -142,8 +142,8 @@ const Navbar = () => {
                                 Log In
                             </NavLink>
                             <NavLink
-                                to="/register-user"
-                                isActive={location.pathname.startsWith('/register-user')}
+                                to="/register"
+                                isActive={location.pathname.startsWith('/register')}
                                 icon={<LogInIcon className="w-5 h-5"/>}
                             >
                                 Sign Up

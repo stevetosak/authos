@@ -1,11 +1,12 @@
 package com.tosak.authos.web.rest
 
 import com.tosak.authos.PromptType
+import com.tosak.authos.TokenType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
 import com.tosak.authos.entity.App
+import com.tosak.authos.entity.AuthorizationCode
 import com.tosak.authos.exceptions.InvalidUserIdException
-import com.tosak.authos.exceptions.MissingLogoutParameterException
 import com.tosak.authos.exceptions.oauth.InvalidScopeException
 import com.tosak.authos.exceptions.oauth.LoginRequiredException
 import com.tosak.authos.pojo.IdTokenStrategy
@@ -16,11 +17,8 @@ import com.tosak.authos.utils.redirectToLogin
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
+import org.springframework.http.*
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
@@ -31,13 +29,13 @@ class OAuthEndpoints(
     private val jwtService: JwtService,
     private val authorizationCodeService: AuthorizationCodeService,
     private val appService: AppService,
-    private val accessTokenService: AccessTokenService,
+    private val tokenService: TokenService,
     private val userService: UserService,
     private val ppidService: PPIDService,
     private val sessionService: SSOSessionService,
     private val claimService: ClaimService,
     private val factory: JwtTokenFactory,
-    private val idTokenService: IdTokenService
+    private val idTokenService: IdTokenService,
 ) {
 
     @GetMapping("/authorize")
@@ -119,6 +117,7 @@ class OAuthEndpoints(
         response: HttpServletResponse
     ): ResponseEntity<Void?> {
 
+
         println("SESSION ATTRIBUTES ${httpSession.getAttribute("user")}")
         val userId = httpSession.getAttribute("user") as Int? ?: throw InvalidUserIdException("Session does not have valid user")
         val user = userService.getById(userId)
@@ -128,11 +127,7 @@ class OAuthEndpoints(
     }
 
 
-
-
     // povekje nacini na avtentikacija: private_key_jwt, client_secret.
-
-    // todo da vidam tocno koi request parametri trebit da gi imat tuka.
     // todo support for different client authentication methods: client_secret, private_key_jwt
     @PostMapping("/token")
     fun token(
@@ -140,27 +135,35 @@ class OAuthEndpoints(
         request: HttpServletRequest
     ): ResponseEntity<TokenResponse> {
 
+        // tuka trebit spored grant type da handlam
+
+        // tuka vrakjam i refresh token prviot pat
         val app = appService.validateAppCredentials(
             tokenRequestDto.clientId,
             tokenRequestDto.clientSecret,
             tokenRequestDto.redirectUri
         );
-        val code = authorizationCodeService.validateTokenRequest(app, tokenRequestDto)
 
-        val user = userService.getById(code.user.id!!);
-
-        val accessTokenWrapper = accessTokenService.generateAccessToken(tokenRequestDto.clientId,code)
-        val idToken = factory.createToken(IdTokenStrategy(ppidService,app,user,request))
-
-        idTokenService.save(idToken,accessTokenWrapper.accessToken);
+        val tokenWrapper = tokenService.handleTokenRequest2(tokenRequestDto,app)
+        val idToken = factory.createToken(IdTokenStrategy(ppidService,app,tokenWrapper.accessTokenWrapper.accessToken.user,request))
+        idTokenService.save(idToken,tokenWrapper.accessTokenWrapper.accessToken);
 
         val headers = HttpHeaders();
         headers.contentType = MediaType.APPLICATION_JSON;
         headers.cacheControl = "no-store";
 
-
-        return ResponseEntity(TokenResponse(accessTokenWrapper.tokenVal, "Bearer", idToken.serialize(), 3600), headers, HttpStatus.OK);
-
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(
+                TokenResponse(
+                    accessToken = tokenWrapper.accessTokenWrapper.accessTokenValue,
+                    refreshToken = tokenWrapper.refreshTokenWrapper.refreshTokenValue,
+                    tokenType = TokenType.Bearer.name,
+                    idToken = idToken.serialize(),
+                    expiresIn = 3600
+                )
+            )
 
     }
 
@@ -188,8 +191,8 @@ class OAuthEndpoints(
     @GetMapping("/userinfo", produces = [APPLICATION_JSON_VALUE])
     @PostMapping("/userinfo",produces = [APPLICATION_JSON_VALUE])
     fun userinfo(@RequestHeader("Authorization") authorization: String) : ResponseEntity<Map<String,Any?>>{
-        val accessToken = accessTokenService.validateAccessToken(authorization.substring(7, authorization.length))
-        val claims = claimService.resolve(accessToken.authorizationCode.scope,accessToken.user,accessToken.clientId)
+        val accessToken = tokenService.validateAccessToken(authorization.substring(7, authorization.length))
+        val claims = claimService.resolve(accessToken)
         return ResponseEntity.status(200).body(claims)
     }
 }

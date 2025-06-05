@@ -1,6 +1,8 @@
 package com.tosak.authos.service
 
+import com.tosak.authos.crypto.b64UrlSafeEncoder
 import com.tosak.authos.crypto.getHash
+import com.tosak.authos.crypto.getSecureRandomValue
 import com.tosak.authos.crypto.hex
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.entity.App
@@ -25,14 +27,10 @@ class AuthorizationCodeService (
 ) {
 
     fun generateAuthorizationCode(clientId: String,redirectUri: String,scope: String,user:User): String {
-        val randomBytes = ByteArray(64)
-        SecureRandom().nextBytes(randomBytes)
-        val authorizationCodeValue = URLEncoder.encode(Base64.getEncoder().encodeToString(randomBytes).replace("=",""), Charsets.UTF_8);
-        val codeHash = hex(getHash(authorizationCodeValue));
-        val authorizationCode = AuthorizationCode(null,codeHash,clientId,redirectUri,scope = scope, user = user)
+        val authorizationCode = AuthorizationCode(clientId = clientId,redirectUri = redirectUri,scope = scope, user = user)
         authorizationCodeRepository.save(authorizationCode)
 
-        return authorizationCodeValue;
+        return authorizationCode.codeHash
 
     }
 
@@ -40,10 +38,9 @@ class AuthorizationCodeService (
     fun validateTokenRequest(app: App, tokenRequestDto: TokenRequestDto) : AuthorizationCode {
 
 
-        val codeHash = hex(getHash(tokenRequestDto.code));
         val redirectUris: List<RedirectUri> = redirectUriService.getAllByAppId(app.id!!)
 
-        val authorizationCode =  authorizationCodeRepository.findByClientIdAndRedirectUriAndCodeHash(app.clientId,redirectUris.map { ru -> ru.id!!.redirectUri },codeHash) ?: throw InvalidAuthorizationCodeCredentials(
+        val authorizationCode = authorizationCodeRepository.findByClientIdAndRedirectUriAndCodeHash(app.clientId,redirectUris.map { ru -> ru.id!!.redirectUri },tokenRequestDto.code!!) ?: throw InvalidAuthorizationCodeCredentials(
             "Could not link provided credentials to an authorization code"
         )
         if(authorizationCode.expiresAt < LocalDateTime.now()) throw AuthorizationCodeExpiredException("Code expired")

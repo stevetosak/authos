@@ -10,7 +10,7 @@ class IssuedIdToken (
     @Id
     val jti: String? = null,
     @ManyToOne(optional = true)
-    @JoinColumn(name = "access_token_id", nullable = true)
+    @JoinColumn(name = "access_token_hash", referencedColumnName = "token_hash", nullable = true)
     val accessToken: AccessToken? = null,
     val audience:String = "",
     @Column(name = "issue_time")

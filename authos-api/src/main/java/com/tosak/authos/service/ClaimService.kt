@@ -1,5 +1,6 @@
 package com.tosak.authos.service
 
+import com.tosak.authos.entity.AccessToken
 import com.tosak.authos.entity.User
 import com.tosak.authos.pojo.ClaimConfig
 import org.springframework.stereotype.Service
@@ -13,7 +14,7 @@ class ClaimService(
 
     ) {
 
-    fun mapToField(claim : String) : String {
+    private fun mapToField(claim : String) : String {
 
         return claim.split("_")
             .mapIndexed{index, part ->
@@ -23,17 +24,17 @@ class ClaimService(
     }
 
 
-    fun resolve(scope: String,user: User,clientId: String) : Map<String,Any?>{
+    fun resolve(accessToken: AccessToken) : Map<String,Any?>{
         val claims = HashMap<String, Any?>()
-        val app = appService.getAppByClientId(clientId);
-        val sub = ppidService.getOrCreatePPID(user,app.group)
+        val app = appService.getAppByClientId(accessToken.clientId);
+        val sub = ppidService.getOrCreatePPID(accessToken.user,app.group)
         claims["sub"] = sub
-        scope.split(" ").forEach {s ->
+        accessToken.scope.split(" ").forEach {s ->
             if(s != "openid"){
                 claimConfig.data[s]?.forEach { c ->
-                    val property = user::class.memberProperties.find { it.name == mapToField(c) }
+                    val property = accessToken.user::class.memberProperties.find { it.name == mapToField(c) }
                     if (property != null) {
-                        val value = property.getter.call(user)
+                        val value = property.getter.call(accessToken.user)
                         println("Property - $value")
                         claims[c] = value
                     } else {

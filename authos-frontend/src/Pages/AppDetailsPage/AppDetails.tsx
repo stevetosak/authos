@@ -6,8 +6,7 @@ import {
 } from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Tabs, TabsList, TabsTrigger, TabsContent} from "@/components/ui/tabs";
-import Layout from "@/Pages/components/Layout.tsx";
-import React, {useEffect, useState} from "react";
+import  {useEffect, useState} from "react";
 import {Label} from "@/components/ui/label";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip";
 import {toast} from "sonner";
@@ -24,25 +23,23 @@ import {
 } from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {useParams} from "react-router";
-import {useNavigate} from "react-router-dom";
 import {App} from "@/services/interfaces.ts";
 import {Factory} from "@/services/Factory.ts";
 import {DataWrapper, WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 import {useAppEditor} from "@/Pages/components/hooks/use-app-editor.ts";
 import {Badge} from "@/components/ui/badge.tsx";
-import {api, apiPostAuthenticated} from "@/services/config.ts";
+import {apiPostAuthenticated} from "@/services/config.ts";
 
 //TODO AUTHORIZATION PER USER
 // TODO GRAPHS AND METRICS IN GENERAL
 
 export default function AppDetails() {
-    const {user,apps} = useAuth()
+    const {apps} = useAuth()
     const {appId} = useParams();
     const [app, setApp] = useState<App>(Factory.appDefault());
 
     const [isEditing, setIsEditing] = useState(false);
     const [isRegeneratingSecret, setIsRegeneratingSecret] = useState(false);
-    const nav = useNavigate()
 
     const {
         editedApp,
