@@ -14,7 +14,7 @@ import {
     CheckIcon,
     CodeIcon,
     CopyIcon,
-    EditIcon,
+    EditIcon, Eye, EyeOff,
     GlobeIcon, Info, KeyIcon, LockIcon,
     RefreshCwIcon, SettingsIcon,
     ShieldIcon, SlidersIcon,
@@ -40,6 +40,7 @@ export default function AppDetails() {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isRegeneratingSecret, setIsRegeneratingSecret] = useState(false);
+    const [showSecret,setShowSecret] = useState(false)
 
     const {
         editedApp,
@@ -58,6 +59,8 @@ export default function AppDetails() {
             if (targetApp != undefined) {
                 setApp(targetApp);
                 setEditedApp(targetApp)
+            }else {
+
             }
             console.error("Cant find app with that id")
         }
@@ -98,9 +101,17 @@ export default function AppDetails() {
 
     const regenerateSecret = () => {
         setIsRegeneratingSecret(true);
+        toast.warning("Regenerating Secret...")
         setTimeout(() => {
-            toast.success("Client secret regenerated");
-        }, 1000);
+            apiPostAuthenticated<App>("/app/regenerate-secret",app)
+                .then(resp => {
+                    setApp(resp.data)
+                    setEditedApp(resp.data)
+                    setIsRegeneratingSecret(false)
+                    toast.success("New secret successfully generated!")
+                })
+        },200)
+
     };
 
     const copyToClipboard = async (text: string) => {
@@ -143,7 +154,6 @@ export default function AppDetails() {
                 className="min-h-screen bg-gradient-to-br text-gray-100 p-4 md:p-10 font-sans">
                 <Card
                     className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-4xl mx-auto">
-                    {/* Enhanced Header Section */}
                     <CardHeader className="border-b border-gray-700 p-6">
                         <div className="flex flex-col md:flex-row justify-between gap-4">
                             <div className="space-y-2">
@@ -167,7 +177,6 @@ export default function AppDetails() {
                         </div>
                     </CardHeader>
 
-                    {/* Improved Tabs Navigation */}
                     <CardContent className="p-0 w-full">
                         <Tabs defaultValue="general" className="w-full">
                             <div className="border-b border-gray-700 h-17">
@@ -241,6 +250,28 @@ export default function AppDetails() {
                                                         variant="ghost"
                                                         size="sm"
                                                         className="w-8 h-8 hover:bg-gray-600"
+                                                        onClick={() => setShowSecret(!showSecret)}
+                                                    >
+                                                        {showSecret ? (
+                                                            <EyeOff className="w-3 h-3"/>
+                                                        ) : (
+                                                            <Eye className="w-3 h-3"/>
+                                                        )}
+                                                        <span className="sr-only">
+              {showSecret ? "Hide" : "Show"} secret
+            </span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    {showSecret ? "Hide secret" : "Show secret"}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="w-8 h-8 hover:bg-gray-600"
                                                         onClick={() => copyToClipboard(currentApp.clientSecret)}
                                                     >
                                                         <CopyIcon className="w-3 h-3"/>
@@ -273,17 +304,14 @@ export default function AppDetails() {
                                         </div>
                                     </div>
                                     <code className="block bg-gray-800 px-3 py-2 rounded text-sm font-mono break-all">
-                                        {currentApp.clientSecret}
+                                        {showSecret ? currentApp.clientSecret : '••••••••••••••••••••••••••••••••'}
                                     </code>
                                     <p className="mt-2 text-xs text-gray-400 italic">
-                                        {isEditing
-                                            ? "⚠️ This secret will only be shown once. Make sure to copy it now."
-                                            : "For security reasons, we can't show your client secret again."}
+                                        Do not share this secret with anyone
                                     </p>
                                 </div>
                             </TabsContent>
 
-                            {/* Settings Tab Content - Better Organized */}
                             <TabsContent value="settings" className="p-6 space-y-8">
                                 <div className="space-y-6">
                                     <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
@@ -318,7 +346,7 @@ export default function AppDetails() {
                                         </h3>
                                         <div className="grid gap-6 md:grid-cols-2">
                                             <div className="space-y-4">
-                                                <Label
+                                            <Label
                                                     className="flex items-center gap-2">
                                                     Response Types
                                                     <Tooltip>
@@ -361,7 +389,6 @@ export default function AppDetails() {
                         </Tabs>
                     </CardContent>
 
-                    {/* Enhanced Footer Actions */}
                     <CardFooter
                         className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-gray-700 bg-gray-800/50">
                         {isEditing ? (

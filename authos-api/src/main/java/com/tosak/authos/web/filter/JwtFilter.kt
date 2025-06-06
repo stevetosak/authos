@@ -58,6 +58,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         } catch (err : Exception){
             SecurityContextHolder.clearContext()
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, err.message)
+            return
         }
 
         filterChain.doFilter(request, response)

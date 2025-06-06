@@ -32,8 +32,7 @@ class ApplicationController(
 
     @PostMapping("/app/register")
     fun registerApp(@RequestBody appDto: RegisterAppDTO,
-                    authentication: Authentication?,
-                    @RequestHeader(name = "X-XSRF-TOKEN") xsrfToken: String ): ResponseEntity<AppDTO> {
+                    authentication: Authentication? ): ResponseEntity<AppDTO> {
         val user = userService.getUserFromAuthentication(authentication)
         val response = appService.registerApp(appDto,user)
 
@@ -49,9 +48,10 @@ class ApplicationController(
         return ResponseEntity.status(201).body(app.toDTO())
 
     }
-    @PostMapping("app/regenerate-secret")
-    fun regenerateSecret(@RequestBody app: AppDTO){
-
+    @PostMapping("/app/regenerate-secret")
+    fun regenerateSecret(@RequestBody app: AppDTO) :ResponseEntity<AppDTO>{
+        val appDto = appService.regenerateSecret(app)
+        return ResponseEntity.status(201).body(appDto)
     }
     @PostMapping("/group/add")
     fun addGroup (@RequestBody groupDTO: CreateAppGroupDTO,authentication: Authentication?) : ResponseEntity<AppGroupDTO>{

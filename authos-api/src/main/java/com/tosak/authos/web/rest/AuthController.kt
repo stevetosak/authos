@@ -59,7 +59,7 @@ open class AuthController(
 
 
 
-        return ResponseEntity.status(200).headers(headers).body(LoginDTO(user.toDTO(),apps.map{a -> a.toDTO()},groups.map { gr -> gr.toDTO() },URI(url),token.serialize()))
+        return ResponseEntity.status(200).headers(headers).body(LoginDTO(user.toDTO(),apps.map{a -> appService.toDTO(a)},groups.map { gr -> gr.toDTO() },URI(url),token.serialize()))
 
 
     }
@@ -76,11 +76,10 @@ open class AuthController(
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
 
-
         return ResponseEntity
             .status(201)
             .headers(headers)
-            .body(LoginDTO(user.toDTO(), apps.map { app -> app.toDTO() }, groups.map { group -> group.toDTO() }));
+            .body(LoginDTO(user.toDTO(), apps.map { app -> appService.toDTO(app) }, groups.map { group -> group.toDTO() }));
 
     }
 
@@ -105,7 +104,7 @@ open class AuthController(
         return ResponseEntity.ok(
             LoginDTO(
                 user.toDTO(),
-                apps.map { app -> app.toDTO() },
+                apps.map { app -> appService.toDTO(app)},
                 groups.map { group -> group.toDTO() })
         )
 

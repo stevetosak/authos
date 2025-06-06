@@ -7,7 +7,7 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Checkbox} from "@/components/ui/checkbox.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {api} from "@/services/config.ts";
+import {api, apiPostAuthenticated} from "@/services/config.ts";
 import {AppGroup, CreateAppGroupDTO, MFAPolicyValue, SSOPolicyValue} from "@/services/interfaces.ts";
 import {useAuth} from "@/services/useAuth.ts";
 import {AxiosResponse} from "axios";
@@ -60,9 +60,8 @@ export function AddGroupModal() {
 
         console.log("Creating group:", JSON.stringify(group));
 
-        api.post("/group/add", group, {
-            withCredentials: true
-        }).then((resp: AxiosResponse<AppGroup>) => {
+        apiPostAuthenticated<AppGroup>("/group/add",group)
+            .then((resp: AxiosResponse<AppGroup>) => {
             setGroups((prevGroups) => [...prevGroups, resp.data]);
             toast.success("Successfully created app group");
             setTimeout(resetData, 300);

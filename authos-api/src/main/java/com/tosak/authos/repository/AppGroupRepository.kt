@@ -9,4 +9,5 @@ interface AppGroupRepository : JpaRepository<AppGroup, Int> {
     fun findByUserId(userId: Int): List<AppGroup>?
     fun findByName(name: String) : AppGroup?
     fun findAppGroupByUserIdAndIsDefault(userId: Int,isDefault: Boolean): AppGroup?
+    fun findByIdAndUserId(id: Int, userId: Int): AppGroup?
 }

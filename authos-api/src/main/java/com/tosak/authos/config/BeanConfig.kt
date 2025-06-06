@@ -10,16 +10,11 @@ import com.tosak.authos.exceptions.KeyLoadException
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
-import org.springframework.session.FlushMode
-import org.springframework.session.data.redis.RedisIndexedSessionRepository
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession
 import java.io.FileInputStream
 import java.security.Key
 import java.security.KeyPair
@@ -41,41 +36,6 @@ open class BeanConfig(
         return BCryptPasswordEncoder(12);
     }
 
-    @Bean
-    open fun rsaKeyGen(): RSAKey {
-
-        val ks: KeyStore = KeyStore.getInstance("PKCS12")
-        val fis = FileInputStream("/home/stevetosak/private/keystore.p12")
-        val keystorePass =
-            DotEnvConfig.dotenv["KEYSTORE_PASS"] ?: throw IllegalStateException("Keystore password not loaded")
-
-        var key: Key? = null
-        var cert: Certificate? = null
-        ks.load(fis, keystorePass.toCharArray())
-        val aliasEnumeration: Enumeration<String> = ks.aliases()
-        while (aliasEnumeration.hasMoreElements()) {
-            val keyName = aliasEnumeration.nextElement()
-            key = ks.getKey(keyName, keystorePass.toCharArray())
-            cert = ks.getCertificate(keyName)
-        }
-
-        if (cert == null || key == null) {
-            throw KeyLoadException("Certificate or private key not loaded")
-        }
-
-
-        val keyPair = KeyPair(cert.publicKey, key as PrivateKey);
-        val x509 = cert as X509Certificate
-
-        return RSAKey
-            .Builder(keyPair.public as RSAPublicKey)
-            .privateKey(keyPair.private as RSAPrivateKey)
-            .keyID("authos-jwt-sign")
-            .algorithm(Algorithm.parse("RS256"))
-            .issueTime(x509.notBefore)
-            .keyUse(KeyUse.SIGNATURE)
-            .build();
-    }
 
     @Bean
     open fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<String, Any> {

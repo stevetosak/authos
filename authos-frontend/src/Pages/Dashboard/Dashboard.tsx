@@ -105,7 +105,6 @@ const Dashboard: React.FC = () => {
                                 <CardHeader className="pb-3">
                                     <div id="group-section" className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                                            {/* Column 1: Title and Description */}
                                             {selectedGroup !== defaultAppGroup && (
                                                 <>
                                                     <div className="md:col-span-2 space-y-2">
@@ -153,7 +152,7 @@ const Dashboard: React.FC = () => {
                                                         <Button
                                                             variant="outline"
                                                             className="flex items-center gap-2 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"
-                                                            onClick={() => nav("/connect/register")}
+                                                            onClick={() => nav(`/connect/register?group=${selectedGroup.id}`)}
                                                         >
                                                             <Plus className="w-4 h-4"/>
                                                             <span>New Application</span>

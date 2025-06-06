@@ -14,4 +14,5 @@ class RegisterAppDTO (
     val appInfoUri : String? = null,
     val redirectUris : List<String>,
     val scope : List<String>,
+    val group: Int?
 )

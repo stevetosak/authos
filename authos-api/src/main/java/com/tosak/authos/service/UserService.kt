@@ -54,6 +54,7 @@ open class UserService @Autowired constructor(
         )
     }
     open fun getUserFromAuthentication(authentication: Authentication?): User {
+        println("$authentication AUTHENTICATION")
         if(authentication == null || authentication.principal == null || authentication.principal !is User)
             throw AuthenticationNotPresentException("Authentication not present")
 

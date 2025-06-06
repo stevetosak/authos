@@ -98,10 +98,6 @@ class OAuthEndpoints(
         val idToken = factory.createToken(IdTokenStrategy(ppidService,app,tokenWrapper.accessTokenWrapper.accessToken.user,request))
         idTokenService.save(idToken,tokenWrapper.accessTokenWrapper.accessToken);
 
-        val headers = HttpHeaders();
-        headers.contentType = MediaType.APPLICATION_JSON;
-        headers.cacheControl = "no-store";
-
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
             .contentType(MediaType.APPLICATION_JSON)

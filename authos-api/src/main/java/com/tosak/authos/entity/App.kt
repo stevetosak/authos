@@ -56,6 +56,9 @@ class App (
     @Transient
     lateinit var responseTypesCollection: MutableList<String>
 
+    @Transient
+    var clientType = if(tokenEndpointAuthMethod == "none") "public" else "confidential"
+
     constructor(appDTO: AppDTO) : this(
         id = appDTO.id,
         name = appDTO.name,

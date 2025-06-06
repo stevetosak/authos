@@ -41,6 +41,9 @@ open class AppGroupService(private val appGroupRepository: AppGroupRepository) {
             savedGr.ssoPolicy, savedGr.mfaPolicy
         )
     }
+    open fun findGroupByIdAndUser(id: Int,user: User): AppGroup {
+        return appGroupRepository.findByIdAndUserId(id,user.id!!) ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
+    }
 
     open fun getDefaultGroupForUser(user: User): AppGroup {
         return appGroupRepository.findAppGroupByUserIdAndIsDefault(user.id!!, true) ?: throw AppGroupsNotFoundException(
