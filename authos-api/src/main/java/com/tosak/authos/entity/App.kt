@@ -48,7 +48,7 @@ class App (
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "app", cascade = [CascadeType.ALL], orphanRemoval = true)
     var redirectUris : MutableList<RedirectUri> = mutableListOf(),
 
-) : DTO<AppDTO>, Serializable {
+) : Serializable {
     @Transient
     lateinit var scopesCollection: MutableList<String>
     @Transient
@@ -81,12 +81,6 @@ class App (
     }
 
 
-    override fun toDTO(): AppDTO {
-        return AppDTO(id,name,redirectUris.map { uri -> uri.id?.redirectUri },
-            clientId,clientSecret,clientSecretExpiresAt,shortDescription,createdAt,
-            group.id!!,logoUri,clientUri,scopesCollection,responseTypesCollection,grantTypesCollection,
-            tokenEndpointAuthMethod)
-    }
     fun addRedirectUris(uris: Collection<String>) {
         uris.forEach { uri ->
             redirectUris.add(RedirectUri(RedirectUriId(this.id, uri),this))

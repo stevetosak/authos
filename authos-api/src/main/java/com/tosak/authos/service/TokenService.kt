@@ -6,12 +6,10 @@ import com.tosak.authos.crypto.b64UrlSafeEncoder
 import com.tosak.authos.crypto.getHash
 import com.tosak.authos.crypto.getSecureRandomValue
 import com.tosak.authos.dto.TokenRequestDto
-import com.tosak.authos.dto.TokenResponse
 import com.tosak.authos.entity.AccessToken
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AuthorizationCode
 import com.tosak.authos.entity.RefreshToken
-import com.tosak.authos.entity.compositeKeys.RefreshTokenKey
 import com.tosak.authos.exceptions.AccessTokenExpiredException
 import com.tosak.authos.exceptions.AccessTokenNotFoundException
 import com.tosak.authos.exceptions.AccessTokenRevokedException
@@ -127,7 +125,7 @@ open class TokenService(
 
 
     @Transactional
-    open fun handleTokenRequest2(tokenRequestDto: TokenRequestDto, app: App): TokenWrapper {
+    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto, app: App): TokenWrapper {
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
         ) throw InvalidParameterException("parameters do not match grant type")
@@ -147,8 +145,8 @@ open class TokenService(
         code.used = true;
         authorizationCodeRepository.save(code)
         return TokenWrapper(
-            generateAccessToken(clientId = request.clientId, authorizationCode = code, refreshToken = null),
-            generateRefreshToken(request.clientId, code)
+            generateAccessToken(clientId = request.clientId!!, authorizationCode = code, refreshToken = null),
+            generateRefreshToken(request.clientId!!, code)
         )
     }
 
@@ -156,7 +154,7 @@ open class TokenService(
     open fun handleRefreshTokenRequest(request: TokenRequestDto, app: App): TokenWrapper {
         val refreshTokenWrapper = validateRefreshToken(request.refreshToken!!, clientId = app.clientId)
         return TokenWrapper(
-            generateAccessToken(clientId = request.clientId, refreshToken = refreshTokenWrapper.refreshToken, authorizationCode = null),
+            generateAccessToken(clientId = request.clientId!!, refreshToken = refreshTokenWrapper.refreshToken, authorizationCode = null),
             refreshTokenWrapper
         )
     }

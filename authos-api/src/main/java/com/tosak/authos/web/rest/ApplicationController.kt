@@ -45,7 +45,7 @@ class ApplicationController(
         val user = userService.getUserFromAuthentication(authentication)
         val app = appService.updateApp(user,appDto)
 
-        return ResponseEntity.status(201).body(app.toDTO())
+        return ResponseEntity.status(201).body(appService.toDTO(app))
 
     }
     @PostMapping("/app/regenerate-secret")

@@ -16,7 +16,6 @@ import org.springframework.http.*
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.web.bind.annotation.*
 import java.net.URI
-import java.net.URLEncoder
 
 @RestController
 @RequestMapping("/oauth")
@@ -79,22 +78,19 @@ class OAuthEndpoints(
 
     // povekje nacini na avtentikacija: private_key_jwt, client_secret.
     // todo support for different client authentication methods: client_secret, private_key_jwt
+    // client secret basic header: b64(clientId:clientSecret)
     @PostMapping("/token")
     fun token(
         @RequestBody tokenRequestDto: TokenRequestDto,
         request: HttpServletRequest
     ): ResponseEntity<TokenResponse> {
 
-        // tuka trebit spored grant type da handlam
-
-        // tuka vrakjam i refresh token prviot pat
         val app = appService.validateAppCredentials(
-            tokenRequestDto.clientId,
-            tokenRequestDto.clientSecret,
-            tokenRequestDto.redirectUri
+            tokenRequestDto,
+            request
         );
 
-        val tokenWrapper = tokenService.handleTokenRequest2(tokenRequestDto,app)
+        val tokenWrapper = tokenService.handleTokenRequest(tokenRequestDto,app)
         val idToken = factory.createToken(IdTokenStrategy(ppidService,app,tokenWrapper.accessTokenWrapper.accessToken.user,request))
         idTokenService.save(idToken,tokenWrapper.accessTokenWrapper.accessToken);
 

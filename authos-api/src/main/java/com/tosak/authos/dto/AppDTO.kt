@@ -26,6 +26,6 @@ data class AppDTO(
     var scopes: List<String> = listOf(),
     var responseTypes: List<String> = listOf(),
     var grantTypes: List<String> = listOf(),
-    var tokenEndpointAuthMethod: String?,
+    var tokenEndpointAuthMethod: String,
     ) :
     Serializable

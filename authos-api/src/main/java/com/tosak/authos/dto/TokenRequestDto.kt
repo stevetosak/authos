@@ -9,9 +9,9 @@ data class TokenRequestDto (
     @JsonProperty("grant_type")
     val grantType: String,
     @JsonProperty("client_id")
-    val clientId: String,
+    var clientId: String?,
     @JsonProperty("client_secret")
-    val clientSecret: String,
+    var clientSecret: String?,
     @JsonProperty("refresh_token")
     val refreshToken: String?
 
