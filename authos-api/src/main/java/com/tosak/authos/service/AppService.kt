@@ -28,9 +28,6 @@ import javax.crypto.SecretKey
 @Service
 open class AppService(
     private val appRepository: AppRepository,
-    private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder,
-    private val redirectUriRepository: RedirectUriRepository,
     private val appGroupRepository: AppGroupRepository,
     private val appGroupService: AppGroupService,
     private val aesUtil: AESUtil,
@@ -77,6 +74,8 @@ open class AppService(
             }
         }
 
+        println("TOKEN DTO: ${tokenRequestDto.toString()}")
+
 
         val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri)
         val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret), secretKey)
@@ -84,6 +83,14 @@ open class AppService(
         return app;
     }
 
+    /**
+     * Regenerates the client secret for the provided application.
+     * Generates a new secure secret, encrypts it, and updates the application entity with the new secret.
+     * The new secret expires after a specified amount of time.
+     *
+     * @param dto the AppDTO object containing the application details for which the secret is to be regenerated
+     * @return an updated AppDTO object with regenerated secret information
+     */
     open fun regenerateSecret(dto: AppDTO): AppDTO {
         val app = getAppById(dto.id!!)
         val newSecret = hex(getSecureRandomValue(32))
@@ -97,6 +104,13 @@ open class AppService(
     }
 
 
+    /**
+     * Registers a new application with the provided details and the currently logged-in user.
+     *
+     * @param appDto the details of the application to be registered, including its name, scopes, grant types, redirect URIs, and other metadata
+     * @param userLoggedIn the user currently logged in, who will own the newly registered application
+     * @return the registered application's details encapsulated in an AppDTO object
+     */
     @Transactional
     open fun registerApp(appDto: RegisterAppDTO, userLoggedIn: User): AppDTO {
         val clientId = hex(getSecureRandomValue(32))

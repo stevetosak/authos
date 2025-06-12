@@ -16,20 +16,41 @@ import java.net.URI
 import java.net.URLEncoder
 
 
+/**
+ * Handles authentication and authorization-related operations, including user login,
+ * registration, session management, and user verification.
+ *
+ * This controller provides REST endpoints for OAuth-based login, native login, user
+ * registration, session clearing, and authentication verification.
+ */
 @RestController
 open class AuthController(
     private val userService: UserService,
-    private val jwtService: JwtService,
     private val tokenFactory: JwtTokenFactory,
     private val appService: AppService,
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
-    private val ppidService: PPIDService,
     private val redisService: RedisService,
 ) {
 
 
-    //todo csrf
+    /**
+     * Handles the OAuth login process by verifying user credentials, validating client credentials,
+     * creating a single sign-on (SSO) session, and generating a redirect response with a consent URL.
+     *
+     * @param email the email address of the user attempting to log in
+     * @param password the password of the user attempting to log in
+     * @param clientId the client ID of the application requesting authentication
+     * @param redirectUri the redirect URI for the application
+     * @param state the state parameter passed during the OAuth flow, used to maintain state between the request and callback
+     * @param scope the scope of the requested access, defining the level of access requested
+     * @param httpSession the HTTP session associated with the user
+     * @param request the HTTP servlet request containing additional request details
+     * @return a ResponseEntity containing a LoginDTO object with user, application, group details,
+     *         the consent redirect URI, and an OAuth token
+     * @throws UserNotFoundException if the user credentials are invalid
+     * @throws InvalidClientCredentialsException if client credentials are invalid
+     */
     @PostMapping("/oauth-login", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun oAuthLogin(
         @RequestParam email: String,
@@ -57,13 +78,21 @@ open class AuthController(
                 "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
         val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url))
 
-
-
         return ResponseEntity.status(200).headers(headers).body(LoginDTO(user.toDTO(),apps.map{a -> appService.toDTO(a)},groups.map { gr -> gr.toDTO() },URI(url),token.serialize()))
 
 
     }
 
+    /**
+     * Handles the login process for non-OAuth flows. Authenticates the user using the provided
+     * email and password, generates login credentials, and fetches associated applications and
+     * groups for the user.
+     *
+     * @param email the email of the user attempting to log in
+     * @param password the password of the user attempting to log in
+     * @param request the HTTP request object for the current request
+     * @return a ResponseEntity containing a LoginDTO with the user details, associated applications, and groups
+     */
     @PostMapping("/native-login", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun nativeLogin(
         @RequestParam email: String,
@@ -83,6 +112,15 @@ open class AuthController(
 
     }
 
+    /**
+     * Registers a new user account using the provided data and creates a default group for the user.
+     *
+     * @param createUserAccountDTO the data required to create a new user account, including email, password, phone number, first name, and last name
+     * @param clientId an optional client ID associated with the request
+     * @param redirectUri an optional redirect URI to be used after registration
+     * @param state an optional state parameter that can be used to maintain request context
+     * @return a ResponseEntity with a status of 201 (Created) and a location header set to the login page URL
+     */
     @PostMapping("/register")
     fun register(
         @RequestBody createUserAccountDTO: CreateUserAccountDTO,
@@ -94,7 +132,12 @@ open class AuthController(
         return ResponseEntity.status(201).location(URI("http://localhost:5173/login")).build()
     }
 
-    // todo da ne sa zemat userot na sekoe poso nepotrebno e ako vekje e logiran
+    /**
+     * Verifies the current authenticated user and retrieves their associated applications and groups.
+     *
+     * @param authentication the authentication object containing the current user's session details. Can be null if no user is authenticated.
+     * @return a ResponseEntity containing a LoginDTO with the user's information, associated applications, and groups.
+     */
     @GetMapping("/verify")
     fun verify(authentication: Authentication?): ResponseEntity<LoginDTO> {
 
@@ -110,6 +153,14 @@ open class AuthController(
 
     }
 
+    /**
+     * Clears all active sessions and invalidates the current HTTP session.
+     * Also removes all session data stored in the Redis database.
+     *
+     * @param session the current HTTP session to be invalidated
+     * @return a ResponseEntity containing the number of cleared keys from the Redis database
+     */
+    @Deprecated("This is a test method")
     @PostMapping("/sessions/clear")
     fun clearSessions(session: HttpSession): ResponseEntity<Int> {
         session.invalidate()

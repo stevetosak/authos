@@ -20,6 +20,11 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * Controller responsible for managing application-related operations and group creation.
+ * Provides endpoints for registering applications, updating them, regenerating secrets,
+ * and adding application groups. Interacts with application services to process requests.
+ */
 @RestController
 class ApplicationController(
     private val appService: AppService,
@@ -28,8 +33,13 @@ class ApplicationController(
 )
 {
 
-    //todo input validation
-
+    /**
+     * Registers a new application with the provided details.
+     *
+     * @param appDto the details of the application to be registered, encapsulated as a RegisterAppDTO object
+     * @param authentication the authentication object of the currently logged-in user, used to determine the application's owner
+     * @return a ResponseEntity containing the details of the registered application as an AppDTO object
+     */
     @PostMapping("/app/register")
     fun registerApp(@RequestBody appDto: RegisterAppDTO,
                     authentication: Authentication? ): ResponseEntity<AppDTO> {
@@ -38,6 +48,13 @@ class ApplicationController(
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
+    /**
+     * Updates an existing application with the provided data.
+     *
+     * @param appDto Data transfer object containing the updated details of the application.
+     * @param authentication Optional authentication object containing the authenticated user's details.
+     * @return A ResponseEntity containing the updated AppDTO object and an HTTP status code indicating the result.
+     */
     @PostMapping("/app/update")
     fun updateApp(@RequestBody appDto: AppDTO,
                   authentication: Authentication?) : ResponseEntity<AppDTO> {
@@ -48,21 +65,31 @@ class ApplicationController(
         return ResponseEntity.status(201).body(appService.toDTO(app))
 
     }
+    /**
+     * Regenerates the client secret for the provided application.
+     *
+     * @param app the AppDTO object containing the application's details for which the secret should be regenerated
+     * @return ResponseEntity containing the updated AppDTO with the regenerated secret information
+     */
     @PostMapping("/app/regenerate-secret")
     fun regenerateSecret(@RequestBody app: AppDTO) :ResponseEntity<AppDTO>{
         val appDto = appService.regenerateSecret(app)
         return ResponseEntity.status(201).body(appDto)
     }
+    /**
+     * Adds a new application group for the authenticated user.
+     *
+     * @param groupDTO The details of the application group to be created, including its name,
+     *                 default status, and policy configurations.
+     * @param authentication The authentication object representing the currently logged-in user.
+     *                        It may be null if no user is authenticated.
+     * @return A ResponseEntity containing the details of the newly created application group with
+     *         a status of HTTP 201 (Created).
+     */
     @PostMapping("/group/add")
     fun addGroup (@RequestBody groupDTO: CreateAppGroupDTO,authentication: Authentication?) : ResponseEntity<AppGroupDTO>{
         val user = userService.getUserFromAuthentication(authentication)
         val group = appGroupService.createAppGroup(groupDTO,user)
         return ResponseEntity.status(HttpStatus.CREATED).body(group)
-    }
-    @PostMapping("/updatetest")
-    fun updateApp(@RequestBody app: String){
-        println("APP: ${app}")
-        jacksonObjectMapper().readValue(app, AppDTO::class.java)
-        println("SERAPP: $app")
     }
 }

@@ -34,6 +34,20 @@ class OAuthEndpoints(
 ) {
 
 
+    /**
+     * Handles the authorization request in the OAuth2 flow.
+     *
+     * @param clientId The client ID provided by the client application.
+     * @param redirectUri The URI to which the authorization server will redirect after the authorization request.
+     * @param state An opaque value used by the client to maintain state between the request and callback.
+     * @param scope A space-separated list of scopes requested by the client.
+     * @param prompt A string specifying whether the user should be prompted for re-authentication; defaults to "login".
+     * @param idTokenHint An optional ID token previously issued by the authorization server to provide a hint about the user's session.
+     * @param responseType The type of response expected, such as "code" for authorization code.
+     * @param request The HTTP servlet request object, providing client request information.
+     * @param response The HTTP servlet response object for returning the result of the operation.
+     * @return A ResponseEntity containing the HTTP response with status and headers for redirect or further handling.
+     */
     @GetMapping("/authorize")
     fun authorize(
         @RequestParam("client_id") clientId: String,
@@ -56,6 +70,7 @@ class OAuthEndpoints(
 
     // direktno ako go pristapis ova mozda e slabost
 
+    // todo ovaj metod samo od authos frontend app da e dostapen
     @GetMapping("/approve")
     fun approve(
         @RequestParam("client_id") clientId: String,
@@ -68,7 +83,7 @@ class OAuthEndpoints(
 
 
         println("SESSION ATTRIBUTES ${httpSession.getAttribute("user")}")
-        val userId = httpSession.getAttribute("user") as Int? ?: throw InvalidUserIdException("Session does not have valid user")
+        val userId = httpSession.getAttribute("user") as Int? ?: throw InvalidUserIdException("Invalid Session.")
         val user = userService.getById(userId)
         appService.verifyClientIdAndRedirectUri(clientId, redirectUri)
         val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri,scope,user)

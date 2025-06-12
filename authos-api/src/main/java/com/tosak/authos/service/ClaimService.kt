@@ -35,8 +35,13 @@ class ClaimService(
                     val property = accessToken.user::class.memberProperties.find { it.name == mapToField(c) }
                     if (property != null) {
                         val value = property.getter.call(accessToken.user)
-                        println("Property - $value")
-                        claims[c] = value
+                        if (value == null || value is String && value.isEmpty()){
+                            println("Property is empty: $c")
+                        }else {
+                            println("Property - $value")
+                            claims[c] = value
+                        }
+
                     } else {
                         println("No property found for key: $c")
                     }

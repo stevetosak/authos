@@ -9,7 +9,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.io.Serializable
 import java.time.LocalDateTime
-import java.util.*
 import kotlin.jvm.Transient
 
 @Entity
@@ -29,7 +28,7 @@ class User(
     @Column(name= "phone_number")
     val phoneNumber: String? = "",
     @Column(name = "avatar_url")
-    val avatarUrl: String? = null,
+    val picture: String? = null,
     @Column(name = "given_name")
     val givenName: String = "",
     @Column(name = "family_name")
@@ -56,6 +55,8 @@ class User(
 
     @Column(name = "failed_login_attempts", nullable = false)
     val failedLoginAttempts: Int = 0,
+
+    val gender : String? = null,
 
     @Column(name = "locked_until")
     val lockedUntil: LocalDateTime? = null
