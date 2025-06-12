@@ -1,8 +1,11 @@
 package com.authos
 
+import com.authos.rest.externalRoutes
+import com.authos.rest.internalRoutes
 import io.ktor.server.application.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+
 
 fun main(args: Array<String>) {
     internalServer()
@@ -32,9 +35,10 @@ fun Application.externalModule() {
     configureFrameworks()
     configureSerialization()
     configureDatabases()
-    configureRouting()
+    externalRoutes()
 }
 fun Application.internalModule() {
+    internalRoutes()
 
 }
 

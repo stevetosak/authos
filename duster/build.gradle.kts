@@ -1,4 +1,4 @@
-
+val ktor_version: String by project
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
@@ -8,11 +8,8 @@ plugins {
 group = "com.authos"
 version = "0.0.1"
 
-application {
-    mainClass = "io.ktor.server.netty.EngineMain"
-}
-
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -37,4 +34,11 @@ dependencies {
     implementation(libs.logback.classic)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
+
+    implementation("io.ktor:ktor-serialization-jackson:${ktor_version}")
+    implementation("io.ktor:ktor-client-core:${ktor_version}")
+    implementation("io.ktor:ktor-client-cio:${ktor_version}")
+    implementation("io.ktor:ktor-client-content-negotiation:${ktor_version}")
+    implementation("com.tosak.authos:crypto-utils:1.0-SNAPSHOT")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
 }
