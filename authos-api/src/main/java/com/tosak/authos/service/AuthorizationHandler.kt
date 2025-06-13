@@ -47,8 +47,12 @@ class AuthorizationHandler(
             throw InvalidScopeException(authorizeRequestParams.redirectUri, authorizeRequestParams.state)
         }
 
+        if(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT){
+            throw InvalidScopeException(authorizeRequestParams.redirectUri, authorizeRequestParams.state)
+        }
+
         var hasActiveSession = false;
-        if (authorizeRequestParams.idTokenHint != null) {
+        if (authorizeRequestParams.idTokenHint != null && authorizeRequestParams.idTokenHint.isNotEmpty()) {
             val idToken = jwtService.verifyToken(authorizeRequestParams.idTokenHint)
             val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
             val app: App = appService.getAppByClientIdAndRedirectUri(

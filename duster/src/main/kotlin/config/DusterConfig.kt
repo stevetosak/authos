@@ -11,6 +11,7 @@ class ClientConfig private constructor(
     val redirectUri: String,
     val scope: String = "openid",
     val grantType: String = "authorization_code",
+    val callbackUrl: String = "",
 ) {
 
     class Builder {
@@ -19,6 +20,7 @@ class ClientConfig private constructor(
         private var redirectUri: String = ""
         private var scope: String = ""
         private var grantType: String = ""
+        private var callbackUrl: String = ""
 
         fun clientId(value: String) = apply {
             require(value.isNotBlank())
@@ -44,6 +46,11 @@ class ClientConfig private constructor(
         fun grantType(value: String) = apply {
             if (value.isNotBlank()) {
                 grantType = value
+            }
+        }
+        fun callbackUrl(value: String) = apply {
+            if (value.isNotBlank()) {
+                callbackUrl = value
             }
         }
 

@@ -2,30 +2,25 @@ package com.authos
 
 import com.authos.config.ConfigFile
 import com.authos.config.loadYaml
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import kotlinx.coroutines.test.runTest
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ApplicationTest {
 
+    val client = HttpClient(CIO)
+
     @Test
-    fun testRoot() = testApplication {
-        application {
-            externalModule()
-        }
-        client.get("/").apply {
-            assertEquals(HttpStatusCode.OK, status)
-        }
+    fun testDusterStart() = runTest{
+        val response = client.get("http://127.0.0.1:8785/duster/api/v1/oauth/start")
+        assertEquals(HttpStatusCode.OK, response.status)
     }
-    @Test
-    fun testYamlLoad() {
-        val yaml = File("src/main/resources/client-config.yaml");
-        println(yaml.readText())
-        val yamlConfig: ConfigFile = loadYaml<ConfigFile>(yaml)
-        println(yamlConfig)
-    }
+
 
 }

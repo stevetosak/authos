@@ -3,6 +3,7 @@ package com.authos.duster_client
 import com.authos.config.ClientConfig
 import com.authos.data.AuthTokenResponse
 import com.authos.data.TokenRequestDto
+import com.authos.model.DusterApp
 import com.authos.model.UserInfo
 import com.fasterxml.jackson.core.JsonProcessingException
 import io.ktor.client.HttpClient
@@ -12,11 +13,14 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
+import kotlin.reflect.full.memberProperties
 
-class DusterClient (val config: ClientConfig) {
+class DusterClient (val dusterApp: DusterApp) {
     private val client = HttpClient(CIO){
         install(ContentNegotiation) {
             jackson()
@@ -31,10 +35,10 @@ class DusterClient (val config: ClientConfig) {
     suspend fun codeExchange(code: String) : AuthTokenResponse {
         val tokenRequest = TokenRequestDto(
             code = code,
-            redirectUri = config.redirectUri,
-            grantType = config.grantType,
-            clientId = config.clientId,
-            clientSecret = config.clientSecret
+            redirectUri = dusterApp.redirectUri,
+            grantType = dusterApp.grantType,
+            clientId = dusterApp.clientId,
+            clientSecret = dusterApp.clientSecret
         )
         val resp: AuthTokenResponse = client.post(AUTHOS_TOKEN_URL) {
             contentType(ContentType.Application.Json)
@@ -46,12 +50,42 @@ class DusterClient (val config: ClientConfig) {
         return resp;
     }
 
-    suspend fun fetchUserInfo(tokenResponse: AuthTokenResponse) : UserInfo {
-        val resp: UserInfo = client.get(AUTHOS_USERINFO_URL) {
-            headers.append("Authorization", "Bearer ${tokenResponse.accessToken}")
-        }.body()
+    suspend fun fetchUserInfo(accessToken: String) : HttpResponse {
+        val resp = client.get(AUTHOS_USERINFO_URL) {
+            headers.append("Authorization", "Bearer $accessToken")
+        }
 
         return resp;
+    }
+
+    fun handleAuthorizeRequest(){
+
+    }
+
+    suspend fun refreshToken(refreshToken: String) : HttpResponse {
+        val tokenRequest = TokenRequestDto(
+            clientId = dusterApp.clientId,
+            clientSecret = dusterApp.clientSecret,
+            grantType = "refresh_token",
+            refreshToken = refreshToken,
+            redirectUri = dusterApp.redirectUri
+        )
+
+        val resp = client.post(AUTHOS_TOKEN_URL,{
+            contentType(ContentType.Application.Json)
+            setBody(tokenRequest)
+        })
+        return resp;
+    }
+
+    suspend fun sendToCallback(userInfo: UserInfo): HttpResponse {
+
+        val data = UserInfo.getPrunedObject(userInfo)
+
+        return client.post(dusterApp.callbackUri) {
+            contentType(ContentType.Application.Json)
+            setBody(data)
+        }
     }
 
 }

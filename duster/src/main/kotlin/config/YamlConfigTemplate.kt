@@ -12,7 +12,8 @@ data class ConfigFile(
 
 data class Config(
     val credentials: Credentials,
-    val server: Server
+    val server: Server,
+    val callback: Callback
 )
 
 data class Credentials(
@@ -36,6 +37,10 @@ data class Server(
 data class PortConfig(
     val port: Int
 )
+data class Callback(
+    val url: String
+)
+
 
 inline fun <reified T> loadYaml(file: File): T {
     val mapper = ObjectMapper(YAMLFactory()).registerKotlinModule()

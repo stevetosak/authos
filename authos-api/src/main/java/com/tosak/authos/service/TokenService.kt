@@ -28,7 +28,7 @@ import java.time.LocalDateTime
 class AccessTokenWrapper(val accessTokenValue: String, val accessToken: AccessToken)
 class RefreshTokenWrapper(val refreshTokenValue: String, val refreshToken: RefreshToken)
 
-class TokenWrapper(val accessTokenWrapper: AccessTokenWrapper, val refreshTokenWrapper: RefreshTokenWrapper)
+class TokenWrapper(val accessTokenWrapper: AccessTokenWrapper, val refreshTokenWrapper: RefreshTokenWrapper?)
 
 @Service
 open class TokenService(
@@ -144,10 +144,13 @@ open class TokenService(
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, request)
         code.used = true;
         authorizationCodeRepository.save(code)
+        var refreshTokenWrapper: RefreshTokenWrapper? = null
+        if(code.scope.contains("offline_access")){
+            refreshTokenWrapper = generateRefreshToken(request.clientId!!,code)
+        }
         return TokenWrapper(
             generateAccessToken(clientId = request.clientId!!, authorizationCode = code, refreshToken = null),
-            generateRefreshToken(request.clientId!!, code)
-        )
+            refreshTokenWrapper = refreshTokenWrapper)
     }
 
     @Transactional

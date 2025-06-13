@@ -3,6 +3,7 @@ package com.authos
 import com.authos.rest.externalRoutes
 import com.authos.rest.internalRoutes
 import io.ktor.server.application.*
+import io.ktor.server.config.HoconApplicationConfig
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
@@ -28,13 +29,13 @@ fun externalServer() {
         host = "0.0.0.0",
         module = Application::externalModule)
     .start(wait = true)
+
 }
 
 fun Application.externalModule() {
     configureHTTP()
     configureFrameworks()
     configureSerialization()
-    configureDatabases()
     externalRoutes()
 }
 fun Application.internalModule() {

@@ -28,6 +28,8 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.postgresql)
     implementation(libs.h2)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
     implementation(libs.ktor.serialization.jackson)
     implementation(libs.ktor.server.request.validation)
     implementation(libs.ktor.server.netty)
@@ -41,4 +43,8 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:${ktor_version}")
     implementation("com.tosak.authos:crypto-utils:1.0-SNAPSHOT")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.3")
+    implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("io.lettuce:lettuce-core:6.7.1.RELEASE")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }

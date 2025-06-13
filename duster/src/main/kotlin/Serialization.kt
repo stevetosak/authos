@@ -23,7 +23,6 @@ import org.koin.logger.slf4jLogger
 fun Application.configureSerialization() {
     install(ContentNegotiation) {
         jackson {
-                enable(SerializationFeature.INDENT_OUTPUT)
             }
     }
     routing {
