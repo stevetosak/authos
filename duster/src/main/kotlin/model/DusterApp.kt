@@ -12,8 +12,6 @@ data class DusterApp (
     val scope : String = "openid",
     val grantType: String = "authorization_code",
     val isActive: Boolean = true,
-    var accessToken: String? = null,
-    var refreshToken: String? = null,
     val callbackUri: String,
     val lastSyncAt: Long,
     val updatedAt: Long,

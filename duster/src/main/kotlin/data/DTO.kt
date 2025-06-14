@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AuthTokenResponse(
     val accessToken: String = "",
-    val refreshToken: String = "",
+    val refreshToken: String?,
     val tokenType: String = "",
     val idToken: String = "",
     val expiresIn: Int = 0
