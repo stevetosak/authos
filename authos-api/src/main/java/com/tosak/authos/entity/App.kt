@@ -39,6 +39,8 @@ class App (
     var shortDescription : String? = null,
     @Column(name = "token_endpoint_auth_method")
     var tokenEndpointAuthMethod : String = "",
+    @Column(name = "refresh_token_rotation_enabled")
+    var refreshTokenRotationEnabled : Boolean = false,
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     val user: User = User(),
@@ -72,7 +74,7 @@ class App (
         clientUri = appDTO.appUrl,
         responseTypes = "",
         shortDescription = appDTO.shortDescription,
-        tokenEndpointAuthMethod = appDTO.tokenEndpointAuthMethod ?: "",
+        tokenEndpointAuthMethod = appDTO.tokenEndpointAuthMethod,
         redirectUris = appDTO.redirectUris.map { uri -> RedirectUri(RedirectUriId(appDTO.id,uri ?: "")) }.toMutableList(),
     ) {
         this.scopesCollection = appDTO.scopes.toMutableList()

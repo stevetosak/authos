@@ -4,7 +4,6 @@ import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.dto.LoginDTO
 import com.tosak.authos.pojo.RedirectResponseTokenStrategy
 import com.tosak.authos.service.*
-import com.tosak.authos.service.JwtService
 import com.tosak.authos.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
@@ -72,7 +71,7 @@ open class AuthController(
         val headers = userService.generateLoginCredentials(user, request,app.group)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        ssoSessionService.createSession(user,app,httpSession)
+        ssoSessionService.initializeSession(user,app,httpSession,request)
 
         val url = "http://localhost:5173/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
@@ -165,9 +164,15 @@ open class AuthController(
     fun clearSessions(session: HttpSession): ResponseEntity<Int> {
         session.invalidate()
         val count = redisService.clearDb();
-
-
         return ResponseEntity.ok(count)
+    }
+
+    @GetMapping("/logoutall")
+    @PostMapping("/logoutall")
+    fun logout(authentication: Authentication?): ResponseEntity<Void> {
+        val user = userService.getUserFromAuthentication(authentication);
+        ssoSessionService.terminateAll(user)
+        return ResponseEntity.ok().build()
     }
 
 

@@ -2,21 +2,18 @@ package com.tosak.authos.service
 
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.User
-import com.tosak.authos.exceptions.InvalidAppIdException
-import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.UserRepository
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.session.FindByIndexNameSessionRepository
-import org.springframework.session.Session
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.session.data.redis.RedisIndexedSessionRepository
-import org.springframework.session.data.redis.RedisIndexedSessionRepository.RedisSession
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.time.Duration
 
 
 /**
@@ -29,7 +26,8 @@ open class SSOSessionService(
     private val redisService: RedisService,
     private val userRepository: UserRepository,
     private val appRepository: AppRepository,
-    private val sessionRepository: RedisIndexedSessionRepository
+    private val sessionRepository: RedisIndexedSessionRepository,
+    private val redisTemplate: RedisTemplate<String, String>
 ) {
     /**
      * Represents the session timeout duration as a configuration property.
@@ -56,7 +54,7 @@ open class SSOSessionService(
          *
          * Utilized in various SSO operations such as session creation, validation, and termination.
          */
-        const val AUTHOS_SSO_KEY_PREFIX = "authos:sso:group"
+        const val AUTHOS_SSO_KEY_PREFIX = "authos:sso"
     }
 
     /**
@@ -66,7 +64,7 @@ open class SSOSessionService(
      * @param groupId The unique identifier of the group.
      * @return A string representing the SSO key for the given user and group.
      */
-    open fun getSsoKey(userId: Int, groupId: Int): String {
+    open fun ssoRedisKey(userId: Int, groupId: Int): String {
         return "$AUTHOS_SSO_KEY_PREFIX:${userId}:${groupId}"
     }
 
@@ -76,19 +74,24 @@ open class SSOSessionService(
      *
      * @param user The user instance to associate with the session.
      * @param app The application instance to associate with the session.
-     * @param httpSession The HTTP session to store the session attributes.
      */
     @Transactional
-    open fun createSession(user: User, app: App, httpSession: HttpSession) {
-        httpSession.setAttribute("user", user.id)
-        httpSession.setAttribute("app", app.id)
-        httpSession.setAttribute("created_at", LocalDateTime.now())
+    open fun initializeSession(user: User, app: App, existingSession: HttpSession, request: HttpServletRequest) {
+        val key = ssoRedisKey(user.id!!, app.group.id!!)
+        if (!existingSession.isNew) {
+            redisTemplate.opsForSet().remove(key, existingSession.id)
+            existingSession.invalidate()
+        }
+        val freshSession = request.getSession(true);
+        freshSession.setAttribute("user", user.id)
+        freshSession.setAttribute("app", app.id)
+        freshSession.setAttribute("created_at", LocalDateTime.now())
 
-        val key = "$AUTHOS_SSO_KEY_PREFIX:${user.id}:${app.group.id}"
-        redisService.setWithTTL(key, httpSession.id, 3600)
+        redisTemplate.opsForSet().add(key, freshSession.id)
+        redisTemplate.expire(key, Duration.ofSeconds(3600))
 
+        freshSession.setAttribute("forcePersist", UUID.randomUUID().toString())
 
-        httpSession.setAttribute("forcePersist", UUID.randomUUID().toString())
 
     }
 
@@ -106,36 +109,41 @@ open class SSOSessionService(
         val app = appRepository.findAppById(appId)
             ?: throw IllegalArgumentException("Cant find app")
 
-        val sessionId = redisService.tryGetValue("$AUTHOS_SSO_KEY_PREFIX:${user.id}:${app.group.id}") ?: return false
-        println("SESSION ID: $sessionId")
-        val session = sessionRepository.findById(sessionId)
-        return !session.isExpired
-
+        return redisTemplate.hasKey(ssoRedisKey(user.id!!, app.group.id!!))
     }
 
     /**
-     * Terminates an active session for the specified user and application.
-     * This involves deleting the session information from both the database and the Redis store.
+     * Terminates all active sessions for the specified user and group.
+     * This involves deleting and invalidating individual spring sessions and the Authos SSO sessions in the Redis store.
      *
      * @param user Represents the user whose session is to be terminated.
      * @param app Represents the application associated with the user's session.
      * @param httpSession The HTTP session object to be invalidated.
      */
-    open fun terminate(user: User, app: App, httpSession: HttpSession) {
-        val key = getSsoKey(user.id!!, app.group.id!!)
-        val sessionId = redisService.tryGetValue(key)
-        println("Session ID: $sessionId")
-        if (sessionId != null) {
-            sessionRepository.deleteById(sessionId)
-            httpSession.invalidate()
-            println("Deleted Spring session: ${RedisIndexedSessionRepository.DEFAULT_NAMESPACE}:sessions:$sessionId")
-        } else {
-            println("No session to delete for key: $key")
+    open fun terminate(user: User, app: App, httpSession: HttpSession): Boolean {
+        val sessions = redisTemplate.opsForSet().members(ssoRedisKey(user.id!!, app.group.id!!))
+        sessions?.forEach { sid ->
+            {
+                sessionRepository.deleteById(sid)
+                httpSession.invalidate()
+            }
         }
+        return redisTemplate.delete(ssoRedisKey(user.id, app.group.id!!))
 
-        redisService.delete(key)
     }
 
+    open fun terminateAll(user: User) {
+        println("DELETING SESSIONS")
+        val ssoSessionKeys = redisTemplate.keys("$AUTHOS_SSO_KEY_PREFIX:${user.id}*")
+        ssoSessionKeys.forEach { key ->
+            println("Deleting key: $key")
+            redisTemplate.opsForSet().members(key)?.
+                    forEach { sid  ->
+                        sessionRepository.deleteById(sid)
+                    }
+            redisTemplate.delete(key);
+        }
+    }
 
 
 }

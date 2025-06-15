@@ -8,25 +8,30 @@ import java.util.concurrent.TimeUnit
 import kotlin.jvm.Throws
 
 @Service
-class RedisService (private val redisTemplate: RedisTemplate<String,String>){
+class RedisService(private val redisTemplate: RedisTemplate<String, String>) {
 
     @Throws(RedisKeyNotFoundException::class)
-    fun tryGetValue(key: String) : String? {
-       val result = redisTemplate.opsForValue().get(key)
+    fun tryGetValue(key: String): String? {
+        val result = redisTemplate.opsForValue().get(key)
         return result;
     }
-   fun hasKey(key: String) : Boolean {
-       return true == redisTemplate.hasKey(key)
-   }
-    fun setWithTTL(key:String, value:String,expireSeconds:Long){
-        redisTemplate.opsForValue().set(key,value,expireSeconds,TimeUnit.SECONDS)
+
+    fun hasKey(key: String): Boolean {
+        return true == redisTemplate.hasKey(key)
     }
-    fun set(key:String, value:String){
-        redisTemplate.opsForValue().set(key,value)
+
+    fun setWithTTL(key: String, value: String, expireSeconds: Long) {
+        redisTemplate.opsForValue().set(key, value, expireSeconds, TimeUnit.SECONDS)
     }
-    fun delete(key:String){
+
+    fun set(key: String, value: String) {
+        redisTemplate.opsForValue().set(key, value)
+    }
+
+    fun delete(key: String) {
         redisTemplate.delete(key)
     }
+
     fun forceDeleteSession(sessionId: String) {
         val keys = listOf(
             "spring:session:sessions:$sessionId",
@@ -35,11 +40,12 @@ class RedisService (private val redisTemplate: RedisTemplate<String,String>){
         )
         keys.forEach { delete(it) }
     }
-    fun clearDb() : Int{
+
+    fun clearDb(): Int {
         val keys = redisTemplate.keys("*")
-        keys.forEach{ key -> redisTemplate.delete(key)}
+        keys.forEach { key -> redisTemplate.delete(key) }
         val afterDel = redisTemplate.keys("*")
-        assert (afterDel.isEmpty())
+        assert(afterDel.isEmpty())
         return afterDel.count()
     }
 }

@@ -92,4 +92,8 @@ class ApplicationController(
         val group = appGroupService.createAppGroup(groupDTO,user)
         return ResponseEntity.status(HttpStatus.CREATED).body(group)
     }
+    @PostMapping("/group/delete")
+    fun deleteGroup(groupId:Int,authentication: Authentication?){
+
+    }
 }

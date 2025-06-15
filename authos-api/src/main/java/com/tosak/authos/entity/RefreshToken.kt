@@ -7,11 +7,12 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "refresh_token")
 class RefreshToken(
-    @Id
-    @Column(name = "client_id")
-    val clientId: String = "",
+    @EmbeddedId
+    val key: RefreshTokenKey? = null,
+    @Column(name = "token_val")
+    var tokenValue: String = "",
     @Column(name = "token_hash")
-    var tokenHash: String = "",
+    val tokenHash: String = "",
     @Column(name = "issued_at")
     val issuedAt: LocalDateTime = LocalDateTime.now(),
     val revoked: Boolean = false,
@@ -20,9 +21,6 @@ class RefreshToken(
     @Column(name = "last_used_at")
     var lastUsedAt: LocalDateTime? = null,
     val scope: String = "",
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    val user: User = User()
 )
 {
 

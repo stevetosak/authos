@@ -10,15 +10,16 @@ import javax.crypto.spec.GCMParameterSpec
 
 @Component
 class AESUtil(
-
+    private val key: SecretKey
 ) {
     private val ENCRPYTON_ALGO: String = "AES/GCM/NoPadding"
     private val TAG_LENGTH_BIT: Int = 128;
     private val IV_LENGTH_BYTE: Int = 12;
 
 
-    fun encrypt(plainText: String, iv: ByteArray, key: SecretKey): ByteArray {
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    fun encrypt(plainText: String): ByteArray {
+        val iv = generateIV()
+        val cipher = Cipher.getInstance(ENCRPYTON_ALGO)
         val parameterSpec = GCMParameterSpec(TAG_LENGTH_BIT, iv)
         cipher.init(Cipher.ENCRYPT_MODE, key, parameterSpec)
         val cipherText = cipher.doFinal(plainText.toByteArray())
@@ -31,7 +32,7 @@ class AESUtil(
     }
 
 
-    fun decrypt(cipherMessage: ByteArray, key: SecretKey): String {
+    fun decrypt(cipherMessage: ByteArray): String {
         val iv = cipherMessage.copyOfRange(0, IV_LENGTH_BYTE)
         val cipherText = cipherMessage.copyOfRange(IV_LENGTH_BYTE, cipherMessage.size)
 
@@ -44,7 +45,7 @@ class AESUtil(
     }
 
 
-    fun generateIV(): ByteArray {
+    private fun generateIV(): ByteArray {
         val srand = SecureRandom()
         val iv: ByteArray = ByteArray(IV_LENGTH_BYTE)
         srand.nextBytes(iv)

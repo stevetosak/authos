@@ -31,7 +31,6 @@ open class AppService(
     private val appGroupRepository: AppGroupRepository,
     private val appGroupService: AppGroupService,
     private val aesUtil: AESUtil,
-    private val secretKey: SecretKey
 
 ) {
     open fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
@@ -78,7 +77,7 @@ open class AppService(
 
 
         val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri)
-        val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret), secretKey)
+        val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret))
         require(secretDecrypted == tokenRequestDto.clientSecret){"Invalid credentials"}
         return app;
     }
@@ -94,8 +93,7 @@ open class AppService(
     open fun regenerateSecret(dto: AppDTO): AppDTO {
         val app = getAppById(dto.id!!)
         val newSecret = hex(getSecureRandomValue(32))
-        val iv = aesUtil.generateIV();
-        val encSecret = aesUtil.encrypt(newSecret, iv, secretKey)
+        val encSecret = aesUtil.encrypt(newSecret)
         app.clientSecret = b64UrlSafeEncoder(encSecret)
         app.clientSecretExpiresAt = LocalDateTime.now().plusMonths(6)
         val appSaved = appRepository.save(app)
@@ -116,8 +114,7 @@ open class AppService(
         val clientId = hex(getSecureRandomValue(32))
         val clientSecret = hex(getSecureRandomValue(32));
 
-        val iv = aesUtil.generateIV();
-        val encryptedSecretBytes = aesUtil.encrypt(clientSecret, iv, secretKey)
+        val encryptedSecretBytes = aesUtil.encrypt(clientSecret)
         var group: AppGroup? = null;
         if (appDto.group != null) {
             group = appGroupRepository.findByIdAndUserId(appDto.group, userLoggedIn.id!!)
@@ -155,7 +152,7 @@ open class AppService(
         require(app != null)
 
         println("USER: ${user.id} APP ${appDto}")
-        if (app.user.id !== user.id) throw ResponseStatusException(
+        if (app.user.id != user.id) throw ResponseStatusException(
             HttpStatus.FORBIDDEN,
             "Authenticated user does not have access to app"
         )
@@ -173,7 +170,7 @@ open class AppService(
     }
 
     open fun toDTO(app: App): AppDTO {
-        val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret), secretKey)
+        val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret))
 
         return AppDTO(
             app.id,

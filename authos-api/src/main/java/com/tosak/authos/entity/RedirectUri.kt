@@ -6,10 +6,9 @@ import jakarta.persistence.*
 @Entity
 @Table(name = "redirect_uris")
 class RedirectUri (
-    @Id
+    @EmbeddedId
     val id: RedirectUriId? = null,
-
-    @MapsId("appId") // This maps the foreign key part of the ID
+    @MapsId("appId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "app_id")
     val app: App? = null

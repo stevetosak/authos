@@ -13,27 +13,26 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
 import {useAuth} from "@/services/useAuth.ts";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
-import {api} from "@/services/config.ts";
+import {api, apiGetAuthenticated, apiPostAuthenticated} from "@/services/config.ts";
 import {toast} from "sonner";
 import {defaultUser} from "@/services/interfaces.ts";
-import { motion } from "framer-motion";
+import {motion} from "framer-motion";
 
 const Navbar = () => {
     const location = useLocation();
-    const {user, isAuthenticated,setUser,setIsAuthenticated} = useAuth();
+    const {user, isAuthenticated, setUser, setIsAuthenticated} = useAuth();
     const nav = useNavigate()
 
     const logOut = () => {
         console.log("LOGOUT")
-        api.post("/logout", {}, {
-            withCredentials: true
-        }).then(resp => {
-            toast.warning("Logging Out...")
-            setTimeout(() => {
-                setUser(defaultUser)
-                setIsAuthenticated(false)
-            }, 1000)
-        }).catch(err => {
+        apiGetAuthenticated("/logoutall")
+            .then(resp => {
+                toast.warning("Logging Out...")
+                setTimeout(() => {
+                    setUser(defaultUser)
+                    setIsAuthenticated(false)
+                }, 1000)
+            }).catch(err => {
             console.error(err)
         })
     }
@@ -83,20 +82,20 @@ const Navbar = () => {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    whileHover={{ y: -3 }}>
+                                    initial={{opacity: 0, y: 10}}
+                                    animate={{opacity: 1, y: 0}}
+                                    transition={{duration: 0.2}}
+                                    whileHover={{y: -3}}>
 
 
-                                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                    <Avatar className="h-8 w-8 border border-gray-600 hover:border-green-600">
-                                        <AvatarImage src={user?.email}/>
-                                        <AvatarFallback className="bg-gray-700">
-                                            {user.firstName.charAt(0) || "U"}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </Button>
+                                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                                        <Avatar className="h-8 w-8 border border-gray-600 hover:border-green-600">
+                                            <AvatarImage src={user?.email}/>
+                                            <AvatarFallback className="bg-gray-700">
+                                                {user.firstName.charAt(0) || "U"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </Button>
                                 </motion.div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
@@ -112,10 +111,10 @@ const Navbar = () => {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator className="bg-gray-700"/>
                                 <Link to={"/profile"}>
-                                <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700" >
-                                    <User className="mr-2 h-4 w-4"/>
-                                    Profile
-                                </DropdownMenuItem>
+                                    <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700">
+                                        <User className="mr-2 h-4 w-4"/>
+                                        Profile
+                                    </DropdownMenuItem>
                                 </Link>
                                 <DropdownMenuItem className="hover:bg-gray-700 focus:bg-gray-700">
                                     <Settings className="mr-2 h-4 w-4"/>
