@@ -1,18 +1,18 @@
-//package com.tosak.authos.web.rest
-//
-//import com.tosak.authos.exceptions.badreq.HttpBadRequestException
-//import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
-//import com.tosak.authos.exceptions.badreq.InvalidIDTokenException
-//import com.tosak.authos.exceptions.oauth.OAuthException
-//import com.tosak.authos.exceptions.unauthorized.HttpUnauthorizedException
-//import org.springframework.http.HttpStatus
-//import org.springframework.http.ResponseEntity
-//import org.springframework.web.bind.annotation.ExceptionHandler
-//import org.springframework.web.bind.annotation.RestControllerAdvice
-//import java.lang.Exception
-//import java.lang.RuntimeException
-//import java.net.URI
-//
+package com.tosak.authos.web.rest
+
+import com.tosak.authos.exceptions.badreq.HttpBadRequestException
+import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
+import com.tosak.authos.exceptions.badreq.InvalidIDTokenException
+import com.tosak.authos.exceptions.oauth.OAuthException
+import com.tosak.authos.exceptions.unauthorized.HttpUnauthorizedException
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.RestControllerAdvice
+import java.lang.Exception
+import java.lang.RuntimeException
+import java.net.URI
+
 //@RestControllerAdvice
 //class ExceptionHandler {
 //    @ExceptionHandler(Exception::class)

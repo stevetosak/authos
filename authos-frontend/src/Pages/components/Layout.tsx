@@ -20,7 +20,7 @@ export function Layout() {
 
     if(authLoading || pageLoading) return  <Loader/>
     return (
-            <SidebarProvider defaultOpen={false}>
+            <SidebarProvider>
                 <div className="flex flex-row min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white w-full">
                     <AppSidebar />
                     <SidebarTriggerWrapper/>

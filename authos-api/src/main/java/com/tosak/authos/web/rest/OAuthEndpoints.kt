@@ -1,6 +1,6 @@
 package com.tosak.authos.web.rest
 
-import com.tosak.authos.TokenType
+import com.tosak.authos.common.enums.TokenType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
 import com.tosak.authos.exceptions.InvalidUserIdException
@@ -8,7 +8,7 @@ import com.tosak.authos.pojo.AuthorizeRequestParams
 import com.tosak.authos.pojo.IdTokenStrategy
 import com.tosak.authos.service.*
 import com.tosak.authos.service.JwtService
-import com.tosak.authos.utils.JwtTokenFactory
+import com.tosak.authos.common.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
@@ -57,11 +57,12 @@ class OAuthEndpoints(
         @RequestParam("prompt", defaultValue = "login") prompt: String,
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
         @RequestParam(name = "response_type") responseType: String,
+        @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
-        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType))
+        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub))
 
         TODO("RSA KEY HANDLING")
 
@@ -77,6 +78,7 @@ class OAuthEndpoints(
         @RequestParam("redirect_uri") redirectUri: String,
         @RequestParam("state") state: String,
         @RequestParam("scope") scope: String,
+        @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpSession: HttpSession,
         response: HttpServletResponse
     ): ResponseEntity<Void?> {
@@ -86,6 +88,9 @@ class OAuthEndpoints(
         val userId = httpSession.getAttribute("user") as Int? ?: throw InvalidUserIdException("Invalid Session.")
         val user = userService.getById(userId)
         appService.verifyClientIdAndRedirectUri(clientId, redirectUri)
+        if(!dusterSub.isNullOrBlank()) {
+            check(ppidService.getUserIdByHash(dusterSub) == user.id){"Invalid Duster client request"}
+        }
         val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri,scope,user)
         return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
     }

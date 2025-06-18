@@ -1,4 +1,4 @@
-package com.tosak.authos.utils
+package com.tosak.authos.common.utils
 
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.JWSHeader

@@ -25,7 +25,7 @@ class LoginTokenStrategy(
         if(group == null) {
             group = appGroupService.getDefaultGroupForUser(user)
         }
-        val sub = ppidService.getOrCreatePPID(user,group!!)
+        val sub = ppidService.getPPID(user,group!!)
         return JWTClaimsSet.Builder()
             .subject(sub)
             .issuer("http://localhost:9000")

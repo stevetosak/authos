@@ -69,15 +69,20 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
 
 
         const oauthRequest = Array.from(formData.values()).every(val => val !== null && val !== '');
+        formData.append("duster_uid",params.get("duster_uid") || '')
 
         setLoading(true);
 
         if (oauthRequest) {
-            const resp = await handleOauthLogin(formData)
-            if(resp.data.signature == null || resp.data.redirectUri == null) throw Error("No signature")
-            const valid = await validateResponse(resp.data.signature)
-            console.warn("VALID:",valid)
-            window.location.href = valid ? resp.data.redirectUri : ""
+            try{
+                const resp = await handleOauthLogin(formData)
+                if(resp.data.signature == null || resp.data.redirectUri == null) throw Error("No signature")
+                const valid = await validateResponse(resp.data.signature)
+                console.warn("VALID:",valid)
+                window.location.href = valid ? resp.data.redirectUri : ""
+            } catch (err){
+                nav("/error")
+            }
 
         } else {
             handleNativeLogin(formData)

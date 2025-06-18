@@ -4,7 +4,7 @@ import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.dto.LoginDTO
 import com.tosak.authos.pojo.RedirectResponseTokenStrategy
 import com.tosak.authos.service.*
-import com.tosak.authos.utils.JwtTokenFactory
+import com.tosak.authos.common.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.MediaType
@@ -30,6 +30,7 @@ open class AuthController(
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
     private val redisService: RedisService,
+    private val ppidService: PPIDService
 ) {
 
 
@@ -58,16 +59,24 @@ open class AuthController(
         @RequestParam(name = "redirect_uri") redirectUri: String,
         @RequestParam(name = "state") state: String,
         @RequestParam(name = "scope") scope: String,
+        @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpSession: HttpSession,
         request: HttpServletRequest,
     ): ResponseEntity<LoginDTO> {
 
 
         val user = userService.verifyCredentials(email, password);
+        val app = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
 
+        println("DUSTER UID: $dusterSub")
+
+        if(!dusterSub.isNullOrEmpty()){
+            println(dusterSub)
+            require( ppidService.getPPID(user,app.group,false) == dusterSub){"Invalid Duster client request."}
+        }
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
-        val app = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
+
         val headers = userService.generateLoginCredentials(user, request,app.group)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
@@ -164,6 +173,8 @@ open class AuthController(
     fun clearSessions(session: HttpSession): ResponseEntity<Int> {
         session.invalidate()
         val count = redisService.clearDb();
+
+
         return ResponseEntity.ok(count)
     }
 
@@ -171,7 +182,7 @@ open class AuthController(
     @PostMapping("/logoutall")
     fun logout(authentication: Authentication?): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
-        ssoSessionService.terminateAll(user)
+        ssoSessionService.terminateAllByUser(user)
         return ResponseEntity.ok().build()
     }
 

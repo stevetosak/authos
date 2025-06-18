@@ -2,32 +2,28 @@ package com.authos.rest
 
 import com.authos.data.AuthTokenResponse
 import com.authos.data.DusterAppRegisterDto
-import com.authos.data.TokenType
 import com.authos.duster_client.DusterClient
 import com.authos.duster_client.StateStore
 import com.authos.model.DusterApp
 import com.authos.model.UserInfo
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterAppRepositoryImpl
-import com.authos.repository.IdTokenRepository
 import com.authos.repository.TokenRepository
 import com.authos.service.DusterRequestService
 import com.authos.service.verifyIdToken
 import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.Url
 import io.ktor.server.application.Application
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
-import org.jetbrains.exposed.v1.core.exposedLogger
 import org.koin.ktor.ext.inject
-import java.net.URLEncoder
 import java.security.InvalidParameterException
 
 //import com.tosak.authos.crypto.*
@@ -62,13 +58,14 @@ fun Application.externalRoutes() {
                     when (result) {
                         is DusterRequestService.ResponseResult.Failure -> {
                             println("Got Failure. Generating authorize url...")
-                            val url = requestService.generateAuthorizeUrl(app, sub, state)
-                            call.respond(HttpStatusCode.Found, mapOf("url" to url))
+                            val url = requestService.generateAuthorizeUrl(app, sub, state) + "&duster_uid=${sub}"
+                            call.respondRedirect { url }
                         }
 
                         is DusterRequestService.ResponseResult.Success -> {
                             println("Got Success. Returning data...")
-                            call.respond(HttpStatusCode.OK, result.data)
+                            val redirectUrl = client.sendToCallback(result.data).headers["Location"]
+                            call.respondRedirect("$redirectUrl")
                         }
                     }
 
@@ -77,10 +74,9 @@ fun Application.externalRoutes() {
                     println("Generating authorization url...")
                     println("Mode is \"${mode}\"")
                     val url = requestService.generateAuthorizeUrl(app = app, state = state)
-                    call.respond(HttpStatusCode.Found, mapOf("url" to url))
+                    call.respondRedirect(url)
                 }
 
-//                val app = dusterAppRepository.getDusterApp(clientId)
             }
 
             get("/callback") {
@@ -103,7 +99,7 @@ fun Application.externalRoutes() {
                 println("Code exchange complete. Verifying id token...")
                 val (idTokenObj, idTokenString) = verifyIdToken(tokenResponse.idToken)
                 println("Fetching user information...")
-                val userinfo = client.fetchUserInfo(tokenResponse.accessToken)
+                val userInfoResponse = client.fetchUserInfo(tokenResponse.accessToken)
                 println("Success! User info fetched.")
                 println("Updating data...")
                 tokenRepository.saveAll(
@@ -115,14 +111,17 @@ fun Application.externalRoutes() {
                     tokenResponse.expiresIn.toLong()
                 )
                 println("Sending userinfo to specified callback url...")
-                client.sendToCallback(userinfo.body())
-                println("Userinfo sent.")
-                call.respond(HttpStatusCode.OK, mapOf("success" to true))
+                val userInfo: UserInfo = userInfoResponse.body()
+                val resp = client.sendToCallback(UserInfo.getPrunedObject(userInfo))
+                val redirectUrl= resp.headers["Location"]
+                call.respondRedirect("$redirectUrl")
             }
         }
         route("/test") {
             post("/callback") {
                 val rsp = call.receive<String>()
+
+                call.respondRedirect("http://localhost:5173/duster")
                 log.warn("Received user info: $rsp")
             }
         }

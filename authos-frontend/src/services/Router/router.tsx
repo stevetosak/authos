@@ -1,4 +1,3 @@
-// router.tsx
 import {
     createBrowserRouter,
     createRoutesFromElements,
@@ -16,6 +15,7 @@ import {ProfilePage} from "@/Pages/UserProfilePage/UserProfilePage.tsx";
 import {WhatIsAuthos} from "@/Pages/Documentation/WhatIsAuthos.tsx";
 import LoginPage from "@/Pages/LoginPage/LoginPage.tsx";
 import {Layout} from "@/Pages/components/Layout.tsx";
+import {DusterClientPage} from "@/Pages/DusterClientPage/DusterClientPage.tsx";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -31,6 +31,7 @@ export const router = createBrowserRouter(
                 <Route path="dashboard/:appId" element={<AppDetailsPage />} />
                 <Route path="connect/register" element={<RegisterAppPage />} />
                 <Route path="profile" element={<ProfilePage />} />
+                <Route path="/duster" element={<DusterClientPage/>}></Route>
             </Route>
 
             <Route path="docs">

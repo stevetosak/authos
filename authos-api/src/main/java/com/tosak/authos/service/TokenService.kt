@@ -1,6 +1,6 @@
 package com.tosak.authos.service
 
-import com.tosak.authos.GrantType
+import com.tosak.authos.common.enums.GrantType
 import com.tosak.authos.crypto.b64UrlSafeDecoder
 import com.tosak.authos.crypto.b64UrlSafeEncoder
 import com.tosak.authos.crypto.getHash
@@ -20,9 +20,8 @@ import com.tosak.authos.exceptions.InvalidRefreshTokenException
 import com.tosak.authos.repository.AccessTokenRepository
 import com.tosak.authos.repository.AuthorizationCodeRepository
 import com.tosak.authos.repository.RefreshTokenRepository
-import com.tosak.authos.utils.AESUtil
+import com.tosak.authos.common.utils.AESUtil
 import jakarta.transaction.Transactional
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
 import java.security.InvalidParameterException

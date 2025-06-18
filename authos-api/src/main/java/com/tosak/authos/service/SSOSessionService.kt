@@ -1,6 +1,7 @@
 package com.tosak.authos.service
 
 import com.tosak.authos.entity.App
+import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
 import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.UserRepository
@@ -132,17 +133,26 @@ open class SSOSessionService(
 
     }
 
-    open fun terminateAll(user: User) {
+    private fun terminateAllSessions(keyPattern:String){
         println("DELETING SESSIONS")
-        val ssoSessionKeys = redisTemplate.keys("$AUTHOS_SSO_KEY_PREFIX:${user.id}*")
+        val ssoSessionKeys = redisTemplate.keys(keyPattern)
         ssoSessionKeys.forEach { key ->
             println("Deleting key: $key")
             redisTemplate.opsForSet().members(key)?.
-                    forEach { sid  ->
-                        sessionRepository.deleteById(sid)
-                    }
+            forEach { sid  ->
+                sessionRepository.deleteById(sid)
+            }
             redisTemplate.delete(key);
         }
+    }
+
+    open fun terminateAllByUser(user: User) {
+        val keyPattern ="$AUTHOS_SSO_KEY_PREFIX:${user.id}*";
+       terminateAllSessions(keyPattern)
+    }
+    open fun terminateAllByGroup(appGroup: AppGroup){
+        val keyPattern = "$AUTHOS_SSO_KEY_PREFIX:*:${appGroup.id}"
+        terminateAllSessions(keyPattern)
     }
 
 

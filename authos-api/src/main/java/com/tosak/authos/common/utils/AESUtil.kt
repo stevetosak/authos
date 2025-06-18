@@ -1,4 +1,4 @@
-package com.tosak.authos.utils
+package com.tosak.authos.common.utils
 
 import com.tosak.authos.crypto.b64UrlSafeDecoder
 import com.tosak.authos.crypto.b64UrlSafeEncoder

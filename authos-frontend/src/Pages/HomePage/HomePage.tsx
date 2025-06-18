@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
                             transition={{ duration: 0.6 }}
                         >
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-green-300">
-                                AuthOS
+                                Authos
                             </h1>
                             <p className="mt-6 text-xl text-gray-300 max-w-3xl mx-auto">
                                 Secure, scalable authentication with SSO, OAuth, and advanced user management.
@@ -53,7 +53,6 @@ const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Features Section */}
                 <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/50">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
@@ -117,11 +116,11 @@ const HomePage: React.FC = () => {
                                             </li>
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-blue-400 mr-2" />
-                                                PKCE support
+                                                PKCE support (todo)
                                             </li>
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-blue-400 mr-2" />
-                                                Customizable consent screens
+                                                Customizable consent screens (todo)
                                             </li>
                                         </ul>
                                     </CardContent>
@@ -137,22 +136,22 @@ const HomePage: React.FC = () => {
                                         <div className="bg-purple-500/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-6">
                                             <Activity className="text-purple-400 w-6 h-6" />
                                         </div>
-                                        <h3 className="text-xl font-semibold mb-3">Analytics & Insights</h3>
+                                        <h3 className="text-xl font-semibold mb-3">Duster Client</h3>
                                         <p className="text-gray-300">
-                                            Real-time monitoring and detailed analytics for your authentication traffic.
+                                            Client application that handles OAuth flows for you.
                                         </p>
                                         <ul className="mt-4 space-y-2 text-gray-400 text-sm">
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-purple-400 mr-2" />
-                                                Login attempt monitoring
+                                                Simple Configuration
                                             </li>
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-purple-400 mr-2" />
-                                                Geo-location tracking
+                                                Token Storage & Caching
                                             </li>
                                             <li className="flex items-center">
                                                 <CheckCircle className="w-4 h-4 text-purple-400 mr-2" />
-                                                Anomaly detection
+                                                Quick & Easy User Info retrieval
                                             </li>
                                         </ul>
                                     </CardContent>
@@ -197,9 +196,9 @@ const HomePage: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="ml-4">
-                                            <h3 className="text-lg font-medium text-white">Brute Force Protection</h3>
+                                            <h3 className="text-lg font-medium text-white">Session tracking</h3>
                                             <p className="mt-1 text-gray-300">
-                                                Automated detection and prevention of credential stuffing and brute force attacks.
+                                                Track your active sessions with Authos apps.
                                             </p>
                                         </div>
                                     </div>
@@ -242,13 +241,12 @@ const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* Footer */}
                 <footer className="border-t border-gray-800 py-12 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col md:flex-row justify-between items-center">
                             <div className="flex items-center space-x-2 mb-4 md:mb-0">
                                 <Key className="w-8 h-8 text-emerald-400" />
-                                <span className="text-xl font-bold text-white">AuthOS</span>
+                                <span className="text-xl font-bold text-white">Authos</span>
                             </div>
                             <div className="flex space-x-6">
                                 <a href="#" className="text-gray-400 hover:text-white">
@@ -266,7 +264,7 @@ const HomePage: React.FC = () => {
                             </div>
                         </div>
                         <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">
-                            &copy; {new Date().getFullYear()} AuthOS. All rights reserved.
+                            &copy; {new Date().getFullYear()} Authos. All rights reserved.
                         </div>
                     </div>
                 </footer>

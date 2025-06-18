@@ -1,7 +1,20 @@
 import React, {useEffect, useState} from "react";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import {Plus, Grid, Users, FolderOpen, Settings, CheckCircle, Shield, Key, Calendar, Pencil} from "lucide-react";
+import {
+    Plus,
+    Grid,
+    Users,
+    FolderOpen,
+    Settings,
+    CheckCircle,
+    Shield,
+    Key,
+    Calendar,
+    Pencil,
+    XIcon,
+    CheckIcon
+} from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {motion} from "framer-motion"
 import Layout from "@/Pages/components/Layout.tsx";
@@ -13,12 +26,14 @@ import {ScrollArea} from "@/components/ui/scroll-area";
 import {AddGroupModal} from "@/Pages/components/AddGroupModal.tsx";
 import {AppGroup, defaultAppGroup} from "@/services/interfaces.ts";
 import {Label} from "@/components/ui/label.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 
 const Dashboard: React.FC = () => {
     const {user, isAuthenticated, groups, apps} = useAuth();
     const [showUserSidebar, setShowUserSidebar] = useState(true);
     const nav = useNavigate();
     const [selectedGroup, setSelectedGroup] = useState<AppGroup>(defaultAppGroup)
+    const [isEditingGroup,setIsEditingGroup] = useState<boolean>(false)
 
 
     const handleGroupClick = (group: AppGroup) => {
@@ -29,13 +44,23 @@ const Dashboard: React.FC = () => {
         }
     }
 
+    const handleGroupUpdate = (param:string,value:any) => {
+
+    }
+    const handleGroupSave = () => {
+
+    }
+    const handleGroupCancel = () => {
+
+    }
+
     useEffect(() => {
         console.log("USER:::   " + JSON.stringify(user));
         console.log("IS AUTH:" + isAuthenticated);
     }, [user, isAuthenticated]);
 
     const handleEditGroup = (gr) => {
-
+        setIsEditingGroup(true)
     }
 
     const handleAppClick = (appId: number) => {
@@ -45,7 +70,6 @@ const Dashboard: React.FC = () => {
     return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white py-8 w-full">
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                    {/* Groups Sidebar - Sticky with fade effect */}
                     <div className="lg:w-72 flex-shrink-0">
                         <div className="sticky top-6 h-[calc(100vh-3rem)] overflow-hidden">
                             <div
@@ -137,7 +161,26 @@ const Dashboard: React.FC = () => {
                                                         </CardDescription>
                                                     </div>
 
-                                                    {/* Column 2: Action Buttons */}
+                                                    {isEditingGroup && (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                onClick={handleGroupCancel}
+                                                                className="text-gray-300 border-gray-600 hover:bg-gray-700 w-full sm:w-auto"
+                                                            >
+                                                                <XIcon className="w-4 h-4 mr-2"/>
+                                                                Cancel
+                                                            </Button>
+                                                            <Button
+                                                                onClick={handleGroupSave}
+                                                                className="bg-emerald-600 hover:bg-emerald-500 w-full sm:w-auto"
+                                                            >
+                                                                <CheckIcon className="w-4 h-4 mr-2"/>
+                                                                Save Changes
+                                                            </Button>
+                                                        </>
+                                                    ) }
+
                                                     <div className="flex justify-end items-start gap-2">
                                                         {selectedGroup && (
                                                             <Button
@@ -159,54 +202,97 @@ const Dashboard: React.FC = () => {
                                                         </Button>
                                                     </div>
 
-                                                    {/* Column 3: Group Details */}
-                                                    <div
-                                                        className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 md:col-span-3">
-                                                        <div
-                                                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 md:col-span-3">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                            {/* Default Group */}
                                                             <div className="space-y-1">
-                                                                <Label
-                                                                    className="text-gray-400 text-sm flex items-center gap-1">
-                                                                    <CheckCircle className="w-4 h-4 text-emerald-400"/>
+                                                                <Label className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <CheckCircle className="w-4 h-4 text-emerald-400" />
                                                                     Default Group
                                                                 </Label>
-                                                                <p className="text-white font-medium">
-                                                                    {selectedGroup?.isDefault ? "Yes" : "No"}
-                                                                </p>
+                                                                {isEditingGroup ? (
+                                                                    <Select
+                                                                        value={selectedGroup?.isDefault ? "true" : "false"}
+                                                                        onValueChange={(value) => handleGroupUpdate("isDefault", value === "true")}
+                                                                    >
+                                                                        <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white">
+                                                                            <SelectValue placeholder="Select" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                                                                            <SelectItem value="true">Yes</SelectItem>
+                                                                            <SelectItem value="false">No</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : (
+                                                                    <p className="text-white font-medium">
+                                                                        {selectedGroup?.isDefault ? "Yes" : "No"}
+                                                                    </p>
+                                                                )}
                                                             </div>
 
+                                                            {/* MFA Policy */}
                                                             <div className="space-y-1">
-                                                                <Label
-                                                                    className="text-gray-400 text-sm flex items-center gap-1">
-                                                                    <Shield className="w-4 h-4 text-blue-400"/>
+                                                                <Label className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <Shield className="w-4 h-4 text-blue-400" />
                                                                     MFA Policy
                                                                 </Label>
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className="text-white border-gray-600 bg-gray-700/50"
-                                                                >
-                                                                    {selectedGroup?.mfaPolicy || "Not set"}
-                                                                </Badge>
+                                                                {isEditingGroup ? (
+                                                                    <Select
+                                                                        value={selectedGroup?.mfaPolicy || ""}
+                                                                        onValueChange={(value) => handleGroupUpdate("mfaPolicy", value)}
+                                                                    >
+                                                                        <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white">
+                                                                            <SelectValue placeholder="Select policy" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                                                                            <SelectItem value="REQUIRED">Required</SelectItem>
+                                                                            <SelectItem value="OPTIONAL">Optional</SelectItem>
+                                                                            <SelectItem value="DISABLED">Disabled</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="text-white border-gray-600 bg-gray-700/50"
+                                                                    >
+                                                                        {selectedGroup?.mfaPolicy || "Not set"}
+                                                                    </Badge>
+                                                                )}
                                                             </div>
 
+                                                            {/* SSO Policy */}
                                                             <div className="space-y-1">
-                                                                <Label
-                                                                    className="text-gray-400 text-sm flex items-center gap-1">
-                                                                    <Key className="w-4 h-4 text-purple-400"/>
+                                                                <Label className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <Key className="w-4 h-4 text-purple-400" />
                                                                     SSO Policy
                                                                 </Label>
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className="text-white border-gray-600 bg-gray-700/50"
-                                                                >
-                                                                    {selectedGroup?.ssoPolicy || "Not set"}
-                                                                </Badge>
+                                                                {isEditingGroup ? (
+                                                                    <Select
+                                                                        value={selectedGroup?.ssoPolicy || ""}
+                                                                        onValueChange={(value) => handleGroupUpdate("ssoPolicy", value)}
+                                                                    >
+                                                                        <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white">
+                                                                            <SelectValue placeholder="Select policy" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                                                                            <SelectItem value="REQUIRED">Required</SelectItem>
+                                                                            <SelectItem value="OPTIONAL">Optional</SelectItem>
+                                                                            <SelectItem value="DISABLED">Disabled</SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                ) : (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="text-white border-gray-600 bg-gray-700/50"
+                                                                    >
+                                                                        {selectedGroup?.ssoPolicy || "Not set"}
+                                                                    </Badge>
+                                                                )}
                                                             </div>
 
                                                             <div className="space-y-1">
-                                                                <Label
-                                                                    className="text-gray-400 text-sm flex items-center gap-1">
-                                                                    <Calendar className="w-4 h-4 text-yellow-400"/>
+                                                                <Label className="text-gray-400 text-sm flex items-center gap-1">
+                                                                    <Calendar className="w-4 h-4 text-yellow-400" />
                                                                     Created At
                                                                 </Label>
                                                                 <p className="text-white font-medium">

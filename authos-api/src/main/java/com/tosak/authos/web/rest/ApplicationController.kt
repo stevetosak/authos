@@ -5,6 +5,7 @@ import com.tosak.authos.dto.AppDTO
 import com.tosak.authos.dto.AppGroupDTO
 import com.tosak.authos.dto.CreateAppGroupDTO
 import com.tosak.authos.dto.RegisterAppDTO
+import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.service.AppGroupService
 import com.tosak.authos.service.AppService
@@ -93,7 +94,10 @@ class ApplicationController(
         return ResponseEntity.status(HttpStatus.CREATED).body(group)
     }
     @PostMapping("/group/delete")
-    fun deleteGroup(groupId:Int,authentication: Authentication?){
-
+    fun deleteGroup(groupId:Int,authentication: Authentication?) : ResponseEntity<Void>{
+        val user = userService.getUserFromAuthentication(authentication)
+        val group: AppGroup = appGroupService.findGroupByIdAndUser(groupId,user)
+        appGroupService.deleteGroup(group)
+        return ResponseEntity.ok().build()
     }
 }

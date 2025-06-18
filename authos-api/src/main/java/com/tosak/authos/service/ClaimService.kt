@@ -1,7 +1,6 @@
 package com.tosak.authos.service
 
 import com.tosak.authos.entity.AccessToken
-import com.tosak.authos.entity.User
 import com.tosak.authos.pojo.ClaimConfig
 import org.springframework.stereotype.Service
 import kotlin.reflect.full.memberProperties
@@ -27,7 +26,7 @@ class ClaimService(
     fun resolve(accessToken: AccessToken) : Map<String,Any?>{
         val claims = HashMap<String, Any?>()
         val app = appService.getAppByClientId(accessToken.clientId);
-        val sub = ppidService.getOrCreatePPID(accessToken.user,app.group)
+        val sub = ppidService.getPPID(accessToken.user,app.group)
         claims["sub"] = sub
         accessToken.scope.split(" ").forEach {s ->
             if(s != "openid"){

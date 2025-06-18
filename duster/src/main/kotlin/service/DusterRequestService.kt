@@ -36,7 +36,7 @@ class DusterRequestService(private val client: DusterClient, private val tokenRe
      * @return A `UserInfoResult` which can either be `Success` containing the pruned user information
      *         or `Failure` in case of an error.
      */
-    private suspend fun userInfoResult(accessToken: String): UserInfoResult {
+    private suspend fun  userInfoResult(accessToken: String): UserInfoResult {
         return try {
             val resp = client.fetchUserInfo(accessToken)
             UserInfoResult.Success(UserInfo.getPrunedObject(resp.body()))
@@ -85,6 +85,8 @@ class DusterRequestService(private val client: DusterClient, private val tokenRe
      * @return The complete authorization URL as a string.
      */
     suspend fun generateAuthorizeUrl(app: DusterApp, sub:String? = null, state:String): String {
+
+
         var sc = app.scope
             if(client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS){
                 if(!app.scope.contains("offline_access")){
@@ -185,7 +187,7 @@ class DusterRequestService(private val client: DusterClient, private val tokenRe
          *
          * @property data Represents the result of a successful operation.
          */
-        data class Success(val data: Any) : ResponseResult()
+        data class Success(val data: HashMap<String,String>) : ResponseResult()
         /**
          * Represents an operation failure result with a status and a message.
          *
@@ -215,7 +217,7 @@ class DusterRequestService(private val client: DusterClient, private val tokenRe
          *
          * @property data The user information or data associated with the successful result.
          */
-        data class Success(val data: Any) : UserInfoResult()
+        data class Success(val data: HashMap<String,String>) : UserInfoResult()
         /**
          * Represents a failure outcome in the process of obtaining user information.
          *

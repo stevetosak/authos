@@ -14,7 +14,7 @@ import org.koin.dsl.module
 // toodo dusterclient spored dadeniot app da sa gradit
 val duster = module {
     singleOf(::StateStore)
-    single { buildRedisManager() }
+    single (createdAtStart = true){ buildRedisManager() }
     single { DusterAppRepositoryImpl(get()) } bind DusterAppRepository::class
     single { TokenRepository(get()) } bind OAuthTokenRepository::class
 }

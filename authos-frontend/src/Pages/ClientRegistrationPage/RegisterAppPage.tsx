@@ -176,8 +176,6 @@ export default function RegisterAppPage() {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Description */}
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                                     Description
@@ -272,7 +270,6 @@ export default function RegisterAppPage() {
                                     </CardContent>
                                 </Card>
 
-                                {/* Scopes */}
                                 <Card
                                     className="bg-gray-700/40 border border-gray-600/50 hover:border-green-400/30 transition-colors">
                                     <CardHeader className="pb-3">
@@ -294,9 +291,7 @@ export default function RegisterAppPage() {
                                 </Card>
                             </div>
 
-                            {/* Advanced Settings */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Token Endpoint Auth */}
                                 <div className="space-y-2">
                                     <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                                         <Cpu className="w-4 h-4 text-green-400"/>
@@ -324,7 +319,6 @@ export default function RegisterAppPage() {
                                     </Select>
                                 </div>
 
-                                {/* App Info URI */}
                                 <div className="space-y-2">
                                     <Label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                                         <Globe className="w-4 h-4 text-green-400"/>
@@ -341,7 +335,6 @@ export default function RegisterAppPage() {
                             </div>
                         </div>
 
-                        {/* Footer Actions */}
                         <div
                             className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700/50">
                             <Button variant="outline" className="border-gray-600 hover:bg-gray-700/50"

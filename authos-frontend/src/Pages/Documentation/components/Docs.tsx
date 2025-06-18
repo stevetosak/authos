@@ -143,7 +143,6 @@ export const DocumentationPage = ({title, children}: DocumentationPageProps) => 
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
-                    {/* Main Content */}
                     <div className="lg:col-span-4">
                         <div
                             className="bg-gray-800/50 border border-gray-700/50 rounded-lg p-6 md:p-8 backdrop-blur-sm">

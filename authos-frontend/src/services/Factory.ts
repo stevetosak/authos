@@ -5,8 +5,10 @@ export class Factory {
         return {
             id: -1,
             name: "",
-            apps: [],
-            createdAt: Date()
+            createdAt: Date(),
+            isDefault: false,
+            ssoPolicy: "Partial",
+            mfaPolicy: "Disabled"
         }
     }
 
@@ -18,7 +20,7 @@ export class Factory {
             name: "",
             clientId: "",
             clientSecret: "",
-            group: this.appGroupDefault(),
+            group: this.appGroupDefault().id,
             redirectUris: [],
             createdAt: Date(),
             scopes: [],

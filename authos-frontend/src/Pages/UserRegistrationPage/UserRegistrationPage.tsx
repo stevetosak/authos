@@ -197,10 +197,8 @@ export default function UserRegistration() {
                                 </form>
                             </TabsContent>
 
-                            {/* OAuth Registration Tab */}
                             <TabsContent value="oauth" className="pt-6">
                                 <form onSubmit={handleOAuthSubmit} className="space-y-5">
-                                    {/* OAuth Provider Buttons */}
                                     <div className="space-y-3">
                                         <p className="text-sm text-gray-400 text-center">Sign up with</p>
                                         <div className="grid grid-cols-2 gap-3">
@@ -241,7 +239,6 @@ export default function UserRegistration() {
                                         </div>
                                     </div>
 
-                                    {/* Auto-filled when provider selected */}
                                     <div>
                                         <Label className="text-gray-300 mb-2 block flex items-center gap-2">
                                             <MailIcon className="w-4 h-4"/>
@@ -259,7 +256,6 @@ export default function UserRegistration() {
                                         />
                                     </div>
 
-                                    {/* Password field - always required for your native auth */}
                                     <div>
                                         <Label className="text-gray-300 mb-2 block flex items-center gap-2">
                                             <LockIcon className="w-4 h-4"/>
@@ -277,7 +273,6 @@ export default function UserRegistration() {
                                         <p className="mt-1 text-xs text-gray-400">Minimum 8 characters</p>
                                     </div>
 
-                                    {/* Name fields - shown only when no provider selected */}
                                     {!oauthFormData.provider && (
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>

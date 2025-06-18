@@ -18,7 +18,7 @@ class IdTokenStrategy(
     ) : JwtTokenStrategy {
         //TODO at_hash: b64 encodiran leva polovina na hash od access tokenot.
     override fun buildClaims(): JWTClaimsSet {
-        val sub = ppidService.getOrCreatePPID(user,app.group)
+        val sub = ppidService.getPPID(user,app.group)
         return JWTClaimsSet.Builder()
             .subject(sub)
             .issuer("http://localhost:9000")

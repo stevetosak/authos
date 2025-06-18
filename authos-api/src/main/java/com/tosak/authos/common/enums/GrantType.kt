@@ -1,4 +1,4 @@
-package com.tosak.authos
+package com.tosak.authos.common.enums
 
 enum class GrantType {
     AUTHORIZATION_CODE,

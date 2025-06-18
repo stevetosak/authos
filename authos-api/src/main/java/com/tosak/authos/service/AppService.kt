@@ -11,19 +11,14 @@ import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
 import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.repository.AppRepository
-import com.tosak.authos.repository.RedirectUriRepository
-import com.tosak.authos.repository.UserRepository
-import com.tosak.authos.utils.AESUtil
+import com.tosak.authos.common.utils.AESUtil
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
-import java.nio.charset.StandardCharsets
 import java.security.InvalidParameterException
 import java.time.LocalDateTime
-import javax.crypto.SecretKey
 
 @Service
 open class AppService(

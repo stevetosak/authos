@@ -1,5 +1,15 @@
 import {Link, useLocation, useNavigate} from "react-router-dom";
-import {Grid, Key, LayoutDashboard, LogInIcon, LogOut, Plus, Settings, User, Users} from "lucide-react";
+import {
+    Grid,
+    Key,
+    LayoutDashboard,
+    LogInIcon,
+    LogOut,
+    Plus,
+    Settings,
+    User,
+    Users, Wind
+} from "lucide-react";
 import React from "react";
 import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -12,7 +22,6 @@ import {
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
 import {useAuth} from "@/services/useAuth.ts";
-import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {api, apiGetAuthenticated, apiPostAuthenticated} from "@/services/config.ts";
 import {toast} from "sonner";
 import {defaultUser} from "@/services/interfaces.ts";
@@ -47,7 +56,7 @@ const Navbar = () => {
                             <Key className="w-6 h-6 text-green-400"/>
                             <span
                                 className="text-xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
-                AuthOS
+                Authos
               </span>
                         </Link>
 
@@ -60,11 +69,11 @@ const Navbar = () => {
                                 Dashboard
                             </NavLink>
                             <NavLink
-                                to="/analytics"
-                                isActive={location.pathname.startsWith('/applications')}
-                                icon={<Grid className="w-5 h-5"/>}
+                                to="/duster"
+                                isActive={location.pathname.startsWith('/duster')}
+                                icon={<Wind className="w-5 h-5"/>}
                             >
-                                Analytics
+                                Duster
                             </NavLink>
                             <NavLink
                                 to="/users"

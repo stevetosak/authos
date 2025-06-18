@@ -1,4 +1,4 @@
-package com.tosak.authos
+package com.tosak.authos.common.enums
 
 import com.tosak.authos.exceptions.badreq.PromptParseException
 

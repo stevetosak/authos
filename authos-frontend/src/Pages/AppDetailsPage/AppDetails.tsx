@@ -178,16 +178,16 @@ export default function AppDetails() {
                     </CardHeader>
 
                     <CardContent className="p-0 w-full">
-                        <Tabs defaultValue="general" className="w-full">
+                        <Tabs defaultValue="credentials" className="w-full">
                             <div className="border-b border-gray-700 h-17">
                                 <TabsList className="grid grid-cols-3 bg-gray-800 rounded-none">
-                                    <TabsTrigger
-                                        value="general"
-                                        className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
-                                    >
-                                        <SettingsIcon className="w-4 h-4 mr-2"/>
-                                        General
-                                    </TabsTrigger>
+                                    {/*<TabsTrigger*/}
+                                    {/*    value="general"*/}
+                                    {/*    className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"*/}
+                                    {/*>*/}
+                                    {/*    <SettingsIcon className="w-4 h-4 mr-2"/>*/}
+                                    {/*    General*/}
+                                    {/*</TabsTrigger>*/}
                                     <TabsTrigger
                                         value="credentials"
                                         className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
@@ -205,10 +205,6 @@ export default function AppDetails() {
                                 </TabsList>
                             </div>
 
-                            <TabsContent value="general" className="p-6">
-                                <div className="space-y-6">
-                                </div>
-                            </TabsContent>
 
                             <TabsContent value="credentials" className="p-6 space-y-6">
                                 <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">

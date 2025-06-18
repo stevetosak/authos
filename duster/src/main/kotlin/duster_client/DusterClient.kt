@@ -85,13 +85,11 @@ class DusterClient(val dusterApp: DusterApp) {
         return resp;
     }
 
-    suspend fun sendToCallback(userInfo: UserInfo): HttpResponse {
-
-        val data = UserInfo.getPrunedObject(userInfo)
+    suspend fun sendToCallback(prunedData: HashMap<String,String>): HttpResponse {
 
         return client.post(dusterApp.callbackUri) {
             contentType(ContentType.Application.Json)
-            setBody(data)
+            setBody(prunedData)
         }
     }
 

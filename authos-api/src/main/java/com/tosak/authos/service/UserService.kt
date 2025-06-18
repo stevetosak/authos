@@ -8,7 +8,7 @@ import com.tosak.authos.exceptions.unauthorized.UserNotFoundException
 import com.tosak.authos.pojo.LoginTokenStrategy
 import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.repository.UserRepository
-import com.tosak.authos.utils.JwtTokenFactory
+import com.tosak.authos.common.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +16,6 @@ import org.springframework.http.ResponseCookie
 import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.web.servlet.function.ServerRequest.Headers
 import org.springframework.http.HttpHeaders
 import java.security.InvalidParameterException
 import java.time.Duration

@@ -7,9 +7,9 @@ import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.PPID
 import com.tosak.authos.entity.User
 import com.tosak.authos.entity.compositeKeys.PPIDKey
+import com.tosak.authos.exceptions.PPIDNotFoundException
 import com.tosak.authos.exceptions.unauthorized.InvalidPPIDHashException
 import com.tosak.authos.repository.PPIDRepository
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -33,14 +33,20 @@ open class PPIDService (
      * @param group The application group associated with the user and the PPID.
      * @return The generated or retrieved PPID as a hex-encoded string.
      */
-    open fun getOrCreatePPID(user: User, group: AppGroup) : String{
+    open fun getPPID(user: User, group: AppGroup,create: Boolean = true) : String{
         val ppidOpt = ppidRepository.findById(PPIDKey(group.id,user.id))
 
         if(ppidOpt.isPresent){
             val existingPpid = ppidOpt.get();
             return hex(getHash("${existingPpid.id.groupId}${existingPpid.id.userId}${existingPpid.salt}"))
         }
+        if(!create) throw PPIDNotFoundException("PPID not found")
 
+        return createPPID(user,group);
+
+    }
+
+    open fun createPPID(user: User, group: AppGroup) : String{
         val salt = getSecureRandomValue(8);
         val ppidHash = getHash("${group.id}${user.id}${hex(salt)}")
 
@@ -50,7 +56,6 @@ open class PPIDService (
         println("returned HASH: ${hex(ppidHash)} SAVED HASH : ${ppid.ppidHash}")
 
         return hex(ppidHash);
-
 
     }
 /**

@@ -28,7 +28,6 @@ export const ProfilePage = () => {
     const [recoveryCodes, setRecoveryCodes] = useState([""]);
     const [isMfaEnabled, setIsMfaEnabled] = useState(false);
 
-    // Mock user data
     const user = {
         name: "Alex Johnson",
         email: "alex.johnson@example.com",
@@ -50,7 +49,6 @@ export const ProfilePage = () => {
     return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white p-4 md:p-8">
                 <div className="max-w-6xl mx-auto">
-                    {/* Profile Header */}
                     <div className="flex flex-col md:flex-row gap-6 mb-8">
                         <div className="flex-shrink-0">
                             <div className="relative">
@@ -73,9 +71,7 @@ export const ProfilePage = () => {
                         </div>
                     </div>
 
-                    {/* Main Content */}
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* Sidebar Navigation */}
                         <div className="lg:col-span-1">
                             <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                 <CardContent className="p-4">
@@ -104,9 +100,7 @@ export const ProfilePage = () => {
                             </Card>
                         </div>
 
-                        {/* Main Content Area */}
                         <div className="lg:col-span-3 space-y-6">
-                            {/* Account Tab */}
                             {activeTab === 'account' && (
                                 <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                     <CardHeader className="border-b border-gray-700/50">
@@ -144,10 +138,8 @@ export const ProfilePage = () => {
                                 </Card>
                             )}
 
-                            {/* Security Tab */}
                             {activeTab === 'security' && (
                                 <div className="space-y-6">
-                                    {/* Password Change */}
                                     <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                         <CardHeader className="border-b border-gray-700/50">
                                             <CardTitle className="flex items-center gap-2">
@@ -185,7 +177,6 @@ export const ProfilePage = () => {
                                         </CardContent>
                                     </Card>
 
-                                    {/* Multi-Factor Authentication */}
                                     <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                         <CardHeader className="border-b border-gray-700/50">
                                             <div className="flex justify-between items-center">
@@ -271,7 +262,6 @@ export const ProfilePage = () => {
                                         </CardContent>
                                     </Card>
 
-                                    {/* Linked Accounts */}
                                     <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                         <CardHeader className="border-b border-gray-700/50">
                                             <CardTitle className="flex items-center gap-2">
@@ -305,7 +295,6 @@ export const ProfilePage = () => {
                                 </div>
                             )}
 
-                            {/* Sessions Tab */}
                             {activeTab === 'sessions' && (
                                 <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                     <CardHeader className="border-b border-gray-700/50">
@@ -351,7 +340,6 @@ export const ProfilePage = () => {
                                 </Card>
                             )}
 
-                            {/* Connected Apps Tab */}
                             {activeTab === 'connected' && (
                                 <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                     <CardHeader className="border-b border-gray-700/50">
@@ -391,7 +379,6 @@ export const ProfilePage = () => {
                     </div>
                 </div>
 
-                {/* MFA Setup Modal */}
                 {showMfaSetup && (
                     <Dialog open={showMfaSetup} onOpenChange={setShowMfaSetup}>
                         <DialogContent className="bg-gray-800 border border-gray-700 max-w-md">

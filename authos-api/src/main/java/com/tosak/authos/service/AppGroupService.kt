@@ -15,7 +15,10 @@ import java.time.LocalDateTime
 
 // todo mozda mapa da vrakjam namesto vo appgroup dto da sa apps
 @Service
-open class AppGroupService(private val appGroupRepository: AppGroupRepository) {
+open class AppGroupService(
+    private val appGroupRepository: AppGroupRepository,
+    private val ssoSessionService: SSOSessionService
+) {
 
     //    @Cacheable(value = ["userGroups"], key = "#userId")
     open fun getAllGroupsForUser(userId: Int): List<AppGroup> {
@@ -41,13 +44,27 @@ open class AppGroupService(private val appGroupRepository: AppGroupRepository) {
             savedGr.ssoPolicy, savedGr.mfaPolicy
         )
     }
-    open fun findGroupByIdAndUser(id: Int,user: User): AppGroup {
-        return appGroupRepository.findByIdAndUserId(id,user.id!!) ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
+
+    open fun findGroupByIdAndUser(id: Int, user: User): AppGroup {
+        return appGroupRepository.findByIdAndUserId(id, user.id!!)
+            ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
     }
 
     open fun getDefaultGroupForUser(user: User): AppGroup {
         return appGroupRepository.findAppGroupByUserIdAndIsDefault(user.id!!, true) ?: throw AppGroupsNotFoundException(
             "No default group found"
         )
+    }
+
+    open fun deleteGroup(appGroup: AppGroup,move: Boolean = false) {
+        if (appGroup.isDefault) {
+            val groups = appGroupRepository.findByUserId(appGroup.user.id!!)?.filter { !it.isDefault }
+            if(groups == null || groups.isEmpty()) throw IllegalStateException("At least one app group is required")
+            val newDefaultGr = groups[0];
+            newDefaultGr.isDefault = true;
+            appGroupRepository.save(newDefaultGr);
+        }
+        appGroupRepository.delete(appGroup)
+        ssoSessionService.terminateAllByGroup(appGroup)
     }
 }

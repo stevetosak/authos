@@ -6,5 +6,6 @@ data class AuthorizeRequestParams(
     val state:String,
     val scope:String,
     val idTokenHint:String?,
-    val responseType:String
+    val responseType:String,
+    val dusterSub:String?,
 )

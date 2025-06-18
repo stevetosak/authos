@@ -1,12 +1,11 @@
 package com.tosak.authos.service
 
-import com.tosak.authos.PromptType
+import com.tosak.authos.common.enums.PromptType
 import com.tosak.authos.entity.App
 import com.tosak.authos.exceptions.oauth.InvalidScopeException
-import com.tosak.authos.exceptions.oauth.LoginRequiredException
 import com.tosak.authos.exceptions.oauth.UnsupportedResponseTypeException
 import com.tosak.authos.pojo.AuthorizeRequestParams
-import com.tosak.authos.utils.redirectToLogin
+import com.tosak.authos.common.utils.redirectToLogin
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -38,7 +37,8 @@ class AuthorizationHandler(
         if(authorizeRequestParams.responseType != "code")
             throw UnsupportedResponseTypeException("unsupported response type ${authorizeRequestParams.responseType}")
 
-        appService.verifyClientIdAndRedirectUri(authorizeRequestParams.clientId, authorizeRequestParams.redirectUri)
+       appService.verifyClientIdAndRedirectUri(authorizeRequestParams.clientId, authorizeRequestParams.redirectUri)
+
 
         val promptType = PromptType.parse(prompt)
 
@@ -63,7 +63,7 @@ class AuthorizationHandler(
         }
 
         if(promptType == PromptType.LOGIN || !hasActiveSession){
-            return redirectToLogin(authorizeRequestParams.clientId,authorizeRequestParams.redirectUri,authorizeRequestParams.state,authorizeRequestParams.scope)
+            return redirectToLogin(authorizeRequestParams.clientId,authorizeRequestParams.redirectUri,authorizeRequestParams.state,authorizeRequestParams.scope,dusterSub = authorizeRequestParams.dusterSub)
         }
 
         return when (promptType) {
@@ -98,6 +98,8 @@ class AuthorizationHandler(
 
     }
 
+    //TODO utility metod za vrakjanje vakvi redirect responses
+
     /**
      * Handles the consent flow for a given authorization request.
      *
@@ -110,13 +112,14 @@ class AuthorizationHandler(
      */
     private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams): ResponseEntity<Void> {
 
-        return ResponseEntity.status(303).location(
-            URI(
-                "http://localhost:5173/oauth/user-consent?client_id=${authorizeRequestParams.clientId}&redirect_uri=${authorizeRequestParams.redirectUri}" +
-                        "&state=${authorizeRequestParams.state}&scope=${
-                            URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")
-                        }"
-            )
+        val url = StringBuilder("http://localhost:5173/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
+                "&redirect_uri=${authorizeRequestParams.redirectUri}" +
+                "&state=${authorizeRequestParams.state}&scope=${URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")}")
+        authorizeRequestParams.dusterSub?.let {
+            url.append("&duster_uid=${it}")
+        }
+
+        return ResponseEntity.status(303).location(URI(url.toString())
         ).build();
     }
 
