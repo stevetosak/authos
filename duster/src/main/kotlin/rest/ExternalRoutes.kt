@@ -121,7 +121,7 @@ fun Application.externalRoutes() {
             post("/callback") {
                 val rsp = call.receive<String>()
 
-                call.respondRedirect("http://localhost:5173/duster")
+                call.respondRedirect("https://imaps.mk/Maps/View/T1?floor=0")
                 log.warn("Received user info: $rsp")
             }
         }

@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders
 import java.security.InvalidParameterException
 import java.time.Duration
 import java.util.Optional
+import kotlin.math.max
 
 @Service
 open class UserService @Autowired constructor(
@@ -60,7 +61,8 @@ open class UserService @Autowired constructor(
         return authentication.principal as User
     }
 
-    open fun generateLoginCredentials(user:User,request: HttpServletRequest,group:AppGroup? = null): HttpHeaders {
+    open fun generateLoginCredentials(user:User,request: HttpServletRequest,group:AppGroup? = null,clear: Boolean = false): HttpHeaders {
+        val maxAge = if(clear) Duration.ZERO else Duration.ofHours(1);
         val token = tokenFactory.createToken(LoginTokenStrategy(user,ppidService,request,group,appGroupService))
         val jwtCookie = ResponseCookie
             .from("AUTH_TOKEN", token.serialize())
@@ -68,7 +70,7 @@ open class UserService @Autowired constructor(
             .secure(true)
             .path("/")
             .sameSite("None")
-            .maxAge(Duration.ofHours(1))
+            .maxAge(maxAge)
             .build()
 
         val xsrfCookie = ResponseCookie.from("XSRF-TOKEN", token.jwtClaimsSet.getStringClaim("xsrf_token"))
@@ -76,13 +78,14 @@ open class UserService @Autowired constructor(
             .secure(true)
             .path("/")
             .sameSite("None")
-            .maxAge(Duration.ofHours(1))
+            .maxAge(maxAge)
             .build()
         val headers = HttpHeaders()
         headers.add("Set-Cookie",jwtCookie.toString())
         headers.add("Set-Cookie",xsrfCookie.toString())
         return headers;
     }
+
 
 
 

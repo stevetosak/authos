@@ -35,7 +35,7 @@ export default function RegisterAppPage() {
         responseTypes: ["code"],
         appInfoUri: "",
     });
-    const {refreshAuth,groups} = useAuth()
+    const {refreshAuth,groups,setApps} = useAuth()
 
     const [selectedScopes, setSelectedScopes] = useState<string[]>(["openid"])
     const [redirectUris, setRedirectUris] = useState<string[]>([])
@@ -66,15 +66,16 @@ export default function RegisterAppPage() {
 
         if (formData.appName.trim() == "") throw Error("app name empty")
         if (formData.grantTypes.length == 0) throw Error("you need to add a grant type")
+        if (redirectUris.length == 0) throw Error("At least one redirect uri must be present")
 
 
         try {
-            await apiPostAuthenticated<App>("/app/register", data)
-            await refreshAuth()
+            const resp = await apiPostAuthenticated<App>("/app/register", data)
+            setApps(prev => ([...prev,resp.data]))
             toast.success(`Successfully registered app: ${formData.appName}`)
             setTimeout(() => {
                 nav("/dashboard")
-            }, 500)
+            }, 300)
 
 
         } catch (err) {

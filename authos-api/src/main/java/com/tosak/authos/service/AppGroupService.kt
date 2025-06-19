@@ -67,4 +67,19 @@ open class AppGroupService(
         appGroupRepository.delete(appGroup)
         ssoSessionService.terminateAllByGroup(appGroup)
     }
+
+    @Transactional
+    open fun updateGroup(appGroupDto: AppGroupDTO,user: User): AppGroup {
+        val group = appGroupRepository.findGroupById(appGroupDto.id!!) ?: throw AppGroupsNotFoundException("Cant find group")
+        if (appGroupDto.isDefault) {
+            val defaultGroup = getDefaultGroupForUser(user);
+            defaultGroup.isDefault = false;
+            appGroupRepository.save(defaultGroup);
+        }
+        group.isDefault = appGroupDto.isDefault
+        group.name = appGroupDto.name
+        group.mfaPolicy = appGroupDto.mfaPolicy
+        group.ssoPolicy = appGroupDto.ssoPolicy
+        return appGroupRepository.save(group)
+    }
 }

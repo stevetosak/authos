@@ -180,10 +180,11 @@ open class AuthController(
 
     @GetMapping("/logoutall")
     @PostMapping("/logoutall")
-    fun logout(authentication: Authentication?): ResponseEntity<Void> {
+    fun logout(authentication: Authentication?,request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
         ssoSessionService.terminateAllByUser(user)
-        return ResponseEntity.ok().build()
+        val headers = userService.generateLoginCredentials(user = user,request = request,clear = true);
+        return ResponseEntity.status(200).headers(headers).build();
     }
 
 

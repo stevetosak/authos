@@ -26,8 +26,9 @@ open class AppService(
     private val appGroupRepository: AppGroupRepository,
     private val appGroupService: AppGroupService,
     private val aesUtil: AESUtil,
+    private val sSOSessionService: SSOSessionService,
 
-) {
+    ) {
     open fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
         return appRepository.findAppByClientIdAndRedirectUri(clientId, redirectUri)
             ?: throw InvalidClientCredentialsException("Invalid client credentials.")
@@ -47,6 +48,9 @@ open class AppService(
 
     open fun getAppById(appId: Int): App {
         return appRepository.findAppById(appId) ?: throw InvalidUserIdException("No app found for user")
+    }
+    open fun getAppByIdAndUser(appId: Int, user: User): App {
+        return appRepository.findByIdAndUserId(appId, userId = user.id!!) ?: throw InvalidUserIdException("No app found for user")
     }
 
     open fun getAppByClientId(clientId: String): App {
@@ -184,6 +188,11 @@ open class AppService(
             app.grantTypesCollection,
             app.tokenEndpointAuthMethod
         )
+    }
+
+    open fun deleteApp(app: App){
+        appRepository.delete(app)
+        sSOSessionService.terminateAllByGroup(app.group)
     }
 
 //    open fun fromDTO(appDTO: AppDTO) : App {

@@ -13,27 +13,38 @@ import {
     Calendar,
     Pencil,
     XIcon,
-    CheckIcon
+    CheckIcon, DeleteIcon, Trash2
 } from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {motion} from "framer-motion"
-import Layout from "@/Pages/components/Layout.tsx";
 import {useNavigate} from "react-router-dom";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {AddGroupModal} from "@/Pages/components/AddGroupModal.tsx";
-import {AppGroup, defaultAppGroup} from "@/services/interfaces.ts";
+import {AppGroup, AppGroupEditableField, defaultAppGroup} from "@/services/interfaces.ts";
 import {Label} from "@/components/ui/label.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
+import {apiPostAuthenticated} from "@/services/config.ts";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel,
+    AlertDialogContent, AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog.tsx";
+import {toast} from "sonner";
+import {Input} from "@/components/ui/input.tsx";
 
 const Dashboard: React.FC = () => {
-    const {user, isAuthenticated, groups, apps} = useAuth();
-    const [showUserSidebar, setShowUserSidebar] = useState(true);
+    const {user, isAuthenticated, groups, apps,setGroups} = useAuth();
     const nav = useNavigate();
     const [selectedGroup, setSelectedGroup] = useState<AppGroup>(defaultAppGroup)
     const [isEditingGroup,setIsEditingGroup] = useState<boolean>(false)
+    const [selectedGroupEditing,setSelectedGroupEditing] = useState<AppGroup>(defaultAppGroup)
+    const [showDeleteDialog,setShowDeleteDialog] = useState<boolean>(false);
 
 
     const handleGroupClick = (group: AppGroup) => {
@@ -41,26 +52,53 @@ const Dashboard: React.FC = () => {
             setSelectedGroup(defaultAppGroup)
         } else {
             setSelectedGroup(group)
+            setSelectedGroupEditing(group)
         }
     }
 
-    const handleGroupUpdate = (param:string,value:any) => {
+    const handleGroupUpdate = (param:AppGroupEditableField,value:any) => {
+        setSelectedGroupEditing((prev : AppGroup) => ({
+            ...prev,
+            [param] : value
+        }))
+    }
+    const handleGroupSave = async () => {
+        console.log("Group: " + JSON.stringify(selectedGroupEditing))
+        if(selectedGroupEditing !== selectedGroup){
+            await apiPostAuthenticated<AppGroup>("/group/update",selectedGroupEditing)
+            setSelectedGroup(selectedGroupEditing);
+            setGroups(prevGroups => prevGroups.map(gr =>
+            gr.id === selectedGroupEditing.id ? {...gr,...selectedGroupEditing} : gr) )
+        }
+        setIsEditingGroup(false)
 
     }
-    const handleGroupSave = () => {
+    const handleDeleteGroup = async () => {
+        if(groups.length < 2) {
+            alert("Cant delete, no other groups present")
+            return;
+        }
+        await apiPostAuthenticated(`/group/delete?group_id=${selectedGroup.id}`)
+        toast.success("Successfully deleted group!")
+        const filteredGroups = groups.filter(g => g.id !== selectedGroup.id)
+        setGroups(filteredGroups)
+        setSelectedGroup(filteredGroups[0])
+        setSelectedGroupEditing(filteredGroups[0])
 
     }
     const handleGroupCancel = () => {
-
+        setIsEditingGroup(false)
     }
 
     useEffect(() => {
         console.log("USER:::   " + JSON.stringify(user));
         console.log("IS AUTH:" + isAuthenticated);
+        setSelectedGroup(groups[0])
     }, [user, isAuthenticated]);
 
-    const handleEditGroup = (gr) => {
-        setIsEditingGroup(true)
+    const toggleEditGroup = () => {
+        if(!isEditingGroup) setSelectedGroupEditing(selectedGroup)
+        setIsEditingGroup(!isEditingGroup)
     }
 
     const handleAppClick = (appId: number) => {
@@ -135,9 +173,18 @@ const Dashboard: React.FC = () => {
                                                         <div className="flex items-center gap-3">
                                                             <div
                                                                 className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"/>
-                                                            <CardTitle className="text-xl text-white">
-                                                                {selectedGroup.name}
-                                                            </CardTitle>
+                                                            {!isEditingGroup ? (
+                                                                <CardTitle className="text-xl text-white">
+                                                                    {selectedGroup.name}
+                                                                </CardTitle>
+                                                            ) : (
+                                                                <div className={"flex flex-col"}>
+                                                                    <CardTitle>
+                                                                        <Input className={"text-xl text-white"} name={"name"} value={selectedGroupEditing.name} placeholder={"Name"} onChange={(e) => handleGroupUpdate("name",e.target.value)}></Input>
+                                                                    </CardTitle>
+                                                                </div>
+                                                            ) }
+
                                                             {selectedGroup && (
                                                                 <Tooltip>
                                                                     <TooltipTrigger asChild>
@@ -145,7 +192,7 @@ const Dashboard: React.FC = () => {
                                                                             variant="ghost"
                                                                             size="icon"
                                                                             className="h-8 w-8 text-gray-400 hover:text-emerald-400 hover:bg-gray-700/50"
-                                                                            onClick={() => handleEditGroup(selectedGroup)}
+                                                                            onClick={() => toggleEditGroup()}
                                                                         >
                                                                             <Pencil className="w-4 h-4"/>
                                                                         </Button>
@@ -161,8 +208,8 @@ const Dashboard: React.FC = () => {
                                                         </CardDescription>
                                                     </div>
 
-                                                    {isEditingGroup && (
-                                                        <>
+                                                    {isEditingGroup ? (
+                                                        <div className={"flex justify-end gap-4"}>
                                                             <Button
                                                                 variant="outline"
                                                                 onClick={handleGroupCancel}
@@ -172,39 +219,57 @@ const Dashboard: React.FC = () => {
                                                                 Cancel
                                                             </Button>
                                                             <Button
+                                                                variant={"outline"}
                                                                 onClick={handleGroupSave}
-                                                                className="bg-emerald-600 hover:bg-emerald-500 w-full sm:w-auto"
+                                                                className="border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300 w-full sm:w-auto"
                                                             >
                                                                 <CheckIcon className="w-4 h-4 mr-2"/>
                                                                 Save Changes
                                                             </Button>
-                                                        </>
-                                                    ) }
-
-                                                    <div className="flex justify-end items-start gap-2">
-                                                        {selectedGroup && (
-                                                            <Button
-                                                                variant="outline"
-                                                                className="flex items-center gap-2 border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white"
-                                                                onClick={() => handleEditGroup(selectedGroup)}
-                                                            >
-                                                                <Pencil className="w-4 h-4"/>
-                                                                <span className="hidden md:inline">Edit Group</span>
-                                                            </Button>
-                                                        )}
+                                                        </div>
+                                                    ) : (<div className="flex justify-end items-start gap-2">
                                                         <Button
                                                             variant="outline"
-                                                            className="flex items-center gap-2 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"
+                                                            className="flex items-center gap-2 hover:translate-0.5 border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300"
                                                             onClick={() => nav(`/connect/register?group=${selectedGroup.id}`)}
                                                         >
                                                             <Plus className="w-4 h-4"/>
                                                             <span>New Application</span>
                                                         </Button>
-                                                    </div>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild={true}>
+                                                                <Button variant={"default"} className={"flex items-center gap-2 " +
+                                                                    "hover:bg-red-500 hover:translate-x-0.5 hover:-translate-y-0.5"}
+                                                                >
+                                                                    <Trash2/>
+                                                                    <span>Delete Group</span>
+                                                                </Button>
+                                                        </AlertDialogTrigger>
+                                                            <AlertDialogContent className={"bg-gradient-to-br from-gray-800 to to-gray-900 border-gray-700 border-s-2"}>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This action cannot be undone.
+                                                                        This will permanently delete the selected group and all of the applications associated with it.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel className={"bg-emerald-600 border-gray-900 border-2 hover:bg-emerald-400"}>
+                                                                            Cancel
+                                                                    </AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDeleteGroup()} className={"border-red-500 hover:bg-red-700 hover:translate-x-0.5 hover:-translate-y-0.5"}>
+                                                                        Confirm
+                                                                    </AlertDialogAction>
+
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>)}
+
+
 
                                                     <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 md:col-span-3">
                                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                                            {/* Default Group */}
                                                             <div className="space-y-1">
                                                                 <Label className="text-gray-400 text-sm flex items-center gap-1">
                                                                     <CheckCircle className="w-4 h-4 text-emerald-400" />
@@ -212,7 +277,7 @@ const Dashboard: React.FC = () => {
                                                                 </Label>
                                                                 {isEditingGroup ? (
                                                                     <Select
-                                                                        value={selectedGroup?.isDefault ? "true" : "false"}
+                                                                        value={selectedGroupEditing?.isDefault ? "true" : "false"}
                                                                         onValueChange={(value) => handleGroupUpdate("isDefault", value === "true")}
                                                                     >
                                                                         <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white">
@@ -230,7 +295,6 @@ const Dashboard: React.FC = () => {
                                                                 )}
                                                             </div>
 
-                                                            {/* MFA Policy */}
                                                             <div className="space-y-1">
                                                                 <Label className="text-gray-400 text-sm flex items-center gap-1">
                                                                     <Shield className="w-4 h-4 text-blue-400" />
@@ -238,16 +302,16 @@ const Dashboard: React.FC = () => {
                                                                 </Label>
                                                                 {isEditingGroup ? (
                                                                     <Select
-                                                                        value={selectedGroup?.mfaPolicy || ""}
+                                                                        value={selectedGroupEditing?.mfaPolicy || ""}
                                                                         onValueChange={(value) => handleGroupUpdate("mfaPolicy", value)}
                                                                     >
                                                                         <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white">
                                                                             <SelectValue placeholder="Select policy" />
                                                                         </SelectTrigger>
                                                                         <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                                                                            <SelectItem value="REQUIRED">Required</SelectItem>
-                                                                            <SelectItem value="OPTIONAL">Optional</SelectItem>
-                                                                            <SelectItem value="DISABLED">Disabled</SelectItem>
+                                                                           <SelectItem value={"Email"}>Email</SelectItem>
+                                                                            <SelectItem value={"Phone"}>Phone</SelectItem>
+                                                                            <SelectItem value={"Disabled"}>Disabled</SelectItem>
                                                                         </SelectContent>
                                                                     </Select>
                                                                 ) : (
@@ -260,7 +324,6 @@ const Dashboard: React.FC = () => {
                                                                 )}
                                                             </div>
 
-                                                            {/* SSO Policy */}
                                                             <div className="space-y-1">
                                                                 <Label className="text-gray-400 text-sm flex items-center gap-1">
                                                                     <Key className="w-4 h-4 text-purple-400" />
@@ -268,16 +331,17 @@ const Dashboard: React.FC = () => {
                                                                 </Label>
                                                                 {isEditingGroup ? (
                                                                     <Select
-                                                                        value={selectedGroup?.ssoPolicy || ""}
+                                                                        value={selectedGroupEditing?.ssoPolicy || ""}
                                                                         onValueChange={(value) => handleGroupUpdate("ssoPolicy", value)}
                                                                     >
                                                                         <SelectTrigger className="w-full bg-gray-700 border-gray-600 text-white">
                                                                             <SelectValue placeholder="Select policy" />
                                                                         </SelectTrigger>
                                                                         <SelectContent className="bg-gray-800 border-gray-700 text-white">
-                                                                            <SelectItem value="REQUIRED">Required</SelectItem>
-                                                                            <SelectItem value="OPTIONAL">Optional</SelectItem>
-                                                                            <SelectItem value="DISABLED">Disabled</SelectItem>
+                                                                            <SelectItem value="Full">Full</SelectItem>
+                                                                            <SelectItem value="Partial">Partial</SelectItem>
+                                                                            <SelectItem value="Same-Domain">Same-Domain</SelectItem>
+                                                                            <SelectItem value="Disabled">Disabled</SelectItem>
                                                                         </SelectContent>
                                                                     </Select>
                                                                 ) : (
@@ -322,6 +386,8 @@ const Dashboard: React.FC = () => {
                                 </CardHeader>
                             </Card>
                         </div>
+
+
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {(selectedGroup !== defaultAppGroup
@@ -399,10 +465,6 @@ const Dashboard: React.FC = () => {
                                 <p className="text-gray-400 max-w-md mb-6">
                                     Get started by adding your first application to this group
                                 </p>
-                                <Button className="gap-2 bg-green-600 hover:bg-green-500/90">
-                                    <Plus className="w-4 h-4"/>
-                                    Add Application
-                                </Button>
                             </motion.div>
                         )}
                     </div>

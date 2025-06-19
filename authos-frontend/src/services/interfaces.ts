@@ -40,6 +40,7 @@ export interface CreateAppGroupDTO {
     ssoPolicy: SSOPolicyValue,
     mfaPolicy: MFAPolicyValue
 }
+export type AppGroupEditableField = "isDefault" | "name" | "ssoPolicy" | "mfaPolicy"
 
 export const defaultUser: User = {id: -1,email: "",firstName: "",lastName: "", phone: ""}
 export const defaultApp: App = {

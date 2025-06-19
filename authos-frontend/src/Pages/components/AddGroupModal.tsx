@@ -6,7 +6,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Checkbox} from "@/components/ui/checkbox.tsx";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
+import {Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {api, apiPostAuthenticated} from "@/services/config.ts";
 import {AppGroup, CreateAppGroupDTO, MFAPolicyValue, SSOPolicyValue} from "@/services/interfaces.ts";
 import {useAuth} from "@/services/useAuth.ts";
@@ -38,7 +38,7 @@ export function AddGroupModal() {
     const [isDefault, setIsDefault] = useState(false);
     const [mfaPolicy, setMfaPolicy] = useState<MFAPolicyValue>("Disabled")
     const [ssoPolicy, setSsoPolicy] = useState<SSOPolicyValue>("Partial")
-    const {user,setGroups} = useAuth();
+    const {user, setGroups} = useAuth();
 
     const resetData = () => {
         setGroupName("");
@@ -60,12 +60,12 @@ export function AddGroupModal() {
 
         console.log("Creating group:", JSON.stringify(group));
 
-        apiPostAuthenticated<AppGroup>("/group/add",group)
+        apiPostAuthenticated<AppGroup>("/group/add", group)
             .then((resp: AxiosResponse<AppGroup>) => {
-            setGroups((prevGroups) => [...prevGroups, resp.data]);
-            toast.success("Successfully created app group");
-            setTimeout(resetData, 300);
-        });
+                setGroups((prevGroups) => [...prevGroups, resp.data]);
+                toast.success("Successfully created app group");
+                resetData()
+            });
 
     };
 
@@ -110,35 +110,59 @@ export function AddGroupModal() {
                     <div className={"flex justify-between"}>
 
 
+
+
                         <div className="flex items-center space-x-3">
-                            <Checkbox
-                                id="default-group"
-                                checked={isDefault}
-                                onCheckedChange={(checked) => setIsDefault(checked as boolean)}
-                                className="border-gray-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                            />
-                            <div className="flex items-center gap-2">
-                                <Label htmlFor="default-group" className="text-gray-300">
-                                    Set as default group
-                                </Label>
-                                <TooltipWrapper
-                                    content="New applications will be added automatically to default group"/>
+                            <div className={"space-y-2"}>
+                                <Label className={"p-1"}>MFA Policy</Label>
+                                <Select onValueChange={(val) => setMfaPolicy(val as MFAPolicyValue)} value={mfaPolicy}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="MFA Policy"/>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-gray-700">
+                                        <SelectItem value="Email">Email</SelectItem>
+                                        <SelectItem value="Phone">Phone</SelectItem>
+                                        <SelectItem value="Disabled">Disabled</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
+
+                            <TooltipWrapper
+                                content={
+                                    <div className="space-y-2 italic">
+                                        <p><strong>Email:</strong> Email confirmation </p>
+                                        <p><strong>Phone:</strong> SMS confirmation</p>
+                                    </div>
+                                }
+                            >
+                                <button
+                                    type="button"
+                                    className="text-gray-400 hover:text-gray-300 focus:outline-none"
+                                    aria-label="SSO Policy Help"
+                                >
+                                    <Info className="h-5 w-5"/>
+                                </button>
+                            </TooltipWrapper>
                         </div>
 
 
                         <div className="flex items-center space-x-3">
-                            <Select onValueChange={(val) => setSsoPolicy(val as SSOPolicyValue)} value={ssoPolicy}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="SSO Policy"/>
-                                </SelectTrigger>
-                                <SelectContent className="bg-gray-700">
-                                    <SelectItem value="Full">Full</SelectItem>
-                                    <SelectItem value="Partial">Partial</SelectItem>
-                                    <SelectItem value="Same-Domain">Same-Domain</SelectItem>
-                                    <SelectItem value="Disabled">Disabled</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className={"space-y-2"}>
+                                <Label className={"p-1"}>SSO Policy</Label>
+                                <Select onValueChange={(val) => setSsoPolicy(val as SSOPolicyValue)} value={ssoPolicy}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="SSO Policy"/>
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-gray-700">
+                                        <SelectItem value="Full">Full</SelectItem>
+                                        <SelectItem value="Partial">Partial</SelectItem>
+                                        <SelectItem value="Same-Domain">Same-Domain</SelectItem>
+                                        <SelectItem value="Disabled">Disabled</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                            </div>
+
 
                             <TooltipWrapper
                                 content={
@@ -162,34 +186,20 @@ export function AddGroupModal() {
                         </div>
                     </div>
                     <div>
-                        <div className="flex items-center space-x-3">
-                            <Select onValueChange={(val) => setMfaPolicy(val as MFAPolicyValue)} value={mfaPolicy}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="MFA Policy"/>
-                                </SelectTrigger>
-                                <SelectContent className="bg-gray-700">
-                                    <SelectItem value="Email">Email</SelectItem>
-                                    <SelectItem value="Phone">Phone</SelectItem>
-                                    <SelectItem value="Disabled">Disabled</SelectItem>
-                                </SelectContent>
-                            </Select>
-
-                            <TooltipWrapper
-                                content={
-                                    <div className="space-y-2 italic">
-                                        <p><strong>Email:</strong> Email confirmation </p>
-                                        <p><strong>Phone:</strong> SMS confirmation</p>
-                                    </div>
-                                }
-                            >
-                                <button
-                                    type="button"
-                                    className="text-gray-400 hover:text-gray-300 focus:outline-none"
-                                    aria-label="SSO Policy Help"
-                                >
-                                    <Info className="h-5 w-5"/>
-                                </button>
-                            </TooltipWrapper>
+                        <div className="flex items-center space-x-3 p-1">
+                            <Checkbox
+                                id="default-group"
+                                checked={isDefault}
+                                onCheckedChange={(checked) => setIsDefault(checked as boolean)}
+                                className="border-gray-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                            />
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="default-group" className="text-gray-300">
+                                    Set as default group
+                                </Label>
+                                <TooltipWrapper
+                                    content="New applications will be added automatically to default group"/>
+                            </div>
                         </div>
                     </div>
 

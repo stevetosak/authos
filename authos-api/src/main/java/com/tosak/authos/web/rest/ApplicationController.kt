@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -31,8 +32,7 @@ class ApplicationController(
     private val appService: AppService,
     private val userService: UserService,
     private val appGroupService: AppGroupService,
-)
-{
+) {
 
     /**
      * Registers a new application with the provided details.
@@ -42,13 +42,16 @@ class ApplicationController(
      * @return a ResponseEntity containing the details of the registered application as an AppDTO object
      */
     @PostMapping("/app/register")
-    fun registerApp(@RequestBody appDto: RegisterAppDTO,
-                    authentication: Authentication? ): ResponseEntity<AppDTO> {
+    fun registerApp(
+        @RequestBody appDto: RegisterAppDTO,
+        authentication: Authentication?
+    ): ResponseEntity<AppDTO> {
         val user = userService.getUserFromAuthentication(authentication)
-        val response = appService.registerApp(appDto,user)
+        val response = appService.registerApp(appDto, user)
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
+
     /**
      * Updates an existing application with the provided data.
      *
@@ -57,15 +60,25 @@ class ApplicationController(
      * @return A ResponseEntity containing the updated AppDTO object and an HTTP status code indicating the result.
      */
     @PostMapping("/app/update")
-    fun updateApp(@RequestBody appDto: AppDTO,
-                  authentication: Authentication?) : ResponseEntity<AppDTO> {
+    fun updateApp(
+        @RequestBody appDto: AppDTO,
+        authentication: Authentication?
+    ): ResponseEntity<AppDTO> {
         //todo validate
         val user = userService.getUserFromAuthentication(authentication)
-        val app = appService.updateApp(user,appDto)
+        val app = appService.updateApp(user, appDto)
 
         return ResponseEntity.status(201).body(appService.toDTO(app))
 
     }
+    @PostMapping("/app/delete")
+    fun deleteApp(@RequestParam("app_id") appId: Int,authentication: Authentication?): ResponseEntity<AppDTO> {
+        val user = userService.getUserFromAuthentication(authentication)
+        val app = appService.getAppByIdAndUser(appId = appId,user)
+        appService.deleteApp(app)
+        return ResponseEntity.status(200).build()
+    }
+
     /**
      * Regenerates the client secret for the provided application.
      *
@@ -73,10 +86,11 @@ class ApplicationController(
      * @return ResponseEntity containing the updated AppDTO with the regenerated secret information
      */
     @PostMapping("/app/regenerate-secret")
-    fun regenerateSecret(@RequestBody app: AppDTO) :ResponseEntity<AppDTO>{
+    fun regenerateSecret(@RequestBody app: AppDTO): ResponseEntity<AppDTO> {
         val appDto = appService.regenerateSecret(app)
         return ResponseEntity.status(201).body(appDto)
     }
+
     /**
      * Adds a new application group for the authenticated user.
      *
@@ -88,15 +102,26 @@ class ApplicationController(
      *         a status of HTTP 201 (Created).
      */
     @PostMapping("/group/add")
-    fun addGroup (@RequestBody groupDTO: CreateAppGroupDTO,authentication: Authentication?) : ResponseEntity<AppGroupDTO>{
+    fun addGroup(
+        @RequestBody groupDTO: CreateAppGroupDTO,
+        authentication: Authentication?
+    ): ResponseEntity<AppGroupDTO> {
         val user = userService.getUserFromAuthentication(authentication)
-        val group = appGroupService.createAppGroup(groupDTO,user)
+        val group = appGroupService.createAppGroup(groupDTO, user)
         return ResponseEntity.status(HttpStatus.CREATED).body(group)
     }
-    @PostMapping("/group/delete")
-    fun deleteGroup(groupId:Int,authentication: Authentication?) : ResponseEntity<Void>{
+
+    @PostMapping("/group/update")
+    fun updateGroup(@RequestBody appGroupDto: AppGroupDTO, authentication: Authentication?) :ResponseEntity<AppGroupDTO> {
         val user = userService.getUserFromAuthentication(authentication)
-        val group: AppGroup = appGroupService.findGroupByIdAndUser(groupId,user)
+        val group = appGroupService.updateGroup(appGroupDto,user);
+        return ResponseEntity.ok(group.toDTO())
+    }
+
+    @PostMapping("/group/delete")
+    fun deleteGroup(@RequestParam("group_id") groupId: Int, authentication: Authentication?): ResponseEntity<Void> {
+        val user = userService.getUserFromAuthentication(authentication)
+        val group: AppGroup = appGroupService.findGroupByIdAndUser(groupId, user)
         appGroupService.deleteGroup(group)
         return ResponseEntity.ok().build()
     }

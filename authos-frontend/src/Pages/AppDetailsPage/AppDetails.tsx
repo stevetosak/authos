@@ -29,14 +29,16 @@ import {DataWrapper, WrapperState} from "@/Pages/components/wrappers/DataWrapper
 import {useAppEditor} from "@/Pages/components/hooks/use-app-editor.ts";
 import {Badge} from "@/components/ui/badge.tsx";
 import {apiPostAuthenticated} from "@/services/config.ts";
+import {useNavigate} from "react-router-dom";
 
 //TODO AUTHORIZATION PER USER
 // TODO GRAPHS AND METRICS IN GENERAL
 
 export default function AppDetails() {
-    const {apps} = useAuth()
+    const {apps,setApps} = useAuth()
     const {appId} = useParams();
     const [app, setApp] = useState<App>(Factory.appDefault());
+    const nav = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
     const [isRegeneratingSecret, setIsRegeneratingSecret] = useState(false);
@@ -60,7 +62,7 @@ export default function AppDetails() {
                 setApp(targetApp);
                 setEditedApp(targetApp)
             }else {
-
+                console.error("app undefined")
             }
             console.error("Cant find app with that id")
         }
@@ -93,6 +95,9 @@ export default function AppDetails() {
 
 
     };
+    const handleDelete = async () => {
+
+    }
 
     const handleCancel = () => {
         setIsEditing(false);
@@ -125,8 +130,13 @@ export default function AppDetails() {
             action: {
                 label: "Delete",
                 onClick: () => {
-                    toast.error("Application deleted");
-                    //redirect tuka do dashboard pak
+                    apiPostAuthenticated(`/app/delete?app_id=${app.id}`).then( () =>{
+                        toast.success("Successfully deleted app!")
+                        setApps(apps.filter(a => a.id !== app.id))
+                        setTimeout(() => {
+                            nav("/dashboard")
+                        },300)
+                    })
                 }
             },
             cancel: {
