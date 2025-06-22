@@ -19,8 +19,8 @@ open class IdTokenService (private val idTokenRepository : IdTokenRepository)
             accessToken,
             token.jwtClaimsSet.audience.joinToString(" "),
             sub = token.jwtClaimsSet.subject,
-            uaHash = token.jwtClaimsSet.getStringClaim("ua_hash"),
-            ipHash = token.jwtClaimsSet.getStringClaim("ip_hash"),
+            uaHash = "nimpl",
+            ipHash = "nimpl",
         )
         idTokenRepository.save(idToken)
     }

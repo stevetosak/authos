@@ -26,8 +26,6 @@ class IdTokenStrategy(
             .expirationTime(Date(System.currentTimeMillis() + 3600 * 1000)) // 1 sat
             .issueTime(Date())
             .jwtID(UUID.randomUUID().toString())
-            .claim("ua_hash", b64UrlSafeEncoder(getHash(request.getHeader("User-Agent"))))
-            .claim("ip_hash", b64UrlSafeEncoder(getHash(request.remoteAddr)))
             .claim("auth_time",Date())
             .build();
     }

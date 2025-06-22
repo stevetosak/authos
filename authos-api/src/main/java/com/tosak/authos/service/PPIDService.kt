@@ -53,7 +53,6 @@ open class PPIDService (
         val ppid = PPID(PPIDKey(group.id,user.id),hex(salt), LocalDateTime.now(),hex(ppidHash))
         ppidRepository.save(ppid)
 
-        println("returned HASH: ${hex(ppidHash)} SAVED HASH : ${ppid.ppidHash}")
 
         return hex(ppidHash);
 

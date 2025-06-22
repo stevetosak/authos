@@ -62,13 +62,10 @@ open class TokenService(
         token = token.takeIf { it != null && !app.refreshTokenRotationEnabled }
             ?: generateRefreshToken(user = authorizationCode.user, clientId = app.clientId, scope = authorizationCode.scope)
 
-        println("token size: ${token.tokenValue.length}")
         val refreshToken = refreshTokenRepository.save(token)
         return RefreshTokenWrapper(aesUtil.decrypt(b64UrlSafeDecoder(refreshToken.tokenValue)), refreshToken)
     }
 
-
-    // access tokens are opaque tokens
     @Transactional
     open fun generateAccessToken(
         clientId: String,
@@ -96,7 +93,6 @@ open class TokenService(
 
     fun validateRefreshToken(token: String, clientId: String): RefreshTokenWrapper {
         val tokenHash = b64UrlSafeEncoder(getHash(token))
-        println("tokenHash: $tokenHash")
         val refreshToken = refreshTokenRepository.findRefreshTokenByTokenHash(tokenHash)
             ?: throw InvalidRefreshTokenException("Invalid refresh token")
         require(!refreshToken.revoked) { "ALERT: token revoked" }

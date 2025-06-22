@@ -1,7 +1,5 @@
 package com.tosak.authos.common.utils
 
-import com.tosak.authos.crypto.b64UrlSafeDecoder
-import com.tosak.authos.crypto.b64UrlSafeEncoder
 import org.springframework.stereotype.Component
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -12,14 +10,14 @@ import javax.crypto.spec.GCMParameterSpec
 class AESUtil(
     private val key: SecretKey
 ) {
-    private val ENCRPYTON_ALGO: String = "AES/GCM/NoPadding"
+    private val ENCRYPTION_ALGO: String = "AES/GCM/NoPadding"
     private val TAG_LENGTH_BIT: Int = 128;
     private val IV_LENGTH_BYTE: Int = 12;
 
 
     fun encrypt(plainText: String): ByteArray {
         val iv = generateIV()
-        val cipher = Cipher.getInstance(ENCRPYTON_ALGO)
+        val cipher = Cipher.getInstance(ENCRYPTION_ALGO)
         val parameterSpec = GCMParameterSpec(TAG_LENGTH_BIT, iv)
         cipher.init(Cipher.ENCRYPT_MODE, key, parameterSpec)
         val cipherText = cipher.doFinal(plainText.toByteArray())
@@ -47,7 +45,7 @@ class AESUtil(
 
     private fun generateIV(): ByteArray {
         val srand = SecureRandom()
-        val iv: ByteArray = ByteArray(IV_LENGTH_BYTE)
+        val iv = ByteArray(IV_LENGTH_BYTE)
         srand.nextBytes(iv)
         return iv;
     }

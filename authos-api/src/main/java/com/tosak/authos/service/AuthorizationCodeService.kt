@@ -1,9 +1,5 @@
 package com.tosak.authos.service
 
-import com.tosak.authos.crypto.b64UrlSafeEncoder
-import com.tosak.authos.crypto.getHash
-import com.tosak.authos.crypto.getSecureRandomValue
-import com.tosak.authos.crypto.hex
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AuthorizationCode
@@ -15,10 +11,7 @@ import com.tosak.authos.exceptions.unauthorized.AuthorizationCodeUsedException
 import com.tosak.authos.exceptions.unauthorized.InvalidAuthorizationCodeCredentials
 import com.tosak.authos.repository.AuthorizationCodeRepository
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.security.SecureRandom
 import java.time.LocalDateTime
-import java.util.*
 
 @Service
 class AuthorizationCodeService (
@@ -30,7 +23,7 @@ class AuthorizationCodeService (
         val authorizationCode = AuthorizationCode(clientId = clientId,redirectUri = redirectUri,scope = scope, user = user)
         authorizationCodeRepository.save(authorizationCode)
 
-        return authorizationCode.codeHash
+        return authorizationCode.codeVal
 
     }
 

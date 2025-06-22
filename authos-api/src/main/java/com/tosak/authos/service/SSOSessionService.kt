@@ -1,5 +1,6 @@
 package com.tosak.authos.service
 
+import com.tosak.authos.common.utils.getRequestParamHash
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
@@ -7,11 +8,14 @@ import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
-import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DataAccessException
+import org.springframework.data.redis.core.RedisOperations
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.SessionCallback
 import org.springframework.session.data.redis.RedisIndexedSessionRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
@@ -56,6 +60,8 @@ open class SSOSessionService(
          * Utilized in various SSO operations such as session creation, validation, and termination.
          */
         const val AUTHOS_SSO_KEY_PREFIX = "authos:sso"
+
+
     }
 
     /**
@@ -65,7 +71,7 @@ open class SSOSessionService(
      * @param groupId The unique identifier of the group.
      * @return A string representing the SSO key for the given user and group.
      */
-    open fun ssoRedisKey(userId: Int, groupId: Int): String {
+    open fun ssoGroupKey(userId: Int, groupId: Int): String {
         return "$AUTHOS_SSO_KEY_PREFIX:${userId}:${groupId}"
     }
 
@@ -78,23 +84,27 @@ open class SSOSessionService(
      */
     @Transactional
     open fun initializeSession(user: User, app: App, existingSession: HttpSession, request: HttpServletRequest) {
-        val key = ssoRedisKey(user.id!!, app.group.id!!)
+        val ssoGroupKey = ssoGroupKey(user.id!!, app.group.id!!)
         if (!existingSession.isNew) {
-            redisTemplate.opsForSet().remove(key, existingSession.id)
+            redisTemplate.opsForSet().remove(ssoGroupKey, existingSession.id)
             existingSession.invalidate()
         }
         val freshSession = request.getSession(true);
         freshSession.setAttribute("user", user.id)
         freshSession.setAttribute("app", app.id)
         freshSession.setAttribute("created_at", LocalDateTime.now())
+        val paramHash = getRequestParamHash(request)
+        freshSession.setAttribute("param_hash", paramHash)
 
-        redisTemplate.opsForSet().add(key, freshSession.id)
-        redisTemplate.expire(key, Duration.ofSeconds(3600))
+
+        redisTemplate.opsForSet().add(ssoGroupKey, freshSession.id)
+        redisTemplate.expire(ssoGroupKey, Duration.ofSeconds(3600))
 
         freshSession.setAttribute("forcePersist", UUID.randomUUID().toString())
 
 
     }
+
 
 
     /**
@@ -110,7 +120,7 @@ open class SSOSessionService(
         val app = appRepository.findAppById(appId)
             ?: throw IllegalArgumentException("Cant find app")
 
-        return redisTemplate.hasKey(ssoRedisKey(user.id!!, app.group.id!!))
+        return redisTemplate.hasKey(ssoGroupKey(user.id!!, app.group.id!!))
     }
 
     /**
@@ -121,19 +131,19 @@ open class SSOSessionService(
      * @param app Represents the application associated with the user's session.
      * @param httpSession The HTTP session object to be invalidated.
      */
-    open fun terminate(user: User, app: App, httpSession: HttpSession): Boolean {
-        val sessions = redisTemplate.opsForSet().members(ssoRedisKey(user.id!!, app.group.id!!))
+    open fun terminateSSOSession(user: User, app: App, httpSession: HttpSession): Boolean {
+        val sessions = redisTemplate.opsForSet().members(ssoGroupKey(user.id!!, app.group.id!!))
         sessions?.forEach { sid ->
-            {
-                sessionRepository.deleteById(sid)
-                httpSession.invalidate()
-            }
+            sessionRepository.deleteById(sid)
         }
-        return redisTemplate.delete(ssoRedisKey(user.id, app.group.id!!))
+        httpSession.invalidate()
+        return redisTemplate.delete(ssoGroupKey(user.id, app.group.id!!))
 
     }
 
-    private fun terminateAllSessions(keyPattern:String){
+
+
+    private fun terminateByPattern(keyPattern:String){
         println("DELETING SESSIONS")
         val ssoSessionKeys = redisTemplate.keys(keyPattern)
         ssoSessionKeys.forEach { key ->
@@ -148,11 +158,11 @@ open class SSOSessionService(
 
     open fun terminateAllByUser(user: User) {
         val keyPattern ="$AUTHOS_SSO_KEY_PREFIX:${user.id}*";
-       terminateAllSessions(keyPattern)
+       terminateByPattern(keyPattern)
     }
     open fun terminateAllByGroup(appGroup: AppGroup){
         val keyPattern = "$AUTHOS_SSO_KEY_PREFIX:*:${appGroup.id}"
-        terminateAllSessions(keyPattern)
+        terminateByPattern(keyPattern)
     }
 
 

@@ -3,12 +3,14 @@ package com.tosak.authos.web.rest
 import com.tosak.authos.common.enums.TokenType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
-import com.tosak.authos.exceptions.InvalidUserIdException
 import com.tosak.authos.pojo.AuthorizeRequestParams
 import com.tosak.authos.pojo.IdTokenStrategy
 import com.tosak.authos.service.*
 import com.tosak.authos.service.JwtService
 import com.tosak.authos.common.utils.JwtTokenFactory
+import com.tosak.authos.common.utils.getRequestParamHash
+import com.tosak.authos.exceptions.MissingSessionAttributesException
+import com.tosak.authos.exceptions.TamperedRequestException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
@@ -64,7 +66,6 @@ class OAuthEndpoints(
 
         return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub))
 
-        TODO("RSA KEY HANDLING")
 
     }
 
@@ -80,14 +81,30 @@ class OAuthEndpoints(
         @RequestParam("scope") scope: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpSession: HttpSession,
-        response: HttpServletResponse
+        httpServletRequest: HttpServletRequest,
     ): ResponseEntity<Void?> {
 
 
-        println("SESSION ATTRIBUTES ${httpSession.getAttribute("user")}")
-        val userId = httpSession.getAttribute("user") as Int? ?: throw InvalidUserIdException("Invalid Session.")
+        val userId = httpSession.getAttribute("user") as Int?
+        val appId = httpSession.getAttribute("app") as Int?
+        val paramHashFromSession = httpSession.getAttribute("param_hash") as String?
+        val paramHashFromRequest = getRequestParamHash(httpServletRequest)
+
+        if (userId == null || paramHashFromSession == null || appId == null) {
+            throw MissingSessionAttributesException("Missing session attributes")
+        }
         val user = userService.getById(userId)
-        appService.verifyClientIdAndRedirectUri(clientId, redirectUri)
+        val appFromParams = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
+        val appFromSession = appService.getAppById(appId)
+
+        if (paramHashFromSession != paramHashFromRequest) {
+            sessionService.terminateSSOSession(user,appFromSession,httpSession)
+            throw TamperedRequestException("Parameter hash does not match")
+        }
+
+        check(appFromParams == appFromSession){"Mismatch app from session and params"}
+
+
         if(!dusterSub.isNullOrBlank()) {
             check(ppidService.getUserIdByHash(dusterSub) == user.id){"Invalid Duster client request"}
         }
@@ -146,7 +163,7 @@ class OAuthEndpoints(
         val user = userService.getById(userId)
         val app = appService.getAppByClientId(clientId);
 
-        sessionService.terminate(user,app,httpSession)
+        sessionService.terminateSSOSession(user,app,httpSession)
         // posle ova event do site rp kaj so bil najaven
     }
 

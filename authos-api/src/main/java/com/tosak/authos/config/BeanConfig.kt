@@ -15,6 +15,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.FileInputStream
 import java.security.Key
 import java.security.KeyPair
@@ -28,6 +29,7 @@ import java.util.*
 
 
 @Configuration
+@EnableTransactionManagement
 open class BeanConfig(
 
 ) {
@@ -43,6 +45,7 @@ open class BeanConfig(
         template.connectionFactory = connectionFactory
         template.keySerializer = StringRedisSerializer()
         template.valueSerializer = GenericJackson2JsonRedisSerializer()
+        template.setEnableTransactionSupport(true)
         template.afterPropertiesSet()
         return template
     }

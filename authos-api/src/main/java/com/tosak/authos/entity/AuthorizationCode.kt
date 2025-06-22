@@ -1,6 +1,5 @@
 package com.tosak.authos.entity
 
-import com.tosak.authos.crypto.getHash
 import com.tosak.authos.crypto.getSecureRandomValue
 import com.tosak.authos.crypto.hex
 import jakarta.persistence.*
@@ -11,7 +10,7 @@ import java.time.LocalDateTime
 class AuthorizationCode (
     @Id
     @Column(name = "code_hash")
-    var codeHash : String =  hex(getSecureRandomValue(32)),
+    var codeVal : String =  hex(getSecureRandomValue(32)),
     @Column(name = "client_id")
     val clientId : String = "",
     @Column(name = "redirect_uri")
@@ -26,13 +25,13 @@ class AuthorizationCode (
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     val user: User = User(),
 
-){
+    ){
 
 
     constructor(codeHash: String,clientId: String, redirectUri: String) : this(
         clientId = clientId,
         redirectUri = redirectUri){
-        this.codeHash = codeHash
+        this.codeVal = codeHash
     }
 
 }
