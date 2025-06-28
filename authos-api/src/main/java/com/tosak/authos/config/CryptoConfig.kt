@@ -3,7 +3,7 @@ package com.tosak.authos.config
 import com.nimbusds.jose.Algorithm
 import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
-import com.tosak.authos.exceptions.KeyLoadException
+import com.tosak.authos.exceptions.internal.KeyLoadException
 import jakarta.annotation.PostConstruct
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -52,6 +52,7 @@ open class CryptoConfig{
     @Bean
     open fun secretKey(): SecretKey {
         val key = keyStore.getKey("authos-credentials-encrypt",keystorePass.toCharArray()) as SecretKey
+        println("Key length: ${key.encoded.size * 8} bits")
         return key
     }
 

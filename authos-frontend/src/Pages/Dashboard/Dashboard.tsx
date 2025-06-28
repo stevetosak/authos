@@ -23,7 +23,7 @@ import {Badge} from "@/components/ui/badge.tsx";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {AddGroupModal} from "@/Pages/components/AddGroupModal.tsx";
-import {AppGroup, AppGroupEditableField, defaultAppGroup} from "@/services/interfaces.ts";
+import {AppGroup, AppGroupEditableField, defaultAppGroup} from "@/services/types.ts";
 import {Label} from "@/components/ui/label.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
 import {apiPostAuthenticated} from "@/services/config.ts";

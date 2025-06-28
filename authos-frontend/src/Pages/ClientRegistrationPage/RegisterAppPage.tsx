@@ -23,7 +23,7 @@ import {useNavigate} from "react-router-dom";
 import {api, apiPostAuthenticated} from "@/services/config.ts";
 import {toast} from "sonner";
 import {useAuth} from "@/services/useAuth.ts";
-import {App} from "@/services/interfaces.ts";
+import {App} from "@/services/types.ts";
 
 export default function RegisterAppPage() {
     const [formData, setFormData] = useState({
@@ -82,6 +82,7 @@ export default function RegisterAppPage() {
             console.error(err)
         }
     }
+    
 
     return (
         <div className="inset-0 z-50 flex items-center justify-center my-5">

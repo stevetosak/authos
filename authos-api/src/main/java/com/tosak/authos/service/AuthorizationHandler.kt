@@ -6,6 +6,11 @@ import com.tosak.authos.exceptions.oauth.InvalidScopeException
 import com.tosak.authos.exceptions.oauth.UnsupportedResponseTypeException
 import com.tosak.authos.pojo.AuthorizeRequestParams
 import com.tosak.authos.common.utils.redirectToLogin
+import com.tosak.authos.exceptions.badreq.BadPromptException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.demand
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpSession
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -21,7 +26,9 @@ class AuthorizationHandler(
     private val jwtService: JwtService,
     private val appService: AppService,
     private val ppidService: PPIDService,
-    private val sessionService: SSOSessionService
+    private val sessionService: SSOSessionService,
+    private val ssoSessionService: SSOSessionService,
+    private val userService: UserService
 ) {
     /**
      * Handles an authorization request based on the specified prompt and authorization request parameters.
@@ -33,45 +40,56 @@ class AuthorizationHandler(
      * @throws InvalidScopeException If the scope provided in the request is invalid or does not contain "openid".
      * @throws InvalidParameterException If an invalid or unrecognized prompt type is encountered.
      */
-    fun handleRequest(prompt: String, authorizeRequestParams: AuthorizeRequestParams): ResponseEntity<Void> {
-        if(authorizeRequestParams.responseType != "code")
+    fun handleRequest(
+        prompt: String,
+        authorizeRequestParams: AuthorizeRequestParams,
+        httpSession: HttpSession,
+        request: HttpServletRequest
+    ): ResponseEntity<Void> {
+        if (authorizeRequestParams.responseType != "code")
             throw UnsupportedResponseTypeException("unsupported response type ${authorizeRequestParams.responseType}")
 
-       appService.verifyClientIdAndRedirectUri(authorizeRequestParams.clientId, authorizeRequestParams.redirectUri)
-
+        val app = appService.getAppByClientIdAndRedirectUri(
+            authorizeRequestParams.clientId,
+            authorizeRequestParams.redirectUri
+        )
 
         val promptType = PromptType.parse(prompt)
 
+        demand(!authorizeRequestParams.scope.isEmpty() && authorizeRequestParams.scope.contains("openid"))
+        { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
 
-        if (authorizeRequestParams.scope.isEmpty() || !authorizeRequestParams.scope.contains("openid")) {
-            throw InvalidScopeException(authorizeRequestParams.redirectUri, authorizeRequestParams.state)
-        }
+        demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
+        { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
 
-        if(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT){
-            throw InvalidScopeException(authorizeRequestParams.redirectUri, authorizeRequestParams.state)
-        }
 
         var hasActiveSession = false;
         if (authorizeRequestParams.idTokenHint != null && authorizeRequestParams.idTokenHint.isNotEmpty()) {
             val idToken = jwtService.verifyToken(authorizeRequestParams.idTokenHint)
-            val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
-            val app: App = appService.getAppByClientIdAndRedirectUri(
-                authorizeRequestParams.clientId,
-                authorizeRequestParams.redirectUri
-            )
-            hasActiveSession = sessionService.hasActiveSession(userId, app.id!!)
+            val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
+            val user = userService.getById(ppid.key.userId!!)
+            hasActiveSession = sessionService.hasActiveSession(user.id!!, app.group.id!!)
+            if (hasActiveSession) ssoSessionService.initializeSession(user, app, httpSession, request)
         }
 
-        if(promptType == PromptType.LOGIN || !hasActiveSession){
-            return redirectToLogin(authorizeRequestParams.clientId,authorizeRequestParams.redirectUri,authorizeRequestParams.state,authorizeRequestParams.scope,dusterSub = authorizeRequestParams.dusterSub)
+        if (promptType == PromptType.LOGIN || !hasActiveSession) {
+            return redirectToLogin(
+                authorizeRequestParams.clientId,
+                authorizeRequestParams.redirectUri,
+                authorizeRequestParams.state,
+                authorizeRequestParams.scope,
+                dusterSub = authorizeRequestParams.dusterSub
+            )
         }
+
+
 
         return when (promptType) {
             PromptType.NONE -> handleNone(authorizeRequestParams)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
-                throw InvalidParameterException("bad prompt type")
+                throw AuthosException("invalid request", BadPromptException())
             }
         }
     }
@@ -112,14 +130,22 @@ class AuthorizationHandler(
      */
     private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams): ResponseEntity<Void> {
 
-        val url = StringBuilder("http://localhost:5173/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
-                "&redirect_uri=${authorizeRequestParams.redirectUri}" +
-                "&state=${authorizeRequestParams.state}&scope=${URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")}")
+        val url = StringBuilder(
+            "http://localhost:5173/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
+                    "&redirect_uri=${authorizeRequestParams.redirectUri}" +
+                    "&state=${authorizeRequestParams.state}&scope=${
+                        URLEncoder.encode(
+                            authorizeRequestParams.scope,
+                            "UTF-8"
+                        )
+                    }"
+        )
         authorizeRequestParams.dusterSub?.let {
             url.append("&duster_uid=${it}")
         }
 
-        return ResponseEntity.status(303).location(URI(url.toString())
+        return ResponseEntity.status(303).location(
+            URI(url.toString())
         ).build();
     }
 

@@ -29,7 +29,6 @@ open class AuthController(
     private val appService: AppService,
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
-    private val redisService: RedisService,
     private val ppidService: PPIDService
 ) {
 
@@ -70,23 +69,31 @@ open class AuthController(
 
         println("DUSTER UID: $dusterSub")
 
-        if(!dusterSub.isNullOrEmpty()){
+        if (!dusterSub.isNullOrEmpty()) {
             println(dusterSub)
-            require( ppidService.getPPID(user,app.group,false) == dusterSub){"Invalid Duster client request."}
+            require(ppidService.getPPID(user, app.group, false) == dusterSub) { "Invalid Duster client request." }
         }
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
 
-        val headers = userService.generateLoginCredentials(user, request,app.group)
+        val headers = userService.generateLoginCredentials(user, request, app.group)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        ssoSessionService.initializeSession(user,app,httpSession,request)
+        ssoSessionService.initializeSession(user, app, httpSession, request)
 
         val url = "http://localhost:5173/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
         val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url))
 
-        return ResponseEntity.status(200).headers(headers).body(LoginDTO(user.toDTO(),apps.map{a -> appService.toDTO(a)},groups.map { gr -> gr.toDTO() },URI(url),token.serialize()))
+        return ResponseEntity.status(200).headers(headers).body(
+            LoginDTO(
+                user.toDTO(),
+                apps.map { a -> appService.toDTO(a) },
+                groups.map { gr -> gr.toDTO() },
+                URI(url),
+                token.serialize()
+            )
+        )
 
 
     }
@@ -116,7 +123,12 @@ open class AuthController(
         return ResponseEntity
             .status(201)
             .headers(headers)
-            .body(LoginDTO(user.toDTO(), apps.map { app -> appService.toDTO(app) }, groups.map { group -> group.toDTO() }));
+            .body(
+                LoginDTO(
+                    user.toDTO(),
+                    apps.map { app -> appService.toDTO(app) },
+                    groups.map { group -> group.toDTO() })
+            );
 
     }
 
@@ -148,42 +160,61 @@ open class AuthController(
      */
     @GetMapping("/verify")
     fun verify(authentication: Authentication?): ResponseEntity<LoginDTO> {
-
         val user = userService.getUserFromAuthentication(authentication);
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
         return ResponseEntity.ok(
             LoginDTO(
                 user.toDTO(),
-                apps.map { app -> appService.toDTO(app)},
+                apps.map { app -> appService.toDTO(app) },
                 groups.map { group -> group.toDTO() })
         )
 
     }
 
-    /**
-     * Clears all active sessions and invalidates the current HTTP session.
-     * Also removes all session data stored in the Redis database.
-     *
-     * @param session the current HTTP session to be invalidated
-     * @return a ResponseEntity containing the number of cleared keys from the Redis database
-     */
-    @Deprecated("This is a test method")
-    @PostMapping("/sessions/clear")
-    fun clearSessions(session: HttpSession): ResponseEntity<Int> {
-        session.invalidate()
-        val count = redisService.clearDb();
+    @GetMapping("/verify-sub")
+    fun verifySub(
+        @CookieValue(name = "sub", required = false) sub: String?,
+        httpServletRequest: HttpServletRequest
+    ): ResponseEntity<LoginDTO> {
+        if (sub == null) return ResponseEntity.badRequest().build()
+        val ppid = ppidService.getPPIDBySub(sub)
+        val user = userService.getById(ppid.key.userId!!)
+        val headers = userService.generateLoginCredentials(user, httpServletRequest)
+        val apps = appService.getAllAppsForUser(user.id!!)
+        val groups = appGroupService.getAllGroupsForUser(user.id)
+        return ResponseEntity
+            .status(201).headers(headers).body(
+                LoginDTO(
+                    user.toDTO(),
+                    apps.map { app -> appService.toDTO(app) },
+                    groups.map { group -> group.toDTO() })
+            )
 
-
-        return ResponseEntity.ok(count)
     }
 
-    @GetMapping("/logoutall")
-    @PostMapping("/logoutall")
-    fun logout(authentication: Authentication?,request: HttpServletRequest): ResponseEntity<Void> {
+//    /**
+//     * Clears all active sessions and invalidates the current HTTP session.
+//     * Also removes all session data stored in the Redis database.
+//     *
+//     * @param session the current HTTP session to be invalidated
+//     * @return a ResponseEntity containing the number of cleared keys from the Redis database
+//     */
+//    @Deprecated("This is a test method")
+//    @PostMapping("/sessions/clear")
+//    fun clearSessions(session: HttpSession): ResponseEntity<Int> {
+//        session.invalidate()
+//        val count = redisService.clearDb();
+//
+//
+//        return ResponseEntity.ok(count)
+//    }
+
+    @GetMapping("/logout")
+    @PostMapping("/logout")
+    fun logout(authentication: Authentication?, request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
-        ssoSessionService.terminateAllByUser(user)
-        val headers = userService.generateLoginCredentials(user = user,request = request,clear = true);
+        val headers = userService.generateLoginCredentials(user = user, request = request, clear = true);
         return ResponseEntity.status(200).headers(headers).build();
     }
 

@@ -1,4 +1,4 @@
-import {App, AppGroup} from "@/services/interfaces.ts";
+import {App, AppGroup} from "@/services/types.ts";
 
 export class Factory {
     static appGroupDefault = (): AppGroup => {

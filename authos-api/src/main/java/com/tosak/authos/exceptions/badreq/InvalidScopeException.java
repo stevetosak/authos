@@ -1,7 +1,6 @@
 package com.tosak.authos.exceptions.badreq;
 
+import com.tosak.authos.exceptions.base.HttpBadRequestException;
+
 public class InvalidScopeException extends HttpBadRequestException {
-    public InvalidScopeException(String message) {
-        super(message);
-    }
 }

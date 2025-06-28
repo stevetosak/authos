@@ -9,12 +9,17 @@ group = "com.authos"
 version = "0.0.1"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 application {
     mainClass.set("com.authos.ApplicationKt")
+}
+
+ktor{
+    fatJar{
+        archiveFileName.set("fat.jar")
+    }
 }
 
 dependencies {
@@ -41,10 +46,10 @@ dependencies {
     implementation("io.ktor:ktor-client-core:${ktor_version}")
     implementation("io.ktor:ktor-client-cio:${ktor_version}")
     implementation("io.ktor:ktor-client-content-negotiation:${ktor_version}")
-    implementation("com.tosak.authos:crypto-utils:1.0-SNAPSHOT")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
     implementation("com.nimbusds:nimbus-jose-jwt:10.3")
     implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("io.lettuce:lettuce-core:6.7.1.RELEASE")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
+

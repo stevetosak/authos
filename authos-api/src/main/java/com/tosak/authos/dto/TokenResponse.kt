@@ -14,6 +14,6 @@ data class TokenResponse (
     val accessToken: String,
     val refreshToken : String? = null,
     val tokenType: String,
-    val idToken : String,
+    val idToken : String?,
     val expiresIn : Int,
 )

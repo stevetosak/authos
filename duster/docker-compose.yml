@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  duster-client:
+    image: "stevetosak/authos-duster-client:1.0"
+    ports:
+      - "8785:8785"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      HOST_IP: 192.168.209.7
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - duster-net
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - duster-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
+
+networks:
+  duster-net:
+    driver: bridge

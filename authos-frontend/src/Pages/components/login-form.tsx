@@ -3,105 +3,22 @@ import {Button} from "@/components/ui/button.tsx";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Label} from "@/components/ui/label.tsx";
-import React, {useState} from "react";
-import axios from "axios";
-import {LoginResponse} from "@/services/interfaces.ts";
-import {useAuth} from "@/services/useAuth.ts";
+import React, {SetStateAction, useEffect, useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
 import {Chrome, LockIcon, LogInIcon, MailIcon} from "lucide-react";
-import {validateResponse} from "@/services/jwtService.ts";
-import {api} from "@/services/config.ts";
 
-export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [error, setError] = useState<string | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [loading, setLoading] = useState<boolean>(false);
-    const {setContext, setIsAuthenticated} = useAuth()
+interface LoginFormProps {
+    className: string,
+    handleSubmit: (e : React.FormEvent) => void
+    setEmail: React.Dispatch<SetStateAction<string>>
+    setPassword: React.Dispatch<SetStateAction<string>>
+}
 
-    const nav = useNavigate()
+export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginFormProps) {
 
-
-    // todo security checks on frontend redirecs
-
-
-    const handleNativeLogin = async (formData: URLSearchParams) => {
-
-
-        return await api.post<LoginResponse>("native-login", formData, {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            withCredentials: true
-        });
-
-
-    }
-
-    const handleOauthLogin = async (formData: URLSearchParams) => {
-        return await api.post<LoginResponse>("/oauth-login", formData, {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            withCredentials: true
-        });
-    }
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setError(null);
-
-        if (!email || !password) {
-            setError("Email and password are required.");
-            return;
-        }
-
-        const params = new URLSearchParams(window.location.search)
-        const formData = new URLSearchParams();
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('client_id', params.get("client_id") || '');
-        formData.append('redirect_uri', params.get("redirect_uri") || '');
-        formData.append('state', params.get("state") || '');
-        formData.append('scope', params.get("scope") || '')
-
-
-        const oauthRequest = Array.from(formData.values()).every(val => val !== null && val !== '');
-        formData.append("duster_uid",params.get("duster_uid") || '')
-
-        setLoading(true);
-
-        if (oauthRequest) {
-            try{
-                const resp = await handleOauthLogin(formData)
-                if(resp.data.signature == null || resp.data.redirectUri == null) throw Error("No signature")
-                const valid = await validateResponse(resp.data.signature)
-                console.warn("VALID:",valid)
-                window.location.href = valid ? resp.data.redirectUri : ""
-            } catch (err){
-                nav("/error")
-            }
-
-        } else {
-            handleNativeLogin(formData)
-                .then(resp => {
-                    setContext(resp.data)
-                    setIsAuthenticated(true)
-                    setLoading(false);
-                    nav("/dashboard")
-                }).catch(err => {
-                console.error(err)
-            })
-        }
-        setLoading(false);
-
-
-    };
 
     return (
-        <div className={cn("flex items-center justify-center min-h-[calc(100vh-5rem)] w-full", className)} {...props}>
+        <div className={cn("flex items-center justify-center min-h-[calc(100vh-5rem)] w-full", className)} >
             <Card
                 className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl w-full max-w-4xl min-h-[500px] flex flex-col">
                 <CardHeader className="border-b border-gray-700 p-8">
@@ -180,6 +97,11 @@ export function LoginForm({className, ...props}: React.ComponentProps<"div">) {
                             >
                                 <Chrome className="w-5 h-5 mr-2"/>
                                 Sign in with Google
+                            </Button>
+                            <Button variant={"outline"} type={"button"} className={'w-full text-white border-gray-600 hover:bg-gray-700'} onClick={() => {
+                                window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=fresh"
+                            }}>
+                                Authos Login Test
                             </Button>
                         </div>
 

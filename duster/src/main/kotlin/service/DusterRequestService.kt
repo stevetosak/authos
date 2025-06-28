@@ -86,7 +86,6 @@ class DusterRequestService(private val client: DusterClient, private val tokenRe
      */
     suspend fun generateAuthorizeUrl(app: DusterApp, sub:String? = null, state:String): String {
 
-
         var sc = app.scope
             if(client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS){
                 if(!app.scope.contains("offline_access")){

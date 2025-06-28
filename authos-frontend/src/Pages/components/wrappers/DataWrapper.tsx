@@ -1,10 +1,14 @@
-import {App} from "@/services/interfaces.ts";
+import {App} from "@/services/types.ts";
 import {JSX} from "react";
 import {TitleDescState, TitleDescWrapper} from "@/Pages/components/wrappers/TitleDescWrapper.tsx";
 import {RedirectUriWrapper} from "@/Pages/components/wrappers/RedirectUriWrapper.tsx";
 import {ScopeWrapper} from "@/Pages/components/wrappers/ScopeWrapper.tsx";
 import {GrantTypeWrapper} from "@/Pages/components/wrappers/GrantTypesWrapper.tsx";
 import {ResponseTypesWrapper} from "@/Pages/components/wrappers/ResponseTypesWrapper.tsx";
+import {
+    DusterCallbackUriState,
+    DusterCallbackUriWrapper
+} from "@/Pages/components/wrappers/DusterCallbackUriWrapper.tsx";
 
 
 export interface WrapperState {
@@ -27,7 +31,8 @@ type WRAPPER_STATE_MAP = {
     redirectUri: WrapperState;
     scope: WrapperState,
     grantType: WrapperState,
-    responseType: WrapperState
+    responseType: WrapperState,
+    dusterCallback: DusterCallbackUriState
 }
 
 type WrapperKey = keyof WRAPPER_STATE_MAP
@@ -40,7 +45,8 @@ const WRAPPER_COMPONENT_MAP: {
     redirectUri: RedirectUriWrapper,
     scope: ScopeWrapper,
     grantType: GrantTypeWrapper,
-    responseType: ResponseTypesWrapper
+    responseType: ResponseTypesWrapper,
+    dusterCallback: DusterCallbackUriWrapper
 };
 
 type FieldValidation = {

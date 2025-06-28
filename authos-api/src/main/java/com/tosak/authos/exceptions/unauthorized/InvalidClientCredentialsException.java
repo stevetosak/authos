@@ -1,7 +1,6 @@
 package com.tosak.authos.exceptions.unauthorized;
 
+import com.tosak.authos.exceptions.base.HttpUnauthorizedException;
+
 public class InvalidClientCredentialsException extends HttpUnauthorizedException {
-    public InvalidClientCredentialsException(String message) {
-        super(message);
-    }
 }

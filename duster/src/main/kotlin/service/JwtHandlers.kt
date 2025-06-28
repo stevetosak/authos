@@ -1,5 +1,6 @@
 package com.authos.service
 
+import com.authos.getHostIp
 import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.RSASSAVerifier
 import com.nimbusds.jose.jwk.JWKSet
@@ -9,7 +10,7 @@ import java.util.Date
 
 fun verifyIdToken(jwtString: String): Pair<SignedJWT, String> {
     val jwt = SignedJWT.parse(jwtString)
-    val jwks = JWKSet.load(URI("http://localhost:9000/.well-known/jwks.json").toURL())
+    val jwks = JWKSet.load(URI("http://${getHostIp()}:9000/.well-known/jwks.json").toURL())
     val jwk = jwks.getKeyByKeyId("authos-jwt-sign")
 
     val verifier: JWSVerifier = RSASSAVerifier(jwk.toRSAKey().toRSAPublicKey())

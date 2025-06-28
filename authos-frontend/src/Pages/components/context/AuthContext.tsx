@@ -1,5 +1,5 @@
 import React, {createContext, Dispatch, SetStateAction} from "react";
-import {App, AppGroup, LoginResponse, User} from "@/services/interfaces.ts";
+import {App, AppGroup, LoginResponse, User} from "@/services/types.ts";
 
 interface AuthContextType{
     user: User,

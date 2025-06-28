@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {useParams} from "react-router";
-import {App} from "@/services/interfaces.ts";
+import {App} from "@/services/types.ts";
 import {Factory} from "@/services/Factory.ts";
 import {DataWrapper, WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 import {useAppEditor} from "@/Pages/components/hooks/use-app-editor.ts";
@@ -191,13 +191,6 @@ export default function AppDetails() {
                         <Tabs defaultValue="credentials" className="w-full">
                             <div className="border-b border-gray-700 h-17">
                                 <TabsList className="grid grid-cols-3 bg-gray-800 rounded-none">
-                                    {/*<TabsTrigger*/}
-                                    {/*    value="general"*/}
-                                    {/*    className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"*/}
-                                    {/*>*/}
-                                    {/*    <SettingsIcon className="w-4 h-4 mr-2"/>*/}
-                                    {/*    General*/}
-                                    {/*</TabsTrigger>*/}
                                     <TabsTrigger
                                         value="credentials"
                                         className="py-4 data-[state=active]:bg-gray-700 data-[state=active]:text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
@@ -387,6 +380,18 @@ export default function AppDetails() {
                                                 >
                                                     {app.tokenEndpointAuthMethod}
                                                 </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                            <CodeIcon className="w-4 h-4"/>
+                                            Duster
+                                        </h3>
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <div className="space-y-4">
+                                                <h4 className="font-medium text-gray-300">Callback URL</h4>
+                                                <DataWrapper state={{...baseState,onChange:handleChange}} wrapper={"dusterCallback"}/>
                                             </div>
                                         </div>
                                     </div>

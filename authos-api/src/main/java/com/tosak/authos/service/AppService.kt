@@ -7,11 +7,14 @@ import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
-import com.tosak.authos.exceptions.InvalidUserIdException
+import com.tosak.authos.exceptions.internal.InvalidUserIdException
 import com.tosak.authos.exceptions.unauthorized.InvalidClientCredentialsException
 import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.repository.AppRepository
 import com.tosak.authos.common.utils.AESUtil
+import com.tosak.authos.exceptions.badreq.MissingParametersException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.demand
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
@@ -31,14 +34,17 @@ open class AppService(
     ) {
     open fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
         return appRepository.findAppByClientIdAndRedirectUri(clientId, redirectUri)
-            ?: throw InvalidClientCredentialsException("Invalid client credentials.")
+            ?: throw AuthosException("invalid client", InvalidClientCredentialsException())
     }
 
 
     open fun verifyClientIdAndRedirectUri(clientId: String, redirectUri: String) {
         if (!appRepository.existsByClientIdAndRedirectUri(clientId, redirectUri)) {
-            throw InvalidClientCredentialsException("Invalid client credentials")
+            throw AuthosException("invalid client", InvalidClientCredentialsException())
         }
+    }
+    open fun getAppByName(name: String): App {
+        return appRepository.findByName(name) ?: throw InvalidParameterException("App name not found")
     }
 
     //    @Cacheable(value = ["userApps"], key = "#userId")
@@ -57,8 +63,8 @@ open class AppService(
         return appRepository.findByClientId(clientId) ?: throw Exception("bad client id")
     }
 
-    open fun validateAppCredentials(tokenRequestDto: TokenRequestDto, request: HttpServletRequest): App {
-        val authHeader = request.getHeader("Authorization")
+    open fun validateAppCredentials(tokenRequestDto: TokenRequestDto, request: HttpServletRequest? = null): App {
+        val authHeader = request?.getHeader("Authorization")
         if (authHeader != null) {
             val (clientId,clientSecret) = decodeBasicAuth(authHeader)
             println("HEADER: $authHeader")
@@ -67,17 +73,15 @@ open class AppService(
             tokenRequestDto.clientSecret = clientSecret
             require(tokenRequestDto.clientId != null && tokenRequestDto.clientSecret != null) {"Cant parse Auth header"}
         } else {
-            if(tokenRequestDto.clientId == null || tokenRequestDto.clientSecret == null){
-                throw InvalidParameterException("Missing parameters for token request")
-            }
+            demand(tokenRequestDto.clientId != null && tokenRequestDto.clientSecret != null)
+            {AuthosException("invalid request", MissingParametersException())}
         }
 
         println("TOKEN DTO: ${tokenRequestDto.toString()}")
 
-
         val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri)
         val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret))
-        require(secretDecrypted == tokenRequestDto.clientSecret){"Invalid credentials"}
+        demand(secretDecrypted == tokenRequestDto.clientSecret){ AuthosException("invalid client", InvalidClientCredentialsException()) }
         return app;
     }
 
@@ -165,6 +169,7 @@ open class AppService(
         app.addRedirectUris(appDto.redirectUris.filterNotNull())
         app.logoUri = appDto.logoUri
         app.tokenEndpointAuthMethod = appDto.tokenEndpointAuthMethod
+        app.dusterCallbackUri = appDto.dusterCallbackUri
         return appRepository.save(app)
     }
 
@@ -186,7 +191,8 @@ open class AppService(
             app.scopesCollection,
             app.responseTypesCollection,
             app.grantTypesCollection,
-            app.tokenEndpointAuthMethod
+            app.tokenEndpointAuthMethod,
+            app.dusterCallbackUri,
         )
     }
 

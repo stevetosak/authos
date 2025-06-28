@@ -12,7 +12,11 @@ import java.time.LocalDateTime
 open class IdTokenService (private val idTokenRepository : IdTokenRepository)
 {
     @Transactional
-    open fun save(token: SignedJWT,accessToken: AccessToken? = null){
+    open fun save(token: SignedJWT?,accessToken: AccessToken? = null){
+        if(token == null){
+            println("ID Token is null, not saving")
+            return
+        }
         println("IDTOKEN CLAIMS: ${token.jwtClaimsSet.toJSONObject()}")
         val idToken = IssuedIdToken(
             token.jwtClaimsSet.jwtid,

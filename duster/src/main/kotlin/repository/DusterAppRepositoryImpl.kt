@@ -6,38 +6,68 @@ import kotlinx.coroutines.future.await
 import kotlinx.serialization.json.Json
 
 class DusterAppRepositoryImpl(private val redisManager: RedisManager) : DusterAppRepository {
-    private val DUSTER_APP_PREFIX = "duster:app:"
-    private val DUSTER_APP_IDS_KEY = "duster:apps"
+    private val DUSTER_APP_ID_KEY = "duster:app:id"
+    private val DUSTER_APP_NAME_KEY = "duster:app:names"
     private val DUSTER_UPDATES_PREFIX = "duster:apps:updates"
 
-    private val json = Json{
+    private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
-    override suspend fun getDusterApp(clientId: String): DusterApp {
-        val appKey = "$DUSTER_APP_PREFIX$clientId"
+
+    private fun parseByClientId(clientId: String) {
+
+    }
+
+    override suspend fun getDusterAppByClientId(clientId: String): DusterApp {
+        val appKey = "$DUSTER_APP_ID_KEY:$clientId"
         val app = redisManager.withCommands { cmd ->
             cmd.get(appKey).await()
         }?.let { serialized ->
-            json.decodeFromString(DusterApp.serializer(),serialized)
+            json.decodeFromString(DusterApp.serializer(), serialized)
         }
         check(app != null) { "No app found for $clientId" }
         return app
     }
 
-    override fun getAllDusterApps(): List<DusterApp> {
-        TODO("Not yet implemented")
+    override suspend fun getDusterAppByName(name: String): DusterApp {
+        val app = redisManager.withCommands { cmd ->
+            cmd.multi().await()
+            val cid = cmd.get("$DUSTER_APP_NAME_KEY:$name")
+            val app: DusterApp? = cmd.get("$DUSTER_APP_ID_KEY:$cid").get()?.let { serialized ->
+                json.decodeFromString(DusterApp.serializer(), string = serialized)
+            }
+            cmd.exec().await()
+            return@withCommands app
+        }
+        check(app != null) { "No app found for $name" }
+        return app;
     }
 
-    override suspend fun save(dusterApp: DusterApp) : DusterApp {
+    override suspend fun getAllDusterApps(): List<DusterApp> {
+        val apps: MutableList<DusterApp> = mutableListOf()
+        redisManager.withCommands { cmd ->
+            val keys = cmd.keys("$DUSTER_APP_ID_KEY*").get()
+            keys.forEach { key ->
+                cmd.get(key).get()?.let { serialized ->
+                    json.decodeFromString(DusterApp.serializer(), string = serialized)
+                }?.apply { apps.add(this) }
+            }
+        }
+        return apps
+    }
+
+    // todo key name -> client id
+
+    override suspend fun save(dusterApp: DusterApp): DusterApp {
         println("Saving $dusterApp")
-        val appKey = "$DUSTER_APP_PREFIX${dusterApp.clientId}"
+        val appKey = "$DUSTER_APP_ID_KEY:${dusterApp.clientId}"
         val serialized = json.encodeToString(DusterApp.serializer(), dusterApp)
         println("Serializing $serialized")
         redisManager.withCommands { cmd ->
             cmd.multi().await()
             cmd.set(appKey, serialized)
-            cmd.sadd(DUSTER_APP_IDS_KEY,dusterApp.clientId)
+            cmd.set("$DUSTER_APP_NAME_KEY:${dusterApp.name}", dusterApp.clientId)
 //            cmd.zadd(
 //                DUSTER_UPDATES_PREFIX,
 //                ZAddArgs.Builder.ch(),dusterApp.updatedAt,dusterApp.clientId)

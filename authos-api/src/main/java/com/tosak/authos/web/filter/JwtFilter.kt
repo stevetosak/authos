@@ -1,10 +1,13 @@
 package com.tosak.authos.web.filter
 
 import com.nimbusds.jwt.SignedJWT
-import com.tosak.authos.exceptions.NoTokenPresentException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.base.HttpForbiddenException
+import com.tosak.authos.exceptions.base.HttpUnauthorizedException
+import com.tosak.authos.exceptions.demand
+import com.tosak.authos.exceptions.internal.NoTokenPresentException
 import com.tosak.authos.service.CachingUserDetailsService
 import com.tosak.authos.service.JwtService
-import jakarta.annotation.PostConstruct
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -13,9 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
-import org.springframework.util.AntPathMatcher
 import org.springframework.util.PatternMatchUtils
-import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
@@ -25,7 +26,10 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/oauth-login",
         "/register",
         "/oauth/*",
-        "/.well-known/*"
+        "/.well-known/*",
+        "/test/*",
+        "/duster/pull",
+        "/verify-sub"
     )
 
 
@@ -57,8 +61,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
             println("VO RED E")
         } catch (err : Exception){
             SecurityContextHolder.clearContext()
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, err.message)
-            return
+            throw err
         }
 
         filterChain.doFilter(request, response)
@@ -68,8 +71,8 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         val xsrfCookie = jwt.jwtClaimsSet.getStringClaim("xsrf_token");
         val xsrfHeader = request.getHeader("X-XSRF-TOKEN");
 
-        if(xsrfCookie == null || xsrfHeader == null || xsrfHeader != xsrfCookie)
-            throw ServletException("Forbidden")
+        demand(xsrfCookie != null && xsrfHeader != null && xsrfHeader == xsrfCookie)
+        { AuthosException("Forbidden", HttpForbiddenException()) }
 
     }
 
@@ -79,6 +82,6 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7)
         }
-        throw NoTokenPresentException("")
+        throw AuthosException("bad token", HttpUnauthorizedException())
     }
 }

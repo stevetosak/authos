@@ -24,8 +24,9 @@ import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx"
 import {useAuth} from "@/services/useAuth.ts";
 import {api, apiGetAuthenticated, apiPostAuthenticated} from "@/services/config.ts";
 import {toast} from "sonner";
-import {defaultUser} from "@/services/interfaces.ts";
+import {defaultUser} from "@/services/types.ts";
 import {motion} from "framer-motion";
+import axios from "axios";
 
 const Navbar = () => {
     const location = useLocation();
@@ -34,7 +35,7 @@ const Navbar = () => {
 
     const logOut = () => {
         console.log("LOGOUT")
-        apiGetAuthenticated("/logoutall")
+        apiGetAuthenticated("/logout")
             .then(resp => {
                 toast.warning("Logging Out...")
                 setTimeout(() => {
@@ -43,6 +44,14 @@ const Navbar = () => {
                 }, 1000)
             }).catch(err => {
             console.error(err)
+        })
+    }
+
+    function silentAuth(){
+        axios.get("http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=fresh",{
+            withCredentials: true
+        }).then(resp => {
+            console.log("DUSTER RESPONSE: " + resp)
         })
     }
 
@@ -136,6 +145,11 @@ const Navbar = () => {
                                         Log out
                                     </Button>
                                 </DropdownMenuItem>
+                                <Button variant={"outline"} type={"button"} className={'text-white border-gray-600 hover:bg-gray-700'} onClick={async () => {
+
+                                }}>
+                                    Authos Login Test
+                                </Button>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>}
@@ -156,6 +170,11 @@ const Navbar = () => {
                             >
                                 Sign Up
                             </NavLink>
+                            <Button variant={"outline"} type={"button"} className={'text-white border-gray-600 hover:bg-gray-700'} onClick={() => {
+                                window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=auto"
+                            }}>
+                                Authos Login Test
+                            </Button>
                         </div>
                     }
                 </div>

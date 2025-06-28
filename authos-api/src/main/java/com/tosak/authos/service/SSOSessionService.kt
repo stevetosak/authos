@@ -28,7 +28,6 @@ import java.util.*
  */
 @Service
 open class SSOSessionService(
-    private val redisService: RedisService,
     private val userRepository: UserRepository,
     private val appRepository: AppRepository,
     private val sessionRepository: RedisIndexedSessionRepository,
@@ -96,15 +95,14 @@ open class SSOSessionService(
         val paramHash = getRequestParamHash(request)
         freshSession.setAttribute("param_hash", paramHash)
 
-
         redisTemplate.opsForSet().add(ssoGroupKey, freshSession.id)
         redisTemplate.expire(ssoGroupKey, Duration.ofSeconds(3600))
+        sessionRepository.afterPropertiesSet()
 
         freshSession.setAttribute("forcePersist", UUID.randomUUID().toString())
 
 
     }
-
 
 
     /**
@@ -114,13 +112,8 @@ open class SSOSessionService(
      * @param appId the unique identifier of the application for which the session is being validated
      * @return true if the user has an active session for the specified application, false otherwise
      */
-    open fun hasActiveSession(userId: Int, appId: Int): Boolean {
-        val user: User = userRepository.findUserById(userId)
-            ?: throw IllegalArgumentException("Cant find user")
-        val app = appRepository.findAppById(appId)
-            ?: throw IllegalArgumentException("Cant find app")
-
-        return redisTemplate.hasKey(ssoGroupKey(user.id!!, app.group.id!!))
+    open fun hasActiveSession(userId: Int, groupId: Int): Boolean {
+        return redisTemplate.hasKey(ssoGroupKey(userId, groupId))
     }
 
     /**
@@ -142,25 +135,25 @@ open class SSOSessionService(
     }
 
 
-
-    private fun terminateByPattern(keyPattern:String){
+    private fun terminateByPattern(keyPattern: String) {
         println("DELETING SESSIONS")
         val ssoSessionKeys = redisTemplate.keys(keyPattern)
         ssoSessionKeys.forEach { key ->
             println("Deleting key: $key")
-            redisTemplate.opsForSet().members(key)?.
-            forEach { sid  ->
+            redisTemplate.opsForSet().members(key)?.forEach { sid ->
                 sessionRepository.deleteById(sid)
             }
             redisTemplate.delete(key);
         }
     }
 
+
     open fun terminateAllByUser(user: User) {
-        val keyPattern ="$AUTHOS_SSO_KEY_PREFIX:${user.id}*";
-       terminateByPattern(keyPattern)
+        val keyPattern = "$AUTHOS_SSO_KEY_PREFIX:${user.id}*";
+        terminateByPattern(keyPattern)
     }
-    open fun terminateAllByGroup(appGroup: AppGroup){
+
+    open fun terminateAllByGroup(appGroup: AppGroup) {
         val keyPattern = "$AUTHOS_SSO_KEY_PREFIX:*:${appGroup.id}"
         terminateByPattern(keyPattern)
     }

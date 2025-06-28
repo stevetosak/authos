@@ -1,5 +1,6 @@
 package com.tosak.authos.exceptions.oauth;
 
+// TODO samo so redirect uri
 public class OAuthException extends RuntimeException {
     public final String code;
     public final String redirectUri;

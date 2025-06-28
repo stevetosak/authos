@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {App} from "@/services/interfaces.ts";
+import {App} from "@/services/types.ts";
 import {fieldValidations} from "@/Pages/components/wrappers/DataWrapper.tsx";
 
 

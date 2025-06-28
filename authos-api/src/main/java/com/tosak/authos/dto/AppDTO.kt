@@ -27,5 +27,6 @@ data class AppDTO(
     var responseTypes: List<String> = listOf(),
     var grantTypes: List<String> = listOf(),
     var tokenEndpointAuthMethod: String,
+    var dusterCallbackUri: String? = null,
     ) :
     Serializable

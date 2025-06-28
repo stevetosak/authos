@@ -13,7 +13,6 @@ class IdTokenStrategy(
     private val ppidService: PPIDService,
     private val app: App,
     private val user: User,
-    private val request: HttpServletRequest,
 
     ) : JwtTokenStrategy {
         //TODO at_hash: b64 encodiran leva polovina na hash od access tokenot.

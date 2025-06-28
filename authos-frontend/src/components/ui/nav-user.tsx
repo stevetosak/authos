@@ -26,7 +26,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar.tsx"
-import {User} from "@/services/interfaces.ts";
+import {User} from "@/services/types.ts";
 
 export function NavUser({
   user,

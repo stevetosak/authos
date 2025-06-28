@@ -49,6 +49,8 @@ class App (
     var group: AppGroup = AppGroup(),
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "app", cascade = [CascadeType.ALL], orphanRemoval = true)
     var redirectUris : MutableList<RedirectUri> = mutableListOf(),
+    @Column(name = "duster_callback_uri", nullable = true)
+    var dusterCallbackUri : String? = null,
 
 ) : Serializable {
     @Transient

@@ -11,7 +11,8 @@ import java.time.LocalDateTime
 @Table(name = "ppid")
 class PPID (
     @EmbeddedId
-    val id : PPIDKey = PPIDKey(),
+    @Column(name = "id")
+    val key : PPIDKey = PPIDKey(),
     val salt: String = "",
     @Column(name = "created_at")
     val createdAt : LocalDateTime = LocalDateTime.now(),

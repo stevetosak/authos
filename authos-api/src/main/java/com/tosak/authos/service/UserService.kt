@@ -3,12 +3,15 @@ package com.tosak.authos.service
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
-import com.tosak.authos.exceptions.AuthenticationNotPresentException
-import com.tosak.authos.exceptions.unauthorized.UserNotFoundException
+import com.tosak.authos.exceptions.unauthorized.AuthenticationNotPresentException
+import com.tosak.authos.exceptions.unauthorized.InvalidUserCredentials
 import com.tosak.authos.pojo.LoginTokenStrategy
 import com.tosak.authos.repository.AppGroupRepository
 import com.tosak.authos.repository.UserRepository
 import com.tosak.authos.common.utils.JwtTokenFactory
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.base.HttpUnauthorizedException
+import com.tosak.authos.exceptions.demand
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +23,6 @@ import org.springframework.http.HttpHeaders
 import java.security.InvalidParameterException
 import java.time.Duration
 import java.util.Optional
-import kotlin.math.max
 
 @Service
 open class UserService @Autowired constructor(
@@ -34,14 +36,9 @@ open class UserService @Autowired constructor(
 
     open fun verifyCredentials(email: String, password: String): User {
         val userOpt: Optional<User> = userRepository.findByEmail(email)
-        if (!userOpt.isPresent) {
-            throw UserNotFoundException("Mail does not exist")
-        }
-        if (!passwordEncoder.matches(
-                password,
-                userOpt.get().password
-            )
-        ) throw InvalidParameterException("Credentials do not match")
+
+        demand(userOpt.isPresent && passwordEncoder.matches(password, userOpt.get().password))
+        {AuthosException("Bad credentials", InvalidUserCredentials())}
 
         return userOpt.get();
     }
@@ -49,16 +46,14 @@ open class UserService @Autowired constructor(
 
 //    @Cacheable(value = ["users"], key = "#id")
     open fun getById(id: Int): User {
-        return userRepository.findUserById(id) ?: throw UserNotFoundException(
-            "User with id $id not found"
-        )
+        return userRepository.findUserById(id) ?: throw AuthosException("Bad credentials", InvalidUserCredentials())
     }
     open fun getUserFromAuthentication(authentication: Authentication?): User {
-        println("$authentication AUTHENTICATION")
-        if(authentication == null || authentication.principal == null || authentication.principal !is User)
-            throw AuthenticationNotPresentException("Authentication not present")
 
-        return authentication.principal as User
+        demand(authentication != null && authentication.principal != null && authentication.principal is User)
+        {AuthosException("Unauthorized", HttpUnauthorizedException())}
+
+        return authentication!!.principal as User
     }
 
     open fun generateLoginCredentials(user:User,request: HttpServletRequest,group:AppGroup? = null,clear: Boolean = false): HttpHeaders {
@@ -69,6 +64,7 @@ open class UserService @Autowired constructor(
             .httpOnly(true)
             .secure(true)
             .path("/")
+            .domain("localhost")
             .sameSite("None")
             .maxAge(maxAge)
             .build()
@@ -77,6 +73,7 @@ open class UserService @Autowired constructor(
             .httpOnly(false)
             .secure(true)
             .path("/")
+            .domain("localhost")
             .sameSite("None")
             .maxAge(maxAge)
             .build()

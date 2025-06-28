@@ -26,7 +26,7 @@ class AccessToken (
     val revoked : Boolean = false,
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    val user: User = User(),
+    val user: User? = null,
     ){
 
 

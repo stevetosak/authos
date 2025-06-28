@@ -1,5 +1,6 @@
 package com.tosak.authos.service
 
+import com.nimbusds.jwt.SignedJWT
 import com.tosak.authos.common.enums.GrantType
 import com.tosak.authos.crypto.b64UrlSafeDecoder
 import com.tosak.authos.crypto.b64UrlSafeEncoder
@@ -13,14 +14,19 @@ import com.tosak.authos.entity.AuthorizationCode
 import com.tosak.authos.entity.RefreshToken
 import com.tosak.authos.entity.User
 import com.tosak.authos.entity.compositeKeys.RefreshTokenKey
-import com.tosak.authos.exceptions.AccessTokenExpiredException
-import com.tosak.authos.exceptions.AccessTokenNotFoundException
-import com.tosak.authos.exceptions.AccessTokenRevokedException
-import com.tosak.authos.exceptions.InvalidRefreshTokenException
+import com.tosak.authos.exceptions.unauthorized.AccessTokenExpiredException
+import com.tosak.authos.exceptions.unauthorized.InvalidAccessTokenException
+import com.tosak.authos.exceptions.unauthorized.AccessTokenRevokedException
+import com.tosak.authos.exceptions.badreq.InvalidRefreshTokenException
 import com.tosak.authos.repository.AccessTokenRepository
 import com.tosak.authos.repository.AuthorizationCodeRepository
 import com.tosak.authos.repository.RefreshTokenRepository
 import com.tosak.authos.common.utils.AESUtil
+import com.tosak.authos.common.utils.JwtTokenFactory
+import com.tosak.authos.exceptions.badreq.MissingParametersException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.demand
+import com.tosak.authos.pojo.IdTokenStrategy
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
@@ -31,7 +37,11 @@ import java.time.LocalDateTime
 
 class AccessTokenWrapper(val accessTokenValue: String, val accessToken: AccessToken)
 class RefreshTokenWrapper(val refreshTokenValue: String, val refreshToken: RefreshToken)
-class TokenWrapper(val accessTokenWrapper: AccessTokenWrapper, val refreshTokenWrapper: RefreshTokenWrapper?)
+class TokenWrapper(
+    val accessTokenWrapper: AccessTokenWrapper,
+    val refreshTokenWrapper: RefreshTokenWrapper? = null,
+    val idToken: SignedJWT? = null
+)
 
 @Service
 open class TokenService(
@@ -39,7 +49,12 @@ open class TokenService(
     private val authorizationCodeRepository: AuthorizationCodeRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val authorizationCodeService: AuthorizationCodeService,
-    private val aesUtil: AESUtil
+    private val aesUtil: AESUtil,
+    private val appService: AppService,
+    private val jwtTokenFactory: JwtTokenFactory,
+    private val ppidService: PPIDService,
+    private val idTokenService: IdTokenService,
+    private val dusterAppService: DusterAppService
 ) {
 
 
@@ -60,7 +75,11 @@ open class TokenService(
         var token = refreshTokenRepository.findByKey(RefreshTokenKey(user = authorizationCode.user, app.clientId));
 
         token = token.takeIf { it != null && !app.refreshTokenRotationEnabled }
-            ?: generateRefreshToken(user = authorizationCode.user, clientId = app.clientId, scope = authorizationCode.scope)
+            ?: generateRefreshToken(
+                user = authorizationCode.user,
+                clientId = app.clientId,
+                scope = authorizationCode.scope
+            )
 
         val refreshToken = refreshTokenRepository.save(token)
         return RefreshTokenWrapper(aesUtil.decrypt(b64UrlSafeDecoder(refreshToken.tokenValue)), refreshToken)
@@ -69,20 +88,26 @@ open class TokenService(
     @Transactional
     open fun generateAccessToken(
         clientId: String,
-        authorizationCode: AuthorizationCode?,
-        refreshToken: RefreshToken?
+        authorizationCode: AuthorizationCode? = null,
+        refreshToken: RefreshToken? = null
     ): AccessTokenWrapper {
 
         val tokenBytes = getSecureRandomValue(32)
         val tokenValueAscii = String(tokenBytes, StandardCharsets.US_ASCII)
         val tokenHash = getHash(tokenValueAscii);
+        val scope = if (authorizationCode == null && refreshToken == null) "duster" else {
+            refreshToken?.scope ?: authorizationCode!!.scope
+        }
+        val user: User? = if (authorizationCode == null && refreshToken == null) null else {
+            refreshToken?.key?.user ?: authorizationCode!!.user
+        }
 
         val accessToken = accessTokenRepository.save(
             AccessToken(
                 tokenHash = b64UrlSafeEncoder(tokenHash),
                 clientId = clientId,
-                user = if (authorizationCode == null && refreshToken != null) refreshToken.key!!.user else authorizationCode!!.user,
-                scope = if (authorizationCode == null && refreshToken != null) refreshToken.scope else authorizationCode!!.scope,
+                user = user,
+                scope = scope
             )
         )
 
@@ -94,9 +119,14 @@ open class TokenService(
     fun validateRefreshToken(token: String, clientId: String): RefreshTokenWrapper {
         val tokenHash = b64UrlSafeEncoder(getHash(token))
         val refreshToken = refreshTokenRepository.findRefreshTokenByTokenHash(tokenHash)
-            ?: throw InvalidRefreshTokenException("Invalid refresh token")
-        require(!refreshToken.revoked) { "ALERT: token revoked" }
-        require(refreshToken.expiresAt.isAfter(LocalDateTime.now())) { "ALERT: token expired" }
+            ?: throw AuthosException("invalid grant", InvalidRefreshTokenException())
+
+        demand(
+            !refreshToken.revoked
+                    && refreshToken.expiresAt.isAfter(LocalDateTime.now())
+        )
+        { AuthosException("invalid_grant", InvalidRefreshTokenException()) }
+
         refreshToken.lastUsedAt = LocalDateTime.now()
         refreshTokenRepository.save(refreshToken)
         return RefreshTokenWrapper(token, refreshToken)
@@ -106,14 +136,14 @@ open class TokenService(
     open fun validateAccessToken(token: String): AccessToken {
         val tokenVal = String(b64UrlSafeDecoder(token), StandardCharsets.US_ASCII)
         val tokenHash = b64UrlSafeEncoder(getHash(tokenVal))
-        val accessToken = accessTokenRepository.findByTokenHash(tokenHash) ?: throw AccessTokenNotFoundException("")
-        if (accessToken.revoked) {
-            // tuka nesto da sa pret ako imat suspicious activity, t.e pojke pati nekoj probvit so revoked
-            throw AccessTokenRevokedException("Token has been revoked.")
-        }
-        if (accessToken.expiresAt < LocalDateTime.now()) {
-            throw AccessTokenExpiredException("Token expired.")
-        }
+        val accessToken = accessTokenRepository.findByTokenHash(tokenHash) ?: throw AuthosException(
+            "invalid token",
+            InvalidAccessTokenException()
+        )
+        demand(!accessToken.revoked)
+        { AuthosException("invalid_token", AccessTokenRevokedException()) }
+        demand(accessToken.expiresAt.isAfter(LocalDateTime.now()))
+        { AuthosException("invalid_token", AccessTokenExpiredException()) }
 
         return accessToken;
     }
@@ -122,54 +152,74 @@ open class TokenService(
         val grantType = try {
             GrantType.valueOf(grant.uppercase())
         } catch (e: IllegalArgumentException) {
-            throw InvalidParameterException("Unsupported grant type")
+            throw AuthosException("invalid_grant", InvalidParameterException())
         }
         return grantType;
     }
 
-    // TODO ISTESTIRAJ FIXOT ZA REFRESH TOKEN!!!
-
 
     @Transactional
-    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto, app: App): TokenWrapper {
+    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto): TokenWrapper {
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
+            || tokenRequestDto.grantType == "client_credentials" && tokenRequestDto.clientSecret == null
         ) throw InvalidParameterException("parameters do not match grant type")
 
         return when (parseGrantType(tokenRequestDto.grantType)) {
-            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, app)
-            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto, app)
-            GrantType.CLIENT_CREDENTIALS -> TODO()
+            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto)
+            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto)
+            GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
             GrantType.PKCE -> TODO()
             GrantType.DEVICE_CODE -> TODO()
         }
+
     }
 
     @Transactional
-    open fun handleAuthorizationCodeRequest(request: TokenRequestDto, app: App): TokenWrapper {
+    open fun handleClientCredentialsRequest(request: TokenRequestDto): TokenWrapper {
+        demand(request.clientId != null && request.clientSecret != null){ MissingParametersException() }
+        dusterAppService.validateAppCredentials(request.clientId!!, request.clientSecret!!, request.redirectUri)
+        val accessTokenWrapper = generateAccessToken(clientId = request.clientId!!)
+        return TokenWrapper(accessTokenWrapper = accessTokenWrapper)
+    }
+
+    @Transactional
+    open fun handleAuthorizationCodeRequest(request: TokenRequestDto): TokenWrapper {
+        val app = appService.validateAppCredentials(tokenRequestDto = request)
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, request)
         code.used = true;
         authorizationCodeRepository.save(code)
         var refreshTokenWrapper: RefreshTokenWrapper? = null
         if (code.scope.contains("offline_access")) {
-            refreshTokenWrapper = getRefreshToken(app, code)
+            refreshTokenWrapper = getRefreshToken(authorizationCode = code, app = app)
         }
+        val accessTokenWrapper =
+            generateAccessToken(clientId = app.clientId, authorizationCode = code, refreshToken = null)
+        val idToken =
+            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!))
+
         return TokenWrapper(
-            generateAccessToken(clientId = request.clientId!!, authorizationCode = code, refreshToken = null),
-            refreshTokenWrapper = refreshTokenWrapper
+            accessTokenWrapper = accessTokenWrapper,
+            refreshTokenWrapper = refreshTokenWrapper,
+            idToken = idToken
         )
     }
 
     @Transactional
-    open fun handleRefreshTokenRequest(request: TokenRequestDto, app: App): TokenWrapper {
+    open fun handleRefreshTokenRequest(request: TokenRequestDto): TokenWrapper {
+        val app = appService.validateAppCredentials(tokenRequestDto = request)
         val refreshTokenWrapper = validateRefreshToken(request.refreshToken!!, clientId = app.clientId)
+        val accessTokenWrapper = generateAccessToken(
+            clientId = app.clientId,
+            refreshToken = refreshTokenWrapper.refreshToken,
+        )
+
+        val idToken =
+            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!))
         return TokenWrapper(
-            generateAccessToken(
-                clientId = request.clientId!!,
-                refreshToken = refreshTokenWrapper.refreshToken,
-                authorizationCode = null
-            ),
-            refreshTokenWrapper
+            accessTokenWrapper = accessTokenWrapper,
+            refreshTokenWrapper = refreshTokenWrapper,
+            idToken = idToken
         )
     }
 

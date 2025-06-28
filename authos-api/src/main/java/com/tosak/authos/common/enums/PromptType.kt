@@ -1,6 +1,7 @@
 package com.tosak.authos.common.enums
 
 import com.tosak.authos.exceptions.badreq.PromptParseException
+import com.tosak.authos.exceptions.base.AuthosException
 
 enum class PromptType {
     NONE,
@@ -10,9 +11,8 @@ enum class PromptType {
 
     companion object{
         fun parse(prompt : String): PromptType {
-            return entries.find { it.name.equals(prompt,ignoreCase = true) } ?: throw PromptParseException(
-                "Can't parse prompt: $prompt"
-            )
+            return entries.find { it.name.equals(prompt,ignoreCase = true) } ?: throw AuthosException("invalid request",PromptParseException())
+
         }
     }
     override fun toString(): String {

@@ -4,18 +4,20 @@ import com.tosak.authos.common.enums.TokenType
 import com.tosak.authos.dto.TokenRequestDto
 import com.tosak.authos.dto.TokenResponse
 import com.tosak.authos.pojo.AuthorizeRequestParams
-import com.tosak.authos.pojo.IdTokenStrategy
 import com.tosak.authos.service.*
 import com.tosak.authos.service.JwtService
 import com.tosak.authos.common.utils.JwtTokenFactory
 import com.tosak.authos.common.utils.getRequestParamHash
-import com.tosak.authos.exceptions.MissingSessionAttributesException
-import com.tosak.authos.exceptions.TamperedRequestException
+import com.tosak.authos.exceptions.badreq.MissingSessionAttributesException
+import com.tosak.authos.exceptions.badreq.TamperedRequestException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.demand
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.servlet.http.HttpSession
 import org.springframework.http.*
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 
@@ -60,11 +62,12 @@ class OAuthEndpoints(
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
         @RequestParam(name = "response_type") responseType: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
+        httpSession: HttpSession,
         request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
-        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub))
+        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub),httpSession,request)
 
 
     }
@@ -90,30 +93,30 @@ class OAuthEndpoints(
         val paramHashFromSession = httpSession.getAttribute("param_hash") as String?
         val paramHashFromRequest = getRequestParamHash(httpServletRequest)
 
-        if (userId == null || paramHashFromSession == null || appId == null) {
-            throw MissingSessionAttributesException("Missing session attributes")
-        }
-        val user = userService.getById(userId)
+        println("user: $userId, app: $appId, param_hash: $paramHashFromSession")
+
+        demand(userId != null && paramHashFromSession != null && appId != null){ AuthosException("invalid request",
+            MissingSessionAttributesException()) }
+
+        val user = userService.getById(userId!!)
         val appFromParams = appService.getAppByClientIdAndRedirectUri(clientId, redirectUri)
-        val appFromSession = appService.getAppById(appId)
+        val appFromSession = appService.getAppById(appId!!)
 
         if (paramHashFromSession != paramHashFromRequest) {
             sessionService.terminateSSOSession(user,appFromSession,httpSession)
-            throw TamperedRequestException("Parameter hash does not match")
+            throw AuthosException("invalid request",TamperedRequestException())
         }
 
         check(appFromParams == appFromSession){"Mismatch app from session and params"}
 
-
         if(!dusterSub.isNullOrBlank()) {
-            check(ppidService.getUserIdByHash(dusterSub) == user.id){"Invalid Duster client request"}
+            check(ppidService.getPPIDBySub(dusterSub).key.userId == user.id){"Invalid Duster client request"}
         }
         val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri,scope,user)
         return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
     }
 
 
-    // povekje nacini na avtentikacija: private_key_jwt, client_secret.
     // todo support for different client authentication methods: client_secret, private_key_jwt
     // client secret basic header: b64(clientId:clientSecret)
     @PostMapping("/token")
@@ -122,14 +125,8 @@ class OAuthEndpoints(
         request: HttpServletRequest
     ): ResponseEntity<TokenResponse> {
 
-        val app = appService.validateAppCredentials(
-            tokenRequestDto,
-            request
-        );
-
-        val tokenWrapper = tokenService.handleTokenRequest(tokenRequestDto,app)
-        val idToken = factory.createToken(IdTokenStrategy(ppidService,app,tokenWrapper.accessTokenWrapper.accessToken.user,request))
-        idTokenService.save(idToken,tokenWrapper.accessTokenWrapper.accessToken);
+        val tokenWrapper = tokenService.handleTokenRequest(tokenRequestDto)
+        idTokenService.save(tokenWrapper.idToken,tokenWrapper.accessTokenWrapper.accessToken);
 
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
@@ -139,7 +136,7 @@ class OAuthEndpoints(
                     accessToken = tokenWrapper.accessTokenWrapper.accessTokenValue,
                     refreshToken = tokenWrapper.refreshTokenWrapper?.refreshTokenValue,
                     tokenType = TokenType.Bearer.name,
-                    idToken = idToken.serialize(),
+                    idToken = tokenWrapper.idToken?.serialize(),
                     expiresIn = 3600
                 )
             )
@@ -159,8 +156,8 @@ class OAuthEndpoints(
     ){
 
         val idToken = jwtService.verifyToken(idTokenHint)
-        val userId = ppidService.getUserIdByHash(idToken.jwtClaimsSet.subject)
-        val user = userService.getById(userId)
+        val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
+        val user = userService.getById(ppid.key.userId!!)
         val app = appService.getAppByClientId(clientId);
 
         sessionService.terminateSSOSession(user,app,httpSession)
@@ -173,5 +170,13 @@ class OAuthEndpoints(
         val accessToken = tokenService.validateAccessToken(authorization.substring(7, authorization.length))
         val claims = claimService.resolve(accessToken)
         return ResponseEntity.status(200).body(claims)
+    }
+    @GetMapping("/logout/all")
+    @PostMapping("/logout/all")
+    fun logout(authentication: Authentication?,request: HttpServletRequest): ResponseEntity<Void> {
+        val user = userService.getUserFromAuthentication(authentication);
+        sessionService.terminateAllByUser(user)
+        val headers = userService.generateLoginCredentials(user = user,request = request,clear = true);
+        return ResponseEntity.status(200).headers(headers).build();
     }
 }

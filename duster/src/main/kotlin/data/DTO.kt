@@ -35,6 +35,7 @@ data class DusterAppRegisterDto(
     @JsonProperty("grant_type") val grantType: String = "authorization_code",
     @JsonProperty("scope") val scope: String = "openid",
     @JsonProperty("callback_uri") val callbackUri: String,
+    @JsonProperty("name") val name: String,
 )
 //@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 //@JsonIgnoreProperties(ignoreUnknown = true)

@@ -7,8 +7,10 @@ import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.PPID
 import com.tosak.authos.entity.User
 import com.tosak.authos.entity.compositeKeys.PPIDKey
-import com.tosak.authos.exceptions.PPIDNotFoundException
-import com.tosak.authos.exceptions.unauthorized.InvalidPPIDHashException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.demand
+import com.tosak.authos.exceptions.unauthorized.PPIDNotFoundException
+import com.tosak.authos.exceptions.unauthorized.InvalidPpidException
 import com.tosak.authos.repository.PPIDRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -35,13 +37,11 @@ open class PPIDService (
      */
     open fun getPPID(user: User, group: AppGroup,create: Boolean = true) : String{
         val ppidOpt = ppidRepository.findById(PPIDKey(group.id,user.id))
-
         if(ppidOpt.isPresent){
             val existingPpid = ppidOpt.get();
-            return hex(getHash("${existingPpid.id.groupId}${existingPpid.id.userId}${existingPpid.salt}"))
+            return hex(getHash("${existingPpid.key.groupId}${existingPpid.key.userId}${existingPpid.salt}"))
         }
-        if(!create) throw PPIDNotFoundException("PPID not found")
-
+        demand(create){ AuthosException("invalid user",PPIDNotFoundException()) }
         return createPPID(user,group);
 
     }
@@ -63,13 +63,12 @@ open class PPIDService (
  *
  * @param hash The hash value representing the PPID.
  * @return The user ID corresponding to the provided hash.
- * @throws InvalidPPIDHashException if no PPID with the given hash is found.
+ * @throws InvalidPpidException if no PPID with the given hash is found.
  */
 //    @Cacheable(value = ["ppidUsers"], key = "#hash")
-    open fun getUserIdByHash(hash: String) : Int {
-        val ppid = ppidRepository.findByPpidHash(hash) ?: throw InvalidPPIDHashException(
-            "Cant find ppid with matching hash value"
-        )
-        return ppid.id.userId!!
+    open fun getPPIDBySub(hash: String) : PPID {
+        val ppid = ppidRepository.findByPpidHash(hash)
+            ?: throw AuthosException("invalid subject",InvalidPpidException())
+        return ppid
     }
 }

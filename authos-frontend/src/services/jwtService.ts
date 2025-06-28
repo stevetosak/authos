@@ -1,5 +1,5 @@
 import {api} from "@/services/config.ts";
-import {JwkKey, JwksResponse} from "@/services/interfaces.ts";
+import {JwkKey, JwksResponse} from "@/services/types.ts";
 import {importJWK, jwtVerify} from 'jose';
 
 const getJWKPubKey = async (): Promise<JwkKey> => {

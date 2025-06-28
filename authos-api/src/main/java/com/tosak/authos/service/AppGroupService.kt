@@ -1,15 +1,13 @@
 package com.tosak.authos.service
 
-import com.tosak.authos.dto.AppDTO
 import com.tosak.authos.dto.AppGroupDTO
 import com.tosak.authos.dto.CreateAppGroupDTO
-import com.tosak.authos.entity.App
 import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
-import com.tosak.authos.exceptions.AppGroupsNotFoundException
+import com.tosak.authos.exceptions.base.AuthosException
+import com.tosak.authos.exceptions.unauthorized.AppGroupsNotFoundException
 import com.tosak.authos.repository.AppGroupRepository
 import jakarta.transaction.Transactional
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -23,7 +21,7 @@ open class AppGroupService(
     //    @Cacheable(value = ["userGroups"], key = "#userId")
     open fun getAllGroupsForUser(userId: Int): List<AppGroup> {
         return appGroupRepository.findByUserId(userId)
-            ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
+            ?: throw AuthosException("Bad Request", AppGroupsNotFoundException())
     }
 
     @Transactional
@@ -47,13 +45,12 @@ open class AppGroupService(
 
     open fun findGroupByIdAndUser(id: Int, user: User): AppGroup {
         return appGroupRepository.findByIdAndUserId(id, user.id!!)
-            ?: throw AppGroupsNotFoundException("Could not find app groups for given user")
+            ?: throw AuthosException("Bad Request", AppGroupsNotFoundException())
     }
 
     open fun getDefaultGroupForUser(user: User): AppGroup {
-        return appGroupRepository.findAppGroupByUserIdAndIsDefault(user.id!!, true) ?: throw AppGroupsNotFoundException(
-            "No default group found"
-        )
+        return appGroupRepository.findAppGroupByUserIdAndIsDefault(user.id!!, true) ?: throw
+        IllegalStateException("No default group present for user")
     }
 
     open fun deleteGroup(appGroup: AppGroup,move: Boolean = false) {
@@ -70,7 +67,7 @@ open class AppGroupService(
 
     @Transactional
     open fun updateGroup(appGroupDto: AppGroupDTO,user: User): AppGroup {
-        val group = appGroupRepository.findGroupById(appGroupDto.id!!) ?: throw AppGroupsNotFoundException("Cant find group")
+        val group = appGroupRepository.findGroupById(appGroupDto.id!!) ?: throw AuthosException("Bad Request", AppGroupsNotFoundException())
         if (appGroupDto.isDefault) {
             val defaultGroup = getDefaultGroupForUser(user);
             defaultGroup.isDefault = false;
