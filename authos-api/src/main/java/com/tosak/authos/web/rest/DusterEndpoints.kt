@@ -3,7 +3,7 @@ package com.tosak.authos.web.rest
 import com.tosak.authos.common.utils.AESUtil
 import com.tosak.authos.crypto.b64UrlSafeDecoder
 import com.tosak.authos.dto.DusterAppDto
-import com.tosak.authos.dto.AppDusterSyncDto
+import com.tosak.authos.dto.AuthosAppSyncDto
 import com.tosak.authos.entity.App
 import com.tosak.authos.service.AppGroupService
 import com.tosak.authos.service.AppService
@@ -58,13 +58,12 @@ class DusterEndpoints(
         @RequestParam(name = "client_id", required = false) clientId: String?,
         @RequestParam(name = "client_name", required = false) clientName: String?,
         @RequestHeader(name = "Authorization") authorizationHeader: String
-    ): ResponseEntity<AppDusterSyncDto> {
+    ): ResponseEntity<AuthosAppSyncDto> {
         if (clientId == null && clientName == null) {
             return ResponseEntity.status(400).build()
         }
         val token = tokenService.validateAccessToken(authorizationHeader.substring(7))
         if (!token.scope.contains("duster")) return ResponseEntity.status(401).build()
-        val dusterApp = dusterAppService.getAppByClientId(token.clientId);
         val authosApp: App = if (clientId != null) {
             appService.getAppByClientId(clientId)
         } else {
@@ -79,7 +78,7 @@ class DusterEndpoints(
         }
 
         return ResponseEntity.status(200).body(
-            AppDusterSyncDto(
+            AuthosAppSyncDto(
                 clientId = authosApp.clientId,
                 clientSecret = aESUtil.decrypt(b64UrlSafeDecoder(authosApp.clientSecret)),
                 redirectUri = dusterRedirectUri.id!!.redirectUri,
@@ -91,19 +90,24 @@ class DusterEndpoints(
         )
     }
 
+    @GetMapping("/duster/validate-token")
+    fun validateToken(@RequestHeader(name = "Authorization") authorizationHeader: String): ResponseEntity<Void> {
+        tokenService.validateAccessToken(authorizationHeader.substring(7))
+        return ResponseEntity.ok().build()
+    }
+
     @GetMapping("/duster/app")
     fun getDusterAppForUser(authentication: Authentication?): ResponseEntity<DusterAppDto> {
         val user = userService.getUserFromAuthentication(authentication)
         return ResponseEntity.ok().body(dusterAppService.getAppByUser(user))
     }
 
-    @PostMapping("/duster/register")
+    @PostMapping("/duster/create")
     fun registerDusterApp(
-        @RequestParam(name = "callback_url") callbackUrl: String,
         authentication: Authentication?
     ): ResponseEntity<DusterAppDto> {
         val user = userService.getUserFromAuthentication(authentication)
-        val dusterAppDto = dusterAppService.registerApp(user, callbackUrl)
+        val dusterAppDto = dusterAppService.registerApp(user)
         return ResponseEntity.status(201).body(dusterAppDto)
     }
 

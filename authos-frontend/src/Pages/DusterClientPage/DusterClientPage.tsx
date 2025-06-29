@@ -18,8 +18,7 @@ import {
     Settings2,
     Key,
     RotateCw,
-    Copy,
-    Plus, EditIcon,
+    Copy, Wrench,
 } from "lucide-react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {defaultDusterApp, DusterApp} from "@/services/types.ts";
@@ -62,17 +61,15 @@ export const DusterClientPage = () => {
 
     }
 
-
-
     useEffect(() => {
         loadApp()
     },[])
 
 
-    const registerClient = async () => {
+    const createDusterClient = async () => {
 
         try {
-            const resp = await apiPostAuthenticated<DusterApp>(`/duster/register?callback_url=${registrationCallbackUrl}`)
+            const resp = await apiPostAuthenticated<DusterApp>(`/duster/create`)
             setDusterApp(resp.data)
             setIsConfigured(true)
         } catch (e) {
@@ -132,33 +129,25 @@ export const DusterClientPage = () => {
                                 </div>
 
                                 <CardTitle className="text-2xl font-medium text-white mb-2">
-                                    Duster Client Not Configured
+                                    Duster Client Not Enabled
                                 </CardTitle>
 
                                 <p className="text-gray-400 max-w-md mb-6">
-                                    You haven't set up your Duster client yet. Enter a callback url to get started.
+                                    Enabling your duster client generates credentials for it, just like any other OAuth app.
                                 </p>
 
-                                <div className="space-y-4 mt-4">
-                                    <div>
-                                        <Label>Callback URL</Label>
-                                        <Input
-                                            value={registrationCallbackUrl}
-                                            onChange={(e) => setRegistrationCallbackUrl(e.target.value)}
-                                            placeholder="https://your-backend.example.com/callback"
-                                            className="bg-gray-700 border-gray-600 mt-2"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            Where Duster should send user information after authentication
-                                        </p>
-                                    </div>
-                                    <div className="flex justify-end gap-3">
+                                <div className="space-y-4 mt-4 w-full">
+                                    <div className="flex justify-center gap-3">
                                         <Button
-                                            onClick={registerClient}
-                                            className="bg-emerald-600 hover:bg-emerald-500"
-                                            disabled={!registrationCallbackUrl}
+                                            variant={"outline"}
+                                            onClick={createDusterClient}
+                                            className="flex items-center gap-2 justify-start bg-gray-800/50 border-emerald-400/30 hover:bg-emerald-400/10 text-xl w-1/2 text-emerald-500"
                                         >
-                                            Register
+                                            <Wrench className={"w-10 h-10"}></Wrench>
+                                            <span className={"flex-1"}>
+                                                  Enable
+                                            </span>
+
                                         </Button>
                                     </div>
                                 </div>
@@ -296,25 +285,6 @@ export const DusterClientPage = () => {
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-6">
-                                    <div>
-                                        <Label htmlFor="callback-url">Callback URL</Label>
-                                        <Input
-                                            key={isEditing ? "editing" : "viewing"}
-                                            id="callback-url"
-                                            value={dusterApp.callbackUrl}
-                                            onChange={(e) => setDusterApp((prevApp => ({
-                                                ...prevApp,
-                                                callbackUrl: e.target.value
-                                            })))}
-                                            placeholder="https://your-backend.example.com/callback"
-                                            readOnly={!isEditing}
-                                            className="bg-gray-700 border-gray-600 mt-2"
-                                        />
-                                        <p className="text-xs text-gray-400 mt-2">
-                                            Where Duster should send user information after authentication
-                                        </p>
-                                    </div>
-
                                     <div>
                                         <Label>Token Mode</Label>
                                         <div className="flex items-center gap-4 mt-2">

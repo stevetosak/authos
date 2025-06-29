@@ -1,4 +1,4 @@
-package com.tosak.authos.crypto
+package com.authos.crypto
 
 import java.security.MessageDigest
 import java.security.SecureRandom

@@ -15,10 +15,6 @@ data class DusterAppDto(
     @field:NotNull @field:NotEmpty @field:NotBlank val id:Int = -1,
     @field:NotNull @field:NotEmpty @field:NotBlank val clientId: String = "",
     @field:NotNull @field:NotEmpty @field:NotBlank val clientSecret: String = "",
-    @field:NotNull @field:NotEmpty @field:NotBlank @field:URL(
-        protocol = "",
-        host = "",
-        regexp = ""
-    ) val callbackUrl: String = "",
-    val createdAt: LocalDateTime? = null
+    @field:NotNull @field:NotEmpty @field:NotBlank val tokenFetchMode: String = "auto",
+    @field:NotNull @field:NotEmpty @field:NotBlank val createdAt: LocalDateTime = LocalDateTime.MIN,
 ) : Serializable

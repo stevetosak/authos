@@ -5,10 +5,8 @@ plugins {
     application
 }
 
-
-
 group = "com.tosak.authos.duster"
-version = "1.0-SNAPSHOT"
+version = "0.1.0-alpha"
 
 repositories {
     mavenCentral()
@@ -28,6 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:${ktor_version}")
     implementation("io.ktor:ktor-client-content-negotiation:${ktor_version}")
     implementation("io.ktor:ktor-client-logging:${ktor_version}")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
 }
 
 
@@ -36,5 +35,5 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(17)
 }

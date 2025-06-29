@@ -5,6 +5,7 @@ import com.tosak.authos.exceptions.base.HttpBadRequestException
 import com.tosak.authos.exceptions.base.HttpForbiddenException
 import com.tosak.authos.exceptions.oauth.OAuthException
 import com.tosak.authos.exceptions.base.HttpUnauthorizedException
+import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.lang.Exception
 import java.net.URI
 
+@Profile("prod")
 @RestControllerAdvice
 class ExceptionHandler {
     @ExceptionHandler(Exception::class)

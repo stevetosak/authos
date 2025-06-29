@@ -2,7 +2,7 @@
 
 package com.authos.repository
 
-import com.authos.data.TokenType
+import com.authos.model.TokenType
 import com.authos.service.RedisManager
 import kotlinx.coroutines.future.await
 import kotlinx.serialization.json.Json

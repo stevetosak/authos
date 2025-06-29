@@ -32,12 +32,10 @@ class DusterAppRepositoryImpl(private val redisManager: RedisManager) : DusterAp
 
     override suspend fun getDusterAppByName(name: String): DusterApp {
         val app = redisManager.withCommands { cmd ->
-            cmd.multi().await()
-            val cid = cmd.get("$DUSTER_APP_NAME_KEY:$name")
+            val cid = cmd.hget(DUSTER_APP_NAME_KEY,name).await()
             val app: DusterApp? = cmd.get("$DUSTER_APP_ID_KEY:$cid").get()?.let { serialized ->
                 json.decodeFromString(DusterApp.serializer(), string = serialized)
             }
-            cmd.exec().await()
             return@withCommands app
         }
         check(app != null) { "No app found for $name" }
@@ -67,7 +65,7 @@ class DusterAppRepositoryImpl(private val redisManager: RedisManager) : DusterAp
         redisManager.withCommands { cmd ->
             cmd.multi().await()
             cmd.set(appKey, serialized)
-            cmd.set("$DUSTER_APP_NAME_KEY:${dusterApp.name}", dusterApp.clientId)
+            cmd.hset(DUSTER_APP_NAME_KEY,dusterApp.name,dusterApp.clientId)
 //            cmd.zadd(
 //                DUSTER_UPDATES_PREFIX,
 //                ZAddArgs.Builder.ch(),dusterApp.updatedAt,dusterApp.clientId)

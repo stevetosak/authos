@@ -1,4 +1,4 @@
-package com.authos.data
+package com.authos.model
 
 enum class TokenType {
     ID_TOKEN,

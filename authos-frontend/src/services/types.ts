@@ -47,7 +47,7 @@ export interface DusterApp {
     id: number
     clientId: string,
     clientSecret: string,
-    callbackUrl: string,
+    tokenFetchMode: string
     userId: number,
     createdAt: string
 }
@@ -55,7 +55,7 @@ export const defaultDusterApp: DusterApp = {
     id: -1,
     clientId: "",
     clientSecret: "",
-    callbackUrl: "",
+    tokenFetchMode: "auto",
     userId: -1,
     createdAt: Date()
 }

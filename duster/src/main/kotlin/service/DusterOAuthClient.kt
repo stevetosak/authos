@@ -1,14 +1,14 @@
-package com.authos.duster_client
+package com.authos.service
 
 import com.authos.data.AuthTokenResponse
 import com.authos.data.TokenRequestDto
 import com.authos.getHostIp
 import com.authos.model.DusterApp
-import com.authos.model.UserInfo
 import com.fasterxml.jackson.core.JsonProcessingException
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -16,40 +16,24 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
-import java.net.InetAddress
 
-enum class NextAuthorizeRequestType{
+enum class NextAuthorizeRequestType {
     AUTO,
     OFFLINE_ACCESS
 }
 
-class DusterClient(val dusterApp: DusterApp) {
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            jackson()
-        }
+val client = HttpClient(CIO) {
+    expectSuccess = true
+    install(ContentNegotiation) {
+        jackson()
     }
+}
+
+class DusterOAuthClient(val dusterApp: DusterApp) {
 
     var nextRequestType = NextAuthorizeRequestType.AUTO
-
-
-
-    private val AUTHOS_AUTHORIZE_URL = "http://localhost:9000/oauth/authorize"
-//    private val AUTHOS_TOKEN_URL = "http://localhost:9000/oauth/token"
-//    private val AUTHOS_USERINFO_URL = "http://localhost:9000/oauth/userinfo"
-
-    private fun getAuthosTokenUrl(): String {
-        val hostIP = getHostIp()
-        return "http://$hostIP:9000/oauth/token"
-    }
-    private fun getAuthosUserinfoUrl() : String{
-        val hostIP = getHostIp();
-        return "http://$hostIP:9000/oauth/userinfo"
-    }
-
 
 
     @Throws(JsonProcessingException::class)
@@ -99,17 +83,44 @@ class DusterClient(val dusterApp: DusterApp) {
         return resp;
     }
 
-    suspend fun sendToCallback(prunedData: HashMap<String,String>): HttpResponse {
+    suspend fun sendToCallback(prunedData: HashMap<String, String>): HttpResponse {
 
         println("Callback url: ${dusterApp.callbackUri}")
         var callbackUrl = dusterApp.callbackUri
-        if(getHostIp() != "localhost" && callbackUrl.contains("localhost")){
+        if (getHostIp() != "localhost" && callbackUrl.contains("localhost")) {
             callbackUrl = callbackUrl.replace("localhost", getHostIp())
+        };
+        val resp: HttpResponse = try {
+            client.post(callbackUrl) {
+                contentType(ContentType.Application.Json)
+                setBody(prunedData)
+            }
+        } catch (exception: ResponseException) {
+            exception.response
         }
-        return client.post(callbackUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(prunedData)
-        }
+        return resp;
+
     }
 
+
+}
+
+fun getAuthosTokenUrl(): String {
+    val hostIP = getHostIp()
+    return "http://$hostIP:9000/oauth/token"
+}
+
+fun getAuthosUserinfoUrl(): String {
+    val hostIP = getHostIp();
+    return "http://$hostIP:9000/oauth/userinfo"
+}
+
+
+suspend fun sendClientCredentialsTokenRequest(clientId: String, clientSecret: String): String {
+    val body = mapOf("client_id" to clientId, "client_secret" to clientSecret, "grant_type" to "client_credentials")
+    val resp: AuthTokenResponse = client.post(getAuthosTokenUrl()) {
+        setBody(body)
+        contentType(ContentType.Application.Json)
+    }.body()
+    return resp.accessToken
 }

@@ -17,33 +17,53 @@ import java.security.InvalidParameterException
 
 @Service
 class DusterAppService(private val dusterAppRepository: DusterAppRepository, private val aesUtil: AESUtil) {
-    fun registerApp(user: User, callbackUrl:String) : DusterAppDto{
+    fun registerApp(user: User): DusterAppDto {
         val clientId = hex(getSecureRandomValue(32))
         val clientSecret = hex(getSecureRandomValue(32))
         val clientSecretBytes = aesUtil.encrypt(clientSecret)
 
-        val dusterApp = dusterAppRepository.save(  DusterApp(user = user, clientId = clientId,
-            clientSecret = b64UrlSafeEncoder(clientSecretBytes), callbackUrl = callbackUrl))
+        val dusterApp = dusterAppRepository.save(
+            DusterApp(
+                user = user, clientId = clientId,
+                clientSecret = b64UrlSafeEncoder(clientSecretBytes),
+            )
+        )
+        return DusterAppDto(
+            id = dusterApp.id,
+            clientId = dusterApp.clientId,
+            clientSecret = clientSecret,
+            createdAt = dusterApp.createdAt,
+            tokenFetchMode = dusterApp.tokenFetchMode,
+        )
+    }
+
+    fun getAppByUser(user: User): DusterAppDto {
+        val dusterApp: DusterApp = dusterAppRepository.findDusterAppByUser(user)
+            ?: throw InvalidParameterException("Cant find duster app for given user")
         return DusterAppDto(
             dusterApp.id,
             dusterApp.clientId,
-            clientSecret,
-            dusterApp.callbackUrl,
+            aesUtil.decrypt(b64UrlSafeDecoder(dusterApp.clientSecret)),
+            tokenFetchMode = dusterApp.tokenFetchMode,
             dusterApp.createdAt
         )
     }
-    fun getAppByUser(user:User) : DusterAppDto{
-        val dusterApp: DusterApp = dusterAppRepository.findDusterAppByUser(user) ?: throw InvalidParameterException("Cant find duster app for given user")
-        return DusterAppDto(dusterApp.id,dusterApp.clientId,aesUtil.decrypt(b64UrlSafeDecoder(dusterApp.clientSecret)),dusterApp.callbackUrl,dusterApp.createdAt)
-    }
-    fun validateAppCredentials(clientId:String,clientSecret: String,redirectUri:String) : DusterApp {
-        val dusterApp = dusterAppRepository.findByClientId(clientId) ?: throw AuthosException("invalid client",InvalidClientCredentialsException())
+
+    fun validateAppCredentials(clientId: String, clientSecret: String): DusterApp {
+        val dusterApp = dusterAppRepository.findByClientId(clientId) ?: throw AuthosException(
+            "invalid client",
+            InvalidClientCredentialsException()
+        )
         val decryptedSecret = aesUtil.decrypt(b64UrlSafeDecoder(dusterApp.clientSecret))
-        demand(decryptedSecret == clientSecret && dusterApp.callbackUrl == redirectUri)
+        demand(decryptedSecret == clientSecret)
         { AuthosException("bad client", InvalidClientCredentialsException()) }
         return dusterApp;
     }
-    fun getAppByClientId(clientId:String) : DusterApp {
-        return dusterAppRepository.findByClientId(clientId) ?: throw AuthosException("invalid client",InvalidClientCredentialsException())
+
+    fun getAppByClientId(clientId: String): DusterApp {
+        return dusterAppRepository.findByClientId(clientId) ?: throw AuthosException(
+            "invalid client",
+            InvalidClientCredentialsException()
+        )
     }
 }

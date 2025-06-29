@@ -1,4 +1,4 @@
-package com.authos.duster_client
+package com.authos.service
 
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap

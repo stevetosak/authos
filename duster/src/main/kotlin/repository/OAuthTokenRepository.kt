@@ -1,6 +1,6 @@
 package com.authos.repository
 
-import com.authos.data.TokenType
+import com.authos.model.TokenType
 
 interface OAuthTokenRepository {
     suspend fun getToken(sub: String,tokenType: TokenType) : String?

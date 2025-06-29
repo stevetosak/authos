@@ -79,7 +79,7 @@ open class AppService(
 
         println("TOKEN DTO: ${tokenRequestDto.toString()}")
 
-        val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri)
+        val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri!!)
         val secretDecrypted = aesUtil.decrypt(b64UrlSafeDecoder(app.clientSecret))
         demand(secretDecrypted == tokenRequestDto.clientSecret){ AuthosException("invalid client", InvalidClientCredentialsException()) }
         return app;

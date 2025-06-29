@@ -29,6 +29,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/.well-known/*",
         "/test/*",
         "/duster/pull",
+        "/duster/validate-token",
         "/verify-sub"
     )
 
@@ -49,7 +50,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
             filterChain.doFilter(request, response)
             return
         }
-        println("VLEZE FILTER")
+        println("Filter Applied. Request URI: " + request.requestURI)
         try{
             val token = getJwtFromRequest(request)
             val jwt = jwtService.verifyToken(token);
@@ -59,9 +60,10 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
             SecurityContextHolder.getContext().authentication = authentication
             println("VO RED E")
-        } catch (err : Exception){
+        } catch (err : AuthosException){
             SecurityContextHolder.clearContext()
-            throw err
+            println(err.message)
+            println("Not Authenticated. Cleared Security Context.")
         }
 
         filterChain.doFilter(request, response)
@@ -72,7 +74,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         val xsrfHeader = request.getHeader("X-XSRF-TOKEN");
 
         demand(xsrfCookie != null && xsrfHeader != null && xsrfHeader == xsrfCookie)
-        { AuthosException("Forbidden", HttpForbiddenException()) }
+        { AuthosException("bad xsrf", HttpForbiddenException()) }
 
     }
 

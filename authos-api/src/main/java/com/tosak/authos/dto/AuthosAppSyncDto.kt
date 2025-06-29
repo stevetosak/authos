@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AppDusterSyncDto(
+data class AuthosAppSyncDto(
     @JsonProperty("client_id")
     val clientId: String = "",
     @JsonProperty("client_secret")

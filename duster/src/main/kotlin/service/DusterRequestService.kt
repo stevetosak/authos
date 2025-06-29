@@ -1,13 +1,11 @@
 package com.authos.service
 
 import com.authos.data.AuthTokenResponse
-import com.authos.data.TokenType
-import com.authos.duster_client.DusterClient
+import com.authos.model.TokenType
 import com.authos.model.DusterApp
 import com.authos.model.UserInfo
 import com.authos.repository.TokenRepository
 import com.authos.config.AUTHOS_AUTHORIZE_URL
-import com.authos.duster_client.NextAuthorizeRequestType
 import com.authos.service.DusterRequestService.ResponseResult.*
 import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
@@ -26,7 +24,7 @@ import java.net.URLEncoder
  * @param client The Duster client used for API communication.
  * @param tokenRepository The token repository used for storing and retrieving tokens.
  */
-class DusterRequestService(private val client: DusterClient, private val tokenRepository: TokenRepository) {
+class DusterRequestService(private val client: DusterOAuthClient, private val tokenRepository: TokenRepository) {
     /**
      * Fetches user information based on an access token and returns the result.
      * This method attempts to retrieve user information through `fetchUserInfo` and processes the response.

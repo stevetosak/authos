@@ -8,7 +8,8 @@ import com.nimbusds.jwt.SignedJWT
 import java.net.URI
 import java.util.Date
 
-fun verifyIdToken(jwtString: String): Pair<SignedJWT, String> {
+fun verifyIdToken(jwtString: String?): Pair<SignedJWT, String> {
+    require(jwtString != null){"Id token not present"}
     val jwt = SignedJWT.parse(jwtString)
     val jwks = JWKSet.load(URI("http://${getHostIp()}:9000/.well-known/jwks.json").toURL())
     val jwk = jwks.getKeyByKeyId("authos-jwt-sign")

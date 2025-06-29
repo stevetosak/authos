@@ -178,13 +178,15 @@ open class TokenService(
     @Transactional
     open fun handleClientCredentialsRequest(request: TokenRequestDto): TokenWrapper {
         demand(request.clientId != null && request.clientSecret != null){ MissingParametersException() }
-        dusterAppService.validateAppCredentials(request.clientId!!, request.clientSecret!!, request.redirectUri)
+        dusterAppService.validateAppCredentials(request.clientId!!, request.clientSecret!!)
         val accessTokenWrapper = generateAccessToken(clientId = request.clientId!!)
         return TokenWrapper(accessTokenWrapper = accessTokenWrapper)
     }
 
     @Transactional
     open fun handleAuthorizationCodeRequest(request: TokenRequestDto): TokenWrapper {
+        demand(request.redirectUri != null){ AuthosException("missing redirect uri", MissingParametersException()) }
+
         val app = appService.validateAppCredentials(tokenRequestDto = request)
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, request)
         code.used = true;
