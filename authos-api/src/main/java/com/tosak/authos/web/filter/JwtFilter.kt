@@ -60,12 +60,16 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
             SecurityContextHolder.getContext().authentication = authentication
             println("VO RED E")
-        } catch (err : AuthosException){
+        } catch (ex: AuthosException) {
             SecurityContextHolder.clearContext()
-            println(err.message)
+            println(ex.message)
             println("Not Authenticated. Cleared Security Context.")
         }
-
+        catch(ex : Exception){
+            println(ex.message)
+            ex.printStackTrace()
+            throw ex
+        }
         filterChain.doFilter(request, response)
     }
 
@@ -82,8 +86,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         request.cookies?.firstOrNull { it.name == "AUTH_TOKEN" }?.value?.let { return it }
         val bearerToken = request.getHeader("Authorization")
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7)
-        }
+            return bearerToken.substring(7) }
         throw AuthosException("bad token", HttpUnauthorizedException())
     }
 }
