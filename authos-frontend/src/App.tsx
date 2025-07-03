@@ -6,15 +6,15 @@ import React from 'react';
 
 
 
-function App() {
+// function App() {
+//
+//     return (
+//         // <React.StrictMode>
+//             <AuthProvider>
+//                 <RouterProvider router={router}/>
+//             </AuthProvider>
+//         // </React.StrictMode>
+//     )
+// }
 
-    return (
-        <React.StrictMode>
-            <AuthProvider>
-                <RouterProvider router={router}/>
-            </AuthProvider>
-        </React.StrictMode>
-    )
-}
-
-export default App
+// export default App

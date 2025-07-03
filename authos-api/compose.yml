@@ -1,1 +1,31 @@
 version: "3.8"
+services:
+  authos:
+    image: "stevetosak/authos-api:0.0.1-alpha"
+    env_file:
+      - ".env"
+    ports:
+      - "9000:9000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      authos-net:
+    volumes:
+      - "/home/stevetosak/private/keystore.p12:/app/secrets/keystore.p12"
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6380:6379"
+    volumes:
+      - "/home/stevetosak/data/redis-data:/data"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      authos-net:
+networks:
+  authos-net:
+    external: true

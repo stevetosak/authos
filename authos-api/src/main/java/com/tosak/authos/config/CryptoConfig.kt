@@ -5,8 +5,10 @@ import com.nimbusds.jose.jwk.KeyUse
 import com.nimbusds.jose.jwk.RSAKey
 import com.tosak.authos.exceptions.internal.KeyLoadException
 import jakarta.annotation.PostConstruct
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.SpringProperties
 import java.io.FileInputStream
 import java.security.*
 import java.security.cert.X509Certificate
@@ -15,23 +17,28 @@ import java.security.interfaces.RSAPublicKey
 import javax.crypto.SecretKey
 
 @Configuration
-open class CryptoConfig{
+open class CryptoConfig {
 
-   private lateinit var keystorePass: String
-   private lateinit var keyStore: KeyStore
+    private lateinit var keystorePass: String
+    private lateinit var keyStore: KeyStore
 
-   @PostConstruct
-   fun init(){
-       keystorePass = DotEnvConfig.dotenv["KEYSTORE_PASS"] ?: throw IllegalStateException("Keystore password not loaded")
-       val ks: KeyStore = KeyStore.getInstance("PKCS12")
-       val fis = FileInputStream("/home/stevetosak/private/keystore.p12")
-       ks.load(fis, keystorePass.toCharArray())
-       keyStore = ks;
-   }
+    @Value("\${authos.keystore.path}")
+    lateinit var keystorePath: String
+
+
+    @PostConstruct
+    fun init() {
+        keystorePass =
+            DotEnvConfig.dotenv["KEYSTORE_PASS"] ?: throw IllegalStateException("Keystore password not loaded")
+        val ks: KeyStore = KeyStore.getInstance("PKCS12")
+        val fis = FileInputStream(keystorePath)
+        ks.load(fis, keystorePass.toCharArray())
+        keyStore = ks;
+    }
 
     @Bean
     open fun rsaSignKey(): RSAKey {
-        val key = keyStore.getKey("authos-jwt-sign",keystorePass.toCharArray())
+        val key = keyStore.getKey("authos-jwt-sign", keystorePass.toCharArray())
         val cert = keyStore.getCertificate("authos-jwt-sign")
         if (cert == null || key == null) {
             throw KeyLoadException("Certificate or private key not loaded")
@@ -49,9 +56,10 @@ open class CryptoConfig{
             .keyUse(KeyUse.SIGNATURE)
             .build();
     }
+
     @Bean
     open fun secretKey(): SecretKey {
-        val key = keyStore.getKey("authos-credentials-encrypt",keystorePass.toCharArray()) as SecretKey
+        val key = keyStore.getKey("authos-credentials-encrypt", keystorePass.toCharArray()) as SecretKey
         println("Key length: ${key.encoded.size * 8} bits")
         return key
     }

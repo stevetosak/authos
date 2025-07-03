@@ -10,15 +10,22 @@
 	</parent>
 	<groupId>com.tosak</groupId>
 	<artifactId>Authos</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1-alpha</version>
 	<name>Authos</name>
-	<description>Authos</description>
+	<description>OpenID Connect Identity Provider API + Backend</description>
 	<url/>
 	<licenses>
 		<license/>
 	</licenses>
+	<packaging>jar</packaging>
 	<developers>
-		<developer/>
+		<developer>
+			<id>stevetosak</id>
+			<name>Stefan Toskovski</name>
+			<email>stefantoska84@gmail.com</email>
+			<url>https://github.com/stevetosak</url>
+			<timezone>+2</timezone>
+		</developer>
 	</developers>
 	<scm>
 		<connection/>
@@ -57,23 +64,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+			<version>3.4.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.github.wimdeblauwe</groupId>
-			<artifactId>htmx-spring-boot-thymeleaf</artifactId>
-			<version>4.0.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 
 		<dependency>
@@ -82,12 +77,12 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-docker-compose</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.boot</groupId>-->
+<!--			<artifactId>spring-boot-docker-compose</artifactId>-->
+<!--			<scope>runtime</scope>-->
+<!--			<optional>true</optional>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -106,6 +101,7 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
+			<version>6.5.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -153,11 +149,6 @@
 			<artifactId>jackson-module-kotlin</artifactId>
 			<version>2.15.0</version>
 		</dependency>
-
-
-
-
-
 
 
 	</dependencies>
