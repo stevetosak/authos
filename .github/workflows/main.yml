@@ -32,7 +32,7 @@ jobs:
 
       - name: Copy frontend build to server
         run: |
-          scp -r ./authos-frontend/dist ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/stevetosak/delpoy/authos/
+          scp -r ./authos-frontend/dist ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/stevetosak/deploy/authos/
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           
