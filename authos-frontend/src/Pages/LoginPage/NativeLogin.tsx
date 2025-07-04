@@ -17,7 +17,7 @@ const NativeLogin: React.FC = () => {
     const {setContext, setIsAuthenticated} = useAuth()
     const nav = useNavigate()
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<Element>) => {
         e.preventDefault();
         setError(null);
 

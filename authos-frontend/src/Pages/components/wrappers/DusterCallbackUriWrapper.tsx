@@ -1,6 +1,5 @@
 import {WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 import {Input} from "@/components/ui/input.tsx";
-import {CardDescription, CardTitle} from "@/components/ui/card.tsx";
 import React from "react";
 import {Badge} from "@/components/ui/badge.tsx";
 
@@ -12,10 +11,6 @@ export const DusterCallbackUriWrapper = ({
                                       editing,
                                       currentApp,
                                       editedApp,
-                                      inputValues,
-                                      handleInputChange,
-                                      addElement,
-                                      removeElement,
                                       onChange
                                   }: DusterCallbackUriState) => {
     return (editing ? (

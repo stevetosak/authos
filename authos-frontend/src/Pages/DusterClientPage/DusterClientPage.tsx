@@ -17,7 +17,6 @@ import {
     Shield,
     Settings2,
     Key,
-    RotateCw,
     Copy, Wrench,
 } from "lucide-react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
@@ -27,10 +26,6 @@ import {apiGetAuthenticated, apiPostAuthenticated} from "@/services/config.ts";
 export const DusterClientPage = () => {
     const [clientUrl, setClientUrl] = useState("");
     const [healthStatus, setHealthStatus] = useState<"unknown" | "checking" | "healthy" | "unhealthy">("unknown");
-    const [credentials, setCredentials] = useState<{
-        clientId: string;
-        clientSecret: string;
-    } | null>(null);
     const [isConfigured, setIsConfigured] = useState(false)
     const [settings, setSettings] = useState({
         callbackUrl: "",
@@ -42,7 +37,6 @@ export const DusterClientPage = () => {
         lastSynced: string;
         status: "active" | "inactive";
     }>>([]);
-    const [registrationCallbackUrl, setRegistrationCallbackUrl] = useState("");
     const [isEditing, setIsEditing] = useState(false);
 
     const [dusterApp, setDusterApp] = useState<DusterApp>(defaultDusterApp)
@@ -102,7 +96,8 @@ export const DusterClientPage = () => {
             } else {
                 setHealthStatus("unhealthy");
             }
-        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (err) {
             setHealthStatus("unhealthy");
         }
     };

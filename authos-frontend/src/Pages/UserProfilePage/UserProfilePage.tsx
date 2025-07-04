@@ -1,4 +1,3 @@
-import Layout from "@/Pages/components/Layout.tsx";
 import {
     Lock,
     Mail,

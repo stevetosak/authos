@@ -7,7 +7,6 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import {Tooltip, TooltipTrigger, TooltipContent} from "@/components/ui/tooltip";
 import {Check, Cpu, Globe, Info, Key, Reply, Shield, LockIcon, HelpCircle} from "lucide-react";
 import RedirectUriFormInput from "@/Pages/ClientRegistrationPage/components/RedirectUriFormInput.tsx";
-import axios from "axios";
 import {
     Select,
     SelectContent,
@@ -18,9 +17,8 @@ import {
 import MultiSelectBadge from "@/Pages/components/MultiSelectBadge.tsx";
 import {motion} from "framer-motion";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-import Layout from "@/Pages/components/Layout.tsx";
 import {useNavigate} from "react-router-dom";
-import {api, apiPostAuthenticated} from "@/services/config.ts";
+import { apiPostAuthenticated} from "@/services/config.ts";
 import {toast} from "sonner";
 import {useAuth} from "@/services/useAuth.ts";
 import {App} from "@/services/types.ts";
@@ -35,13 +33,13 @@ export default function RegisterAppPage() {
         responseTypes: ["code"],
         appInfoUri: "",
     });
-    const {refreshAuth,groups,setApps} = useAuth()
+    const {groups,setApps} = useAuth()
 
     const [selectedScopes, setSelectedScopes] = useState<string[]>(["openid"])
     const [redirectUris, setRedirectUris] = useState<string[]>([])
     const nav = useNavigate()
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({...formData, [e.target.name]: e.target.value});
     };
 

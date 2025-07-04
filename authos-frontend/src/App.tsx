@@ -1,8 +1,5 @@
 import './App.css'
-import {RouterProvider} from "react-router-dom";
-import {AuthProvider} from "@/Pages/components/context/AuthProvider.tsx";
-import {router} from "./services/Router/router.tsx"
-import React from 'react';
+
 
 
 

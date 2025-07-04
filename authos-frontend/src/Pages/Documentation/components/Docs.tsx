@@ -1,6 +1,5 @@
-import {ChevronDown, FileText, Code, AlertTriangle, Info, ArrowRight, Check, Copy} from "lucide-react";
+import {ChevronDown, FileText, AlertTriangle, Info, ArrowRight, Check, Copy} from "lucide-react";
 import React, {JSX, useState} from "react";
-import Layout from "@/Pages/components/Layout.tsx";
 
 interface DocSectionProps {
     title: string,

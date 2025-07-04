@@ -3,7 +3,6 @@ import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} f
 import {Button} from "@/components/ui/button";
 import {
     Plus,
-    Grid,
     Users,
     FolderOpen,
     Settings,
@@ -13,7 +12,7 @@ import {
     Calendar,
     Pencil,
     XIcon,
-    CheckIcon, DeleteIcon, Trash2
+    CheckIcon, Trash2
 } from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
 import {motion} from "framer-motion"
@@ -44,8 +43,6 @@ const Dashboard: React.FC = () => {
     const [selectedGroup, setSelectedGroup] = useState<AppGroup>(defaultAppGroup)
     const [isEditingGroup,setIsEditingGroup] = useState<boolean>(false)
     const [selectedGroupEditing,setSelectedGroupEditing] = useState<AppGroup>(defaultAppGroup)
-    const [showDeleteDialog,setShowDeleteDialog] = useState<boolean>(false);
-
 
     const handleGroupClick = (group: AppGroup) => {
         if (selectedGroup && selectedGroup === group) {
@@ -56,7 +53,7 @@ const Dashboard: React.FC = () => {
         }
     }
 
-    const handleGroupUpdate = (param:AppGroupEditableField,value:any) => {
+    const handleGroupUpdate = (param:AppGroupEditableField,value:string | boolean) => {
         setSelectedGroupEditing((prev : AppGroup) => ({
             ...prev,
             [param] : value
@@ -424,16 +421,16 @@ const Dashboard: React.FC = () => {
                                             </div>
                                         </CardHeader>
                                         <CardContent className="pb-4">
-                                            <div className="flex gap-2 flex-wrap">
-                                                <Badge variant="outline"
-                                                       className="text-xs border-gray-600 text-gray-300">
-                                                    {app.type || "OIDC"}
-                                                </Badge>
-                                                <Badge variant="outline"
-                                                       className="text-xs border-blue-500/30 text-blue-400">
-                                                    {app.status || "Active"}
-                                                </Badge>
-                                            </div>
+                                            {/*<div className="flex gap-2 flex-wrap">*/}
+                                            {/*    <Badge variant="outline"*/}
+                                            {/*           className="text-xs border-gray-600 text-gray-300">*/}
+                                            {/*        {app.type || "OIDC"}*/}
+                                            {/*    </Badge>*/}
+                                            {/*    <Badge variant="outline"*/}
+                                            {/*           className="text-xs border-blue-500/30 text-blue-400">*/}
+                                            {/*        {app.status || "Active"}*/}
+                                            {/*    </Badge>*/}
+                                            {/*</div>*/}
                                         </CardContent>
                                         <CardFooter className="border-t border-gray-700/50 pt-3">
                                             <Button

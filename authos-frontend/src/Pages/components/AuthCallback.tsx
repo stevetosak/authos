@@ -1,10 +1,10 @@
-import React, {useContext, useEffect} from "react";
+import React, {useEffect} from "react";
 import {apiGetAuthenticated} from "@/services/config.ts";
 import {defaultUser, LoginResponse} from "@/services/types.ts";
 import {useAuth} from "@/services/useAuth.ts";
 import {useNavigate} from "react-router-dom";
 
-export const AuthCallback : React.FC = () => {
+export const AuthCallback : React.FC  = () => {
 
     const {setIsAuthenticated, setContext, setUser, setAuthLoading} = useAuth()
     const nav = useNavigate()
@@ -27,4 +27,6 @@ export const AuthCallback : React.FC = () => {
     useEffect(() => {
        verify()
     },[])
+
+    return <></>
 }
