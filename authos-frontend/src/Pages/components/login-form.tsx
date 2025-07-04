@@ -9,7 +9,7 @@ import {Chrome, LockIcon, LogInIcon, MailIcon} from "lucide-react";
 
 interface LoginFormProps {
     className: string,
-    handleSubmit: (e : React.FormEvent) => void
+    handleSubmit: (e : React.FormEvent) => Promise<void>
     setEmail: React.Dispatch<SetStateAction<string>>
     setPassword: React.Dispatch<SetStateAction<string>>
 }

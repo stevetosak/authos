@@ -22,7 +22,7 @@ import {
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
 import {useAuth} from "@/services/useAuth.ts";
-import {api, apiGetAuthenticated, apiPostAuthenticated} from "@/services/config.ts";
+import  {apiGetAuthenticated} from "@/services/config.ts";
 import {toast} from "sonner";
 import {defaultUser} from "@/services/types.ts";
 import {motion} from "framer-motion";
@@ -36,7 +36,7 @@ const Navbar = () => {
     const logOut = () => {
         console.log("LOGOUT")
         apiGetAuthenticated("/logout")
-            .then(resp => {
+            .then(() => {
                 toast.warning("Logging Out...")
                 setTimeout(() => {
                     setUser(defaultUser)
@@ -217,7 +217,7 @@ const Navbar = () => {
     );
 };
 
-const NavLink = ({to, children, isActive, icon}) => (
+const NavLink = ({to, children, isActive, icon} : {to: string,children: React.ReactNode,isActive: boolean,icon: React.ReactElement}) => (
     <Link
         to={to}
         className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -231,7 +231,7 @@ const NavLink = ({to, children, isActive, icon}) => (
     </Link>
 );
 
-const MobileNavLink = ({to, isActive, icon}) => (
+const MobileNavLink = ({to, isActive, icon}: {to: string, isActive: boolean, icon: React.ReactElement}) => (
     <Link
         to={to}
         className={`flex-1 flex justify-center py-2 px-1 rounded-md transition-colors ${

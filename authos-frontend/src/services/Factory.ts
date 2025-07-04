@@ -28,6 +28,7 @@ export class Factory {
             responseTypes: [""],
             tokenEndpointAuthMethod: "",
             shortDescription: "",
+            dusterCallbackUri: "",
             logoUri: ""
         }
     }

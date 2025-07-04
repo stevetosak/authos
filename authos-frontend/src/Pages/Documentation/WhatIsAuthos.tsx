@@ -1,4 +1,4 @@
-import {DocCode, DocCollapse, DocNote, DocSection, DocumentationPage} from "@/Pages/Documentation/components/Docs.tsx";
+import {DocNote, DocSection, DocumentationPage} from "@/Pages/Documentation/components/Docs.tsx";
 
 export const WhatIsAuthos = () => {
     return (

@@ -11,7 +11,6 @@ import {
     Shield, EyeOff, Key, UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Layout from "@/Pages/components/Layout.tsx";
 import { motion } from "framer-motion";
 import {Badge} from "@/components/ui/badge.tsx";
 

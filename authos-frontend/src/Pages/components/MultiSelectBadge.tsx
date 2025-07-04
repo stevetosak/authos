@@ -27,7 +27,6 @@ export default function MultiSelectBadge({
                                              selected,
                                              setSelected,
                                              options,
-                                             className,
                                              placeholder = "Select...",
                                              disabledItems = [],
                                          }: MultiSelectBadgeProps) {

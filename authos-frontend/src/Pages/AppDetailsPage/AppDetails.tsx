@@ -16,7 +16,7 @@ import {
     CopyIcon,
     EditIcon, Eye, EyeOff,
     GlobeIcon, Info, KeyIcon, LockIcon,
-    RefreshCwIcon, SettingsIcon,
+    RefreshCwIcon,
     ShieldIcon, SlidersIcon,
     TrashIcon,
     XIcon
@@ -85,7 +85,7 @@ export default function AppDetails() {
         console.log(`${JSON.stringify(editedApp)}`)
 
         apiPostAuthenticated<App>("/app/update", editedApp)
-            .then(resp => {
+            .then(() => {
             setApp(editedApp);
             setIsEditing(false);
             toast.success("Application updated successfully");
@@ -95,9 +95,7 @@ export default function AppDetails() {
 
 
     };
-    const handleDelete = async () => {
 
-    }
 
     const handleCancel = () => {
         setIsEditing(false);

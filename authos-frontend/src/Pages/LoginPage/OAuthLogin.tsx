@@ -18,7 +18,7 @@ export const OAuthLogin: React.FC = () => {
     //TODO PRI USPESEN LOGIN TREBIT DA SA CUVAT SUB OD USER VO COOKIE, toj cookiee do duster go prakjas
     // csrf
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         const params = new URLSearchParams(window.location.search)
         const formData = new URLSearchParams();
