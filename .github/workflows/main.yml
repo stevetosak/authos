@@ -2,7 +2,7 @@ name: Build Backend & Deploy Frontend
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   build-and-deploy:
@@ -22,10 +22,17 @@ jobs:
         run: |
           npm ci
           npm run build
+          
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Copy frontend build to server
         run: |
-          scp -r ./authos-web/build/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/path/to/web/root/
+          scp -r ./authos-frontend/dist ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/stevetosak/delpoy/authos/
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           
