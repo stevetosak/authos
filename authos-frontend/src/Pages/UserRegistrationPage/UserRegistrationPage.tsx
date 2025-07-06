@@ -6,6 +6,7 @@ import {Card, CardContent, CardFooter, CardHeader} from "@/components/ui/card";
 import axios from "axios";
 import {Link, useNavigate,}  from "react-router-dom";
 import {InfoIcon, KeyIcon, LockIcon, MailIcon, UserIcon, UserPlusIcon, UsersIcon} from "lucide-react";
+import {api} from "@/services/netconfig.ts";
 
 export default function UserRegistration() {
     const [formData, setFormData] = useState({
@@ -32,7 +33,7 @@ export default function UserRegistration() {
         const {confirmPassword, ...payload} = formData
 
         try {
-            await axios.post("http://localhost:9000/register", payload)
+            await api.post("/register", payload)
             alert("Registered Successfully!.")
             nav("/login")
         } catch (e) {
