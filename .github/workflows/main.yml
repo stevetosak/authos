@@ -40,7 +40,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
 
       - name: Trigger Deployment Script
-        run: ssh ${{secrets.SERVER_USER}}@${{secrets.SERVER_HOST}} 'bash ${{vars.SERVER_DEPLOYMENT_SCRIPT}}'
+        run: ssh ${{secrets.SERVER_USER}}@${{secrets.SERVER_HOST}} 'sudo bash ${{vars.SERVER_DEPLOYMENT_SCRIPT}}'
 
   backend-build-deploy:
     runs-on: ubuntu-latest
