@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {apiGetAuthenticated} from "@/services/config.ts";
+import {apiGetAuthenticated} from "@/services/netconfig.ts";
 import {defaultUser, LoginResponse} from "@/services/types.ts";
 import {useAuth} from "@/services/useAuth.ts";
 import {useNavigate} from "react-router-dom";

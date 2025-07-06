@@ -2,9 +2,10 @@ import axios from "axios";
 import Cookies from 'js-cookie';
 
 export const api = axios.create({
-    baseURL:"http://localhost:9000",
-    timeout:  10000
-})
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    timeout: 10000,
+});
+
 
 export const apiGetAuthenticated = async <T> (uri : string) => {
     const xsrfCookie = Cookies.get("XSRF-TOKEN")

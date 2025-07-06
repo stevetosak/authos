@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 import {defaultDusterApp, DusterApp} from "@/services/types.ts";
-import {apiGetAuthenticated, apiPostAuthenticated} from "@/services/config.ts";
+import {apiGetAuthenticated, apiPostAuthenticated} from "@/services/netconfig.ts";
 
 export const DusterClientPage = () => {
     const [clientUrl, setClientUrl] = useState("");

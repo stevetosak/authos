@@ -22,7 +22,7 @@ import {
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import RegisterAppPage from "@/Pages/ClientRegistrationPage/RegisterAppPage.tsx";
 import {useAuth} from "@/services/useAuth.ts";
-import  {apiGetAuthenticated} from "@/services/config.ts";
+import  {apiGetAuthenticated} from "@/services/netconfig.ts";
 import {toast} from "sonner";
 import {defaultUser} from "@/services/types.ts";
 import {motion} from "framer-motion";

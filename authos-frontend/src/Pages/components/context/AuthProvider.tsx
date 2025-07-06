@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {App, AppGroup, defaultApp, defaultUser, LoginResponse, User} from "@/services/types.ts";
 import axios, {AxiosResponse} from "axios";
 import {AuthContext} from "@/Pages/components/context/AuthContext.tsx";
-import {apiGetAuthenticated} from "@/services/config.ts";
+import {apiGetAuthenticated} from "@/services/netconfig.ts";
 
 type AuthProviderProps = {
     children: React.ReactNode
