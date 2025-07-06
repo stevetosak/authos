@@ -2,7 +2,8 @@ import axios from "axios";
 import Cookies from 'js-cookie';
 
 export const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
+    // baseURL: import.meta.env.VITE_API_BASE_URL,
+    baseURL: "https://api.authos.imaps.mk",
     timeout: 10000,
 });
 
