@@ -1,11 +1,11 @@
-name: Build Backend & Deploy Frontend
-
+name: Build And Deploy Authos Frontend + Backend API
 on:
   push:
     branches: [ "master" ]
 
 jobs:
-  build-and-deploy:
+  frontend-build_server-deploy:
+    needs: backend-build-deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -35,17 +35,28 @@ jobs:
 
       - name: Copy frontend build to server
         run: |
-          scp -r ./authos-frontend/dist/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/stevetosak/deploy/authos/
+          scp -r ./authos-frontend/dist ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/deployer/authos/
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          
+
+      - name: Trigger Deployment Script
+        run: ssh ${{secrets.SERVER_USER}}@${{secrets.SERVER_HOST}} 'bash /home/deployer/authos/deploy.sh'
+
+  backend-build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Spring Boot backend
+      - name: Build Spring Boot App
         working-directory: ./authos-api
         run: mvn clean package -DskipTests
 
@@ -69,3 +80,4 @@ jobs:
           tags: |
             stevetosak/authos-api:0.0.1-alpha
             stevetosak/authos-api:latest
+            
