@@ -15,6 +15,7 @@ import com.tosak.authos.exceptions.demand
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseCookie
 import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -33,6 +34,9 @@ open class UserService @Autowired constructor(
     private val tokenFactory: JwtTokenFactory,
     private val appGroupService: AppGroupService
 ) {
+
+    @Value("\${authos.cookie.domain}")
+    lateinit var cookieDomain: String
 
     open fun verifyCredentials(email: String, password: String): User {
         val userOpt: Optional<User> = userRepository.findByEmail(email)
@@ -64,7 +68,7 @@ open class UserService @Autowired constructor(
             .httpOnly(true)
             .secure(true)
             .path("/")
-            .domain("localhost")
+            .domain(cookieDomain)
             .sameSite("None")
             .maxAge(maxAge)
             .build()
@@ -73,7 +77,7 @@ open class UserService @Autowired constructor(
             .httpOnly(false)
             .secure(true)
             .path("/")
-            .domain("localhost")
+            .domain(cookieDomain)
             .sameSite("None")
             .maxAge(maxAge)
             .build()
