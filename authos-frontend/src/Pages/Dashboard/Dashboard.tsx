@@ -25,7 +25,7 @@ import {AddGroupModal} from "@/Pages/components/AddGroupModal.tsx";
 import {AppGroup, AppGroupEditableField, defaultAppGroup} from "@/services/types.ts";
 import {Label} from "@/components/ui/label.tsx";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {apiPostAuthenticated} from "@/services/config.ts";
+import {apiPostAuthenticated} from "@/services/netconfig.ts";
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel,
     AlertDialogContent, AlertDialogDescription,

@@ -1,4 +1,4 @@
-import {api} from "@/services/config.ts";
+import {api} from "@/services/netconfig.ts";
 import {JwkKey, JwksResponse} from "@/services/types.ts";
 import {importJWK, jwtVerify} from 'jose';
 

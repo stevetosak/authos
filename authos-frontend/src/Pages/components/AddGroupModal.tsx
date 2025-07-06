@@ -7,7 +7,7 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {Checkbox} from "@/components/ui/checkbox.tsx";
 import {Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {api, apiPostAuthenticated} from "@/services/config.ts";
+import {api, apiPostAuthenticated} from "@/services/netconfig.ts";
 import {AppGroup, CreateAppGroupDTO, MFAPolicyValue, SSOPolicyValue} from "@/services/types.ts";
 import {useAuth} from "@/services/useAuth.ts";
 import {AxiosResponse} from "axios";

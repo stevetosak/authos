@@ -17,7 +17,7 @@ import NativeLogin from "@/Pages/LoginPage/NativeLogin.tsx";
 import {Layout} from "@/Pages/components/Layout.tsx";
 import {DusterClientPage} from "@/Pages/DusterClientPage/DusterClientPage.tsx";
 import {OAuthLogin} from "@/Pages/LoginPage/OAuthLogin.tsx";
-import {apiGetAuthenticated} from "@/services/config.ts";
+import {apiGetAuthenticated} from "@/services/netconfig.ts";
 import {defaultUser} from "@/services/types.ts";
 import {AuthCallback} from "@/Pages/components/AuthCallback.tsx";
 

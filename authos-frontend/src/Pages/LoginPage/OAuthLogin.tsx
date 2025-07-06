@@ -1,7 +1,7 @@
 import {Link, useNavigate} from "react-router-dom";
 import React, {useState} from "react";
 import {LoginForm} from "@/Pages/components/login-form.tsx";
-import {api} from "@/services/config.ts";
+import {api} from "@/services/netconfig.ts";
 import {LoginResponse} from "@/services/types.ts";
 import {validateResponse} from "@/services/jwtService.ts";
 

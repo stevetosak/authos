@@ -28,7 +28,7 @@ import {Factory} from "@/services/Factory.ts";
 import {DataWrapper, WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 import {useAppEditor} from "@/Pages/components/hooks/use-app-editor.ts";
 import {Badge} from "@/components/ui/badge.tsx";
-import {apiPostAuthenticated} from "@/services/config.ts";
+import {apiPostAuthenticated} from "@/services/netconfig.ts";
 import {useNavigate} from "react-router-dom";
 
 //TODO AUTHORIZATION PER USER

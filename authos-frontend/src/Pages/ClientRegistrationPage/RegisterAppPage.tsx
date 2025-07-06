@@ -18,7 +18,7 @@ import MultiSelectBadge from "@/Pages/components/MultiSelectBadge.tsx";
 import {motion} from "framer-motion";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {useNavigate} from "react-router-dom";
-import { apiPostAuthenticated} from "@/services/config.ts";
+import { apiPostAuthenticated} from "@/services/netconfig.ts";
 import {toast} from "sonner";
 import {useAuth} from "@/services/useAuth.ts";
 import {App} from "@/services/types.ts";
