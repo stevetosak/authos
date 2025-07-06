@@ -145,11 +145,6 @@ const Navbar = () => {
                                         Log out
                                     </Button>
                                 </DropdownMenuItem>
-                                <Button variant={"outline"} type={"button"} className={'text-white border-gray-600 hover:bg-gray-700'} onClick={async () => {
-
-                                }}>
-                                    Authos Login Test
-                                </Button>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>}
@@ -170,11 +165,7 @@ const Navbar = () => {
                             >
                                 Sign Up
                             </NavLink>
-                            <Button variant={"outline"} type={"button"} className={'text-white border-gray-600 hover:bg-gray-700'} onClick={() => {
-                                window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=auto"
-                            }}>
-                                Authos Login Test
-                            </Button>
+
                         </div>
                     }
                 </div>
