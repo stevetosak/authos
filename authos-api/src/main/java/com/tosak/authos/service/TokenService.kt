@@ -28,6 +28,7 @@ import com.tosak.authos.exceptions.base.AuthosException
 import com.tosak.authos.exceptions.demand
 import com.tosak.authos.pojo.IdTokenStrategy
 import jakarta.transaction.Transactional
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
 import java.security.InvalidParameterException
@@ -56,6 +57,8 @@ open class TokenService(
     private val idTokenService: IdTokenService,
     private val dusterAppService: DusterAppService
 ) {
+    @Value("\${authos.api.host}")
+    private lateinit var apiHost: String;
 
 
     private fun generateRefreshToken(user: User, clientId: String, scope: String): RefreshToken {
@@ -198,7 +201,7 @@ open class TokenService(
         val accessTokenWrapper =
             generateAccessToken(clientId = app.clientId, authorizationCode = code, refreshToken = null)
         val idToken =
-            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!))
+            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!,apiHost))
 
         return TokenWrapper(
             accessTokenWrapper = accessTokenWrapper,
@@ -217,7 +220,7 @@ open class TokenService(
         )
 
         val idToken =
-            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!))
+            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!,apiHost))
         return TokenWrapper(
             accessTokenWrapper = accessTokenWrapper,
             refreshTokenWrapper = refreshTokenWrapper,

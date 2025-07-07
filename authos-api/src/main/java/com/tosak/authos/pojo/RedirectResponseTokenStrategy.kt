@@ -5,12 +5,13 @@ import java.net.URI
 import java.util.*
 
 class RedirectResponseTokenStrategy(
-    private val url: String
+    private val url: String,
+    private val issuer: String,
 ) : JwtTokenStrategy {
     override fun buildClaims(): JWTClaimsSet {
         return JWTClaimsSet.Builder()
             .subject(url)
-            .issuer("http://localhost:9000")
+            .issuer(issuer)
             .issueTime(Date())
             .expirationTime(Date(System.currentTimeMillis() * 1000 + 300)) // 5 mins
             .build();

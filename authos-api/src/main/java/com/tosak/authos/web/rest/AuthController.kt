@@ -7,6 +7,7 @@ import com.tosak.authos.service.*
 import com.tosak.authos.common.utils.JwtTokenFactory
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -31,6 +32,9 @@ open class AuthController(
     private val appGroupService: AppGroupService,
     private val ppidService: PPIDService
 ) {
+
+    @Value("\${authos.frontend.host}")
+    private lateinit var frontendHost: String
 
 
     /**
@@ -81,9 +85,9 @@ open class AuthController(
         val groups = appGroupService.getAllGroupsForUser(user.id)
         ssoSessionService.initializeSession(user, app, httpSession, request)
 
-        val url = "http://localhost:5173/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
+        val url = "${frontendHost}/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
-        val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url))
+        val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url,frontendHost))
 
         return ResponseEntity.status(200).headers(headers).body(
             LoginDTO(
@@ -149,7 +153,7 @@ open class AuthController(
         @RequestParam("state", required = false) state: String?
     ): ResponseEntity<Void> {
         userService.register(createUserAccountDTO)
-        return ResponseEntity.status(201).location(URI("http://localhost:5173/login")).build()
+        return ResponseEntity.status(201).build()
     }
 
     /**

@@ -37,6 +37,8 @@ open class UserService @Autowired constructor(
 
     @Value("\${authos.cookie.domain}")
     lateinit var cookieDomain: String
+    @Value("\${authos.api.host}")
+    lateinit var apiHost: String
 
     open fun verifyCredentials(email: String, password: String): User {
         val userOpt: Optional<User> = userRepository.findByEmail(email)
@@ -62,7 +64,7 @@ open class UserService @Autowired constructor(
 
     open fun generateLoginCredentials(user:User,request: HttpServletRequest,group:AppGroup? = null,clear: Boolean = false): HttpHeaders {
         val maxAge = if(clear) Duration.ZERO else Duration.ofHours(1);
-        val token = tokenFactory.createToken(LoginTokenStrategy(user,ppidService,request,group,appGroupService))
+        val token = tokenFactory.createToken(LoginTokenStrategy(user,ppidService,request,group,appGroupService,apiHost))
         val jwtCookie = ResponseCookie
             .from("AUTH_TOKEN", token.serialize())
             .httpOnly(true)

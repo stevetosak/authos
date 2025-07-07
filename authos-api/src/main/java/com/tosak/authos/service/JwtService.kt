@@ -7,6 +7,7 @@ import com.nimbusds.jwt.SignedJWT
 import com.tosak.authos.exceptions.base.AuthosException
 import com.tosak.authos.exceptions.demand
 import com.tosak.authos.exceptions.unauthorized.InvalidIdTokenException
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -15,6 +16,8 @@ class JwtService(
     private val rsaKeyPair: RSAKey,
 ) {
 
+    @Value("\${authos.api.host}")
+    lateinit var apiHost: String
 
     fun verifyToken(jwtString: String): SignedJWT {
         val jwt = SignedJWT.parse(jwtString)
@@ -22,7 +25,7 @@ class JwtService(
 
         demand(
             jwt.verify(verifier)
-                    && jwt.jwtClaimsSet.issuer == "http://localhost:9000"
+                    && jwt.jwtClaimsSet.issuer == apiHost
                     && jwt.jwtClaimsSet.expirationTime.after(Date())
                     && jwt.jwtClaimsSet.subject != null
         ) { AuthosException("invalid token", InvalidIdTokenException()) }

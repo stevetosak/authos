@@ -12,6 +12,7 @@ import com.tosak.authos.service.PPIDService
 import com.tosak.authos.service.TokenService
 import com.tosak.authos.service.UserService
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
@@ -34,6 +35,9 @@ class DusterEndpoints(
     private val pPIDService: PPIDService,
     private val appGroupService: AppGroupService
 ) {
+
+    @Value("\${authos.frontend.host}")
+    private lateinit var frontendHost: String
     // TODO cleanup na logika vo ovaj controller
     @PostMapping("/test/callback")
     fun testDusterCallback(
@@ -47,7 +51,7 @@ class DusterEndpoints(
         val user = userService.getById(ppid.key.userId!!)
         val group = appGroupService.findGroupByIdAndUser(ppid.key.groupId!!, user)
         val headers = userService.generateLoginCredentials(user, httpServletRequest)
-        return ResponseEntity.status(302).headers(headers).location(URI("http://localhost:5173/oauth/callback")).build()
+        return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
     }
 
     //todo client id = na aplikacijata, accesstoken= na duster

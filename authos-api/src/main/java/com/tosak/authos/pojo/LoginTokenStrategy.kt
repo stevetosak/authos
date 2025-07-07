@@ -18,7 +18,8 @@ class LoginTokenStrategy(
     private val ppidService: PPIDService,
     private val request: HttpServletRequest,
     private var group: AppGroup?,
-    private val appGroupService: AppGroupService
+    private val appGroupService: AppGroupService,
+    private val issuer: String
 
     ) : JwtTokenStrategy {
     override fun buildClaims(): JWTClaimsSet {

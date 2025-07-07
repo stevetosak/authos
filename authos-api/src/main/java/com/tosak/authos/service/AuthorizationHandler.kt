@@ -5,12 +5,13 @@ import com.tosak.authos.entity.App
 import com.tosak.authos.exceptions.oauth.InvalidScopeException
 import com.tosak.authos.exceptions.oauth.UnsupportedResponseTypeException
 import com.tosak.authos.pojo.AuthorizeRequestParams
-import com.tosak.authos.common.utils.redirectToLogin
+//import com.tosak.authos.common.utils.redirectToLogin
 import com.tosak.authos.exceptions.badreq.BadPromptException
 import com.tosak.authos.exceptions.base.AuthosException
 import com.tosak.authos.exceptions.demand
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -30,6 +31,11 @@ class AuthorizationHandler(
     private val ssoSessionService: SSOSessionService,
     private val userService: UserService
 ) {
+
+    @Value("\${authos.frontend.host}")
+    private lateinit var frontendHost : String
+    @Value("\${authos.api.host}")
+    private lateinit var apiHost : String
     /**
      * Handles an authorization request based on the specified prompt and authorization request parameters.
      *
@@ -107,7 +113,7 @@ class AuthorizationHandler(
         return ResponseEntity.status(302)
             .location(
                 URI(
-                    "http://localhost:9000/oauth/approve?client_id=${authorizeRequestParams.clientId}&redirect_uri=${authorizeRequestParams.redirectUri}&state=${authorizeRequestParams.state}&scope=${
+                    "${apiHost}/oauth/approve?client_id=${authorizeRequestParams.clientId}&redirect_uri=${authorizeRequestParams.redirectUri}&state=${authorizeRequestParams.state}&scope=${
                         URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")
                     }"
                 )
@@ -131,7 +137,7 @@ class AuthorizationHandler(
     private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams): ResponseEntity<Void> {
 
         val url = StringBuilder(
-            "http://localhost:5173/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
+            "${frontendHost}/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
                     "&redirect_uri=${authorizeRequestParams.redirectUri}" +
                     "&state=${authorizeRequestParams.state}&scope=${
                         URLEncoder.encode(
@@ -147,6 +153,19 @@ class AuthorizationHandler(
         return ResponseEntity.status(303).location(
             URI(url.toString())
         ).build();
+    }
+
+    fun redirectToLogin(clientId: String, redirectUri: String, state: String, scope: String, dusterSub: String?) : ResponseEntity<Void> {
+
+        println("Redirecting to login...")
+        val url = StringBuilder("${frontendHost}/oauth/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}")
+        dusterSub?.let {
+            url.append("&duster_uid=$dusterSub")
+        }
+        return ResponseEntity
+            .status(303)
+            .location(URI(url.toString()))
+            .build()
     }
 
 }

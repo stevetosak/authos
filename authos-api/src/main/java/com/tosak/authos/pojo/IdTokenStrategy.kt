@@ -13,6 +13,7 @@ class IdTokenStrategy(
     private val ppidService: PPIDService,
     private val app: App,
     private val user: User,
+    private val issuer: String
 
     ) : JwtTokenStrategy {
         //TODO at_hash: b64 encodiran leva polovina na hash od access tokenot.
@@ -20,7 +21,7 @@ class IdTokenStrategy(
         val sub = ppidService.getPPID(user,app.group)
         return JWTClaimsSet.Builder()
             .subject(sub)
-            .issuer("http://localhost:9000")
+            .issuer(issuer)
             .audience(app.clientId)
             .expirationTime(Date(System.currentTimeMillis() + 3600 * 1000)) // 1 sat
             .issueTime(Date())
