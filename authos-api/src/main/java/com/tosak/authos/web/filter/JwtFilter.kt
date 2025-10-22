@@ -5,11 +5,9 @@ import com.tosak.authos.exceptions.base.AuthosException
 import com.tosak.authos.exceptions.base.HttpForbiddenException
 import com.tosak.authos.exceptions.base.HttpUnauthorizedException
 import com.tosak.authos.exceptions.demand
-import com.tosak.authos.exceptions.internal.NoTokenPresentException
 import com.tosak.authos.service.CachingUserDetailsService
 import com.tosak.authos.service.JwtService
 import jakarta.servlet.FilterChain
-import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken

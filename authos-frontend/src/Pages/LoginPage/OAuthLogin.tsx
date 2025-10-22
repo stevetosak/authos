@@ -4,6 +4,7 @@ import {LoginForm} from "@/Pages/components/login-form.tsx";
 import {api} from "@/services/netconfig.ts";
 import {LoginResponse} from "@/services/types.ts";
 import {validateResponse} from "@/services/jwtService.ts";
+import {warn} from "recharts/types/util/LogUtils";
 
 export const OAuthLogin: React.FC = () => {
 
@@ -45,11 +46,16 @@ export const OAuthLogin: React.FC = () => {
                 withCredentials: true
             });
             if(resp.data.signature == null || resp.data.redirectUri == null) {
+                console.error("Invalid response signature or redirect uri")
+                console.warn("signature:",resp.data.signature)
+                console.warn("redirectUri:",resp.data.redirectUri)
+
                 nav("/error")
                 return;
             }
             const valid = await validateResponse(resp.data.signature)
             console.warn("VALID:",valid)
+            if(!valid) console.error("Could not verify response signature")
             window.location.href = valid ? resp.data.redirectUri : "http://localhost:5173/error"
         } catch (err){
             console.error("ERROR oauth login: " + err)

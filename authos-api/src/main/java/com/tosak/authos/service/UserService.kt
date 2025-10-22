@@ -3,7 +3,6 @@ package com.tosak.authos.service
 import com.tosak.authos.dto.CreateUserAccountDTO
 import com.tosak.authos.entity.AppGroup
 import com.tosak.authos.entity.User
-import com.tosak.authos.exceptions.unauthorized.AuthenticationNotPresentException
 import com.tosak.authos.exceptions.unauthorized.InvalidUserCredentials
 import com.tosak.authos.pojo.LoginTokenStrategy
 import com.tosak.authos.repository.AppGroupRepository
@@ -21,7 +20,6 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.http.HttpHeaders
-import java.security.InvalidParameterException
 import java.time.Duration
 import java.util.Optional
 
@@ -32,39 +30,52 @@ open class UserService @Autowired constructor(
     private val appGroupRepository: AppGroupRepository,
     private val ppidService: PPIDService,
     private val tokenFactory: JwtTokenFactory,
-    private val appGroupService: AppGroupService
+    private val appGroupService: AppGroupService,
+    private val tokenService: TokenService,
+    private val mailService: MailService
 ) {
 
     @Value("\${authos.cookie.domain}")
     lateinit var cookieDomain: String
+
     @Value("\${authos.api.host}")
     lateinit var apiHost: String
 
     open fun verifyCredentials(email: String, password: String): User {
         val userOpt: Optional<User> = userRepository.findByEmail(email)
 
+        //todo proverka dali e active user acc
+
         demand(userOpt.isPresent && passwordEncoder.matches(password, userOpt.get().password))
-        {AuthosException("Bad credentials", InvalidUserCredentials())}
+        { AuthosException("Bad credentials", InvalidUserCredentials()) }
+
 
         return userOpt.get();
     }
 
 
-//    @Cacheable(value = ["users"], key = "#id")
+    //    @Cacheable(value = ["users"], key = "#id")
     open fun getById(id: Int): User {
         return userRepository.findUserById(id) ?: throw AuthosException("Bad credentials", InvalidUserCredentials())
     }
+
     open fun getUserFromAuthentication(authentication: Authentication?): User {
 
         demand(authentication != null && authentication.principal != null && authentication.principal is User)
-        {AuthosException("Unauthorized", HttpUnauthorizedException())}
+        { AuthosException("Unauthorized", HttpUnauthorizedException()) }
 
         return authentication!!.principal as User
     }
 
-    open fun generateLoginCredentials(user:User,request: HttpServletRequest,group:AppGroup? = null,clear: Boolean = false): HttpHeaders {
-        val maxAge = if(clear) Duration.ZERO else Duration.ofHours(1);
-        val token = tokenFactory.createToken(LoginTokenStrategy(user,ppidService,request,group,appGroupService,apiHost))
+    open fun generateLoginCredentials(
+        user: User,
+        request: HttpServletRequest,
+        group: AppGroup? = null,
+        clear: Boolean = false
+    ): HttpHeaders {
+        val maxAge = if (clear) Duration.ZERO else Duration.ofHours(1);
+        val token =
+            tokenFactory.createToken(LoginTokenStrategy(user, ppidService, request, group, appGroupService, apiHost))
         val jwtCookie = ResponseCookie
             .from("AUTH_TOKEN", token.serialize())
             .httpOnly(true)
@@ -84,16 +95,14 @@ open class UserService @Autowired constructor(
             .maxAge(maxAge)
             .build()
         val headers = HttpHeaders()
-        headers.add("Set-Cookie",jwtCookie.toString())
-        headers.add("Set-Cookie",xsrfCookie.toString())
+        headers.add("Set-Cookie", jwtCookie.toString())
+        headers.add("Set-Cookie", xsrfCookie.toString())
         return headers;
     }
 
 
-
-
     @Transactional
-    open fun register(
+    open fun createAccount(
         dto: CreateUserAccountDTO
     ): User {
 
@@ -101,16 +110,26 @@ open class UserService @Autowired constructor(
             throw IllegalArgumentException("Email already in use")
         }
 
-        val user = User(null,dto.email, password = passwordEncoder.encode(dto.password),dto.number, givenName = dto.firstName, familyName = dto.lastName)
+        val user = userRepository.save(
+            User(
+                null,
+                dto.email,
+                password = passwordEncoder.encode(dto.password),
+                dto.number,
+                givenName = dto.firstName,
+                familyName = dto.lastName
+            )
+        )
+        appGroupRepository.save(AppGroup(name = "Default Group", user = user, isDefault = true))
+        val token = tokenService.generateRegistrationConfirmationToken(user)
+        mailService.sendRegistrationConfirmationEmail(user, token)
+        return user
 
-        //todo procedura vo bazava za da ne mozit da imat dve default grupi za eden user
-        val defaultGroup = AppGroup(name = "Default Group", user = user, isDefault = true)
-        val savedUser = userRepository.save(user)
-        appGroupRepository.save(defaultGroup)
-        return savedUser
+    }
 
-
-
+    open fun activateAccount(user: User) {
+        user.isActive = true
+        userRepository.save(user)
     }
 
 }

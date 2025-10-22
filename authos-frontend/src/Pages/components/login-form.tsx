@@ -99,7 +99,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                 Sign in with Google
                             </Button>
                             <Button variant={"outline"} type={"button"} className={'w-full text-white border-gray-600 hover:bg-gray-700'} onClick={() => {
-                                window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=fresh"
+                                window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=auto"
                             }}>
                                 Authos Login Test
                             </Button>

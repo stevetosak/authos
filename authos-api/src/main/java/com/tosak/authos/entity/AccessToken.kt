@@ -23,7 +23,7 @@ class AccessToken (
     val expiresAt : LocalDateTime = LocalDateTime.now().plusHours(24),
     @Column(name = "created_at")
     val createdAt : LocalDateTime = LocalDateTime.now(),
-    val revoked : Boolean = false,
+    var revoked : Boolean = false,
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     val user: User? = null,

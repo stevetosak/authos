@@ -27,6 +27,7 @@ import com.tosak.authos.exceptions.badreq.MissingParametersException
 import com.tosak.authos.exceptions.base.AuthosException
 import com.tosak.authos.exceptions.demand
 import com.tosak.authos.pojo.IdTokenStrategy
+import com.tosak.authos.repository.UserRepository
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -54,8 +55,8 @@ open class TokenService(
     private val appService: AppService,
     private val jwtTokenFactory: JwtTokenFactory,
     private val ppidService: PPIDService,
-    private val idTokenService: IdTokenService,
-    private val dusterAppService: DusterAppService
+    private val dusterAppService: DusterAppService,
+    private val userRepository: UserRepository
 ) {
     @Value("\${authos.api.host}")
     private lateinit var apiHost: String;
@@ -139,7 +140,7 @@ open class TokenService(
     open fun validateAccessToken(token: String): AccessToken {
         val tokenVal = String(b64UrlSafeDecoder(token), StandardCharsets.US_ASCII)
         val tokenHash = b64UrlSafeEncoder(getHash(tokenVal))
-        val accessToken = accessTokenRepository.findByTokenHash(tokenHash) ?: throw AuthosException(
+        val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(tokenHash) ?: throw AuthosException(
             "invalid token",
             InvalidAccessTokenException()
         )
@@ -180,7 +181,7 @@ open class TokenService(
 
     @Transactional
     open fun handleClientCredentialsRequest(request: TokenRequestDto): TokenWrapper {
-        demand(request.clientId != null && request.clientSecret != null){ MissingParametersException() }
+        demand(request.clientId != null && request.clientSecret != null) { MissingParametersException() }
         dusterAppService.validateAppCredentials(request.clientId!!, request.clientSecret!!)
         val accessTokenWrapper = generateAccessToken(clientId = request.clientId!!)
         return TokenWrapper(accessTokenWrapper = accessTokenWrapper)
@@ -188,7 +189,7 @@ open class TokenService(
 
     @Transactional
     open fun handleAuthorizationCodeRequest(request: TokenRequestDto): TokenWrapper {
-        demand(request.redirectUri != null){ AuthosException("missing redirect uri", MissingParametersException()) }
+        demand(request.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
 
         val app = appService.validateAppCredentials(tokenRequestDto = request)
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, request)
@@ -201,7 +202,14 @@ open class TokenService(
         val accessTokenWrapper =
             generateAccessToken(clientId = app.clientId, authorizationCode = code, refreshToken = null)
         val idToken =
-            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!,apiHost))
+            jwtTokenFactory.createToken(
+                IdTokenStrategy(
+                    ppidService,
+                    app,
+                    accessTokenWrapper.accessToken.user!!,
+                    apiHost
+                )
+            )
 
         return TokenWrapper(
             accessTokenWrapper = accessTokenWrapper,
@@ -220,12 +228,47 @@ open class TokenService(
         )
 
         val idToken =
-            jwtTokenFactory.createToken(IdTokenStrategy(ppidService, app, accessTokenWrapper.accessToken.user!!,apiHost))
+            jwtTokenFactory.createToken(
+                IdTokenStrategy(
+                    ppidService,
+                    app,
+                    accessTokenWrapper.accessToken.user!!,
+                    apiHost
+                )
+            )
         return TokenWrapper(
             accessTokenWrapper = accessTokenWrapper,
             refreshTokenWrapper = refreshTokenWrapper,
             idToken = idToken
         )
+    }
+
+    open fun generateRegistrationConfirmationToken(user: User, clientId: String = "AUTHOS"): String {
+        val tokenBytes = getSecureRandomValue(32)
+        val tokenVal = hex(tokenBytes)
+        val token = AccessToken(
+            hex(getHash(tokenVal)),
+            clientId = clientId,
+            scope = "registration:confirm",
+            expiresAt = LocalDateTime.now().plusMinutes(5),
+            user = user
+        )
+        accessTokenRepository.save(token)
+        return tokenVal;
+    }
+
+    open fun verifyRegistrationToken(user: User, token: String) {
+        val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(hex(getHash(token))) ?: throw AuthosException("invalid_token",
+            InvalidAccessTokenException())
+        demand(accessToken.scope == "registration:confirm" && accessToken.user!!.id == user.id){ AuthosException("invalid_token",
+            InvalidAccessTokenException()) }
+        demand(accessToken.expiresAt > LocalDateTime.now()){ AuthosException("invalid_token",
+            AccessTokenExpiredException())}
+
+
+        accessToken.revoked = true
+        user.isActive = true
+        userRepository.save(user)
     }
 
 

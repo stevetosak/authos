@@ -41,7 +41,7 @@ class User(
     val lastLoginAt: LocalDateTime? = null,
 
     @Column(name = "is_active")
-    val isActive: Boolean = true,
+    var isActive: Boolean = false,
 
     @Column(name = "email_verified")
     val emailVerified: Boolean = false,

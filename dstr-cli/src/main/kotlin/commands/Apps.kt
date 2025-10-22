@@ -34,7 +34,7 @@ class Apps : SuspendingCliktCommand(name = "apps") {
         currentContext.obj = AppLookup(clientId, name)
         if (currentContext.invokedSubcommand == null) {
             if((!clientId.isNullOrBlank() && !name.isNullOrBlank())){
-                throw IllegalArgumentException("Either clientid or name must be present.")
+                throw IllegalArgumentException("Either clientId or name must be present.")
             }
             val resp = client.get("http://localhost:8785/duster/api/v1/internal/apps") {
                 parameter("client_id", clientId)

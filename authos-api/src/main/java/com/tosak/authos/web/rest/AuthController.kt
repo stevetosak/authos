@@ -35,6 +35,8 @@ open class AuthController(
 
     @Value("\${authos.frontend.host}")
     private lateinit var frontendHost: String
+    @Value("\${authos.api.host}")
+    private lateinit var apiHost: String
 
 
     /**
@@ -87,7 +89,7 @@ open class AuthController(
 
         val url = "${frontendHost}/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
-        val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url,frontendHost))
+        val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url,apiHost))
 
         return ResponseEntity.status(200).headers(headers).body(
             LoginDTO(
@@ -152,7 +154,7 @@ open class AuthController(
         @RequestParam("redirect_uri", required = false) redirectUri: String?,
         @RequestParam("state", required = false) state: String?
     ): ResponseEntity<Void> {
-        userService.register(createUserAccountDTO)
+        userService.createAccount(createUserAccountDTO)
         return ResponseEntity.status(201).build()
     }
 

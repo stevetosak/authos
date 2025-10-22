@@ -17,11 +17,13 @@ const getJWKPubKey = async (): Promise<JwkKey> => {
 export const validateResponse = async (token: string): Promise<boolean> => {
     const jwk = await getJWKPubKey();
     const pubkey = await importJWK(jwk, 'RS256')
+    console.log("token",token)
     try {
         await jwtVerify(token, pubkey, {
-            issuer: "http://localhost:9000",
+            issuer: import.meta.env.API_BASE_URL,
             requiredClaims: ["exp", "sub"]
         })
+        console.log("verified")
         return true;
     } catch (err) {
         console.error("cant validate token", err)

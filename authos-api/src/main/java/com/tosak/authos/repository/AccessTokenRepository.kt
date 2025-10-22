@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AccessTokenRepository  : JpaRepository<AccessToken, Long> {
-    fun findByTokenHash(tokenHash: String): AccessToken?
+    fun findByTokenHashAndRevokedFalse(tokenHash: String): AccessToken?
 }

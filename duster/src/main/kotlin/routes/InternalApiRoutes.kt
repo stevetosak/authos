@@ -86,7 +86,7 @@ fun Route.credentialsRoutes(){
         get{
             val credentials = credentialsRepository.getCredentials()
             if(credentials == null){
-                call.respond(HttpStatusCode.BadRequest, "Missing credentials")
+                call.respond(HttpStatusCode.NotFound, "Missing credentials")
                 return@get
             }
             call.respond(HttpStatusCode.OK,credentials)

@@ -35,7 +35,7 @@ export default function UserRegistration() {
         try {
             await api.post("/register", payload)
             alert("Registered Successfully!.")
-            nav("/login")
+            nav("/register/confirm")
         } catch (e) {
             alert("Cant register user. Error Occured")
             console.error(e)
@@ -51,7 +51,7 @@ export default function UserRegistration() {
                     <CardHeader className="border-b border-gray-700 p-6">
                         <div className="flex flex-col items-center space-y-2">
                             <h2 className="text-2xl font-bold text-emerald-500">User Registration</h2>
-                            <p className="text-gray-400 text-sm">Create an account to access our services</p>
+                            <p className="text-gray-400 text-sm">Create an account</p>
                         </div>
                     </CardHeader>
 

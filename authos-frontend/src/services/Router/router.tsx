@@ -20,6 +20,7 @@ import {OAuthLogin} from "@/Pages/LoginPage/OAuthLogin.tsx";
 import {apiGetAuthenticated} from "@/services/netconfig.ts";
 import {defaultUser} from "@/services/types.ts";
 import {AuthCallback} from "@/Pages/components/AuthCallback.tsx";
+import {AccountConfirmationPage} from "@/Pages/UserRegistrationPage/AccountConfirmationPage.tsx";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -44,7 +45,9 @@ export const router = createBrowserRouter(
             <Route path="/oauth">
                 <Route path="login" element={<OAuthLogin/>}></Route>
                 <Route path="user-consent" element={<ConsentForm/>}/>
-                <Route path={"callback"} element={<AuthCallback/>}></Route>
+                <Route path="callback" element={<AuthCallback/>}></Route>
+            </Route>
+            <Route path={"/register/confirm"} element={<AccountConfirmationPage/>}>
             </Route>
         </>
     )

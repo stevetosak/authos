@@ -7,10 +7,11 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.stereotype.Service
 
 
+// todo ova vo da ojt vo user service nemat potreba posebno da e
+
 @Service
 class CachingUserDetailsService (
     private val userService: UserService,
-    private val appService: AppService,
     private val ppidService: PPIDService,
 ) : UserDetailsService {
 

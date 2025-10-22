@@ -29,7 +29,7 @@ class LoginTokenStrategy(
         val sub = ppidService.getPPID(user,group!!)
         return JWTClaimsSet.Builder()
             .subject(sub)
-            .issuer("http://localhost:9000")
+            .issuer(issuer)
             .expirationTime(Date(System.currentTimeMillis() + 3600 * 1000)) // 1 sat
             .issueTime(Date())
             .jwtID(UUID.randomUUID().toString())

@@ -31,10 +31,7 @@ fun Route.oAuthRoutes(){
             val clientId =
                 call.queryParameters["client_id"] ?: throw InvalidParameterException("Client ID is required")
             val mode = call.queryParameters["mode"] ?: "auto";
-
-
             val sub = call.queryParameters["sub"] ?: call.request.cookies["sub"]
-
             println("Starting Duster Flow..")
 
             val app = dusterAppRepository.getDusterAppByClientId(clientId)
