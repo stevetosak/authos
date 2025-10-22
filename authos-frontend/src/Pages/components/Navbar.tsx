@@ -110,7 +110,7 @@ const Navbar = () => {
                                         <Avatar className="h-8 w-8 border border-gray-600 hover:border-green-600">
                                             <AvatarImage src={user?.email}/>
                                             <AvatarFallback className="bg-gray-700">
-                                                {user.firstName.charAt(0) || "U"}
+                                                {user ? user.firstName.charAt(0) : "U"}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
