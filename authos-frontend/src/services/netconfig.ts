@@ -8,7 +8,6 @@ export const api = axios.create({
 
 
 export const apiGetAuthenticated = async <T> (uri : string) => {
-    console.log("api url:",import.meta.env.VITE_API_BASE_URL,)
     const xsrfCookie = Cookies.get("XSRF-TOKEN")
     return await api.get<T>(uri,{
         withCredentials: true,
