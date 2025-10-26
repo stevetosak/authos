@@ -1,4 +1,4 @@
-create table users
+create table public.users
 (
     id                    serial
         primary key,
@@ -30,10 +30,10 @@ create table users
     name                  varchar(256)
 );
 
-alter table users
+alter table public.users
     owner to stevetosak;
 
-create table role
+create table public.role
 (
     id   serial
         primary key,
@@ -41,31 +41,31 @@ create table role
         unique
 );
 
-alter table role
+alter table public.role
     owner to stevetosak;
 
-create table users_roles
+create table public.users_roles
 (
     user_id integer not null
-        references users
+        references public.users
             on delete cascade,
     role_id integer not null
-        references role
+        references public.role
             on delete cascade,
     primary key (user_id, role_id)
 );
 
-alter table users_roles
+alter table public.users_roles
     owner to stevetosak;
 
-create table app_group
+create table public.app_group
 (
     id         serial
         primary key,
     name       varchar(255),
     created_at timestamp,
     user_id    integer
-        references users,
+        references public.users,
     is_default boolean     default false,
     sso_policy varchar(32) default 'Partial'::character varying
         constraint app_group_sso_policy_check
@@ -77,16 +77,16 @@ create table app_group
                    (ARRAY [('Email'::character varying)::text, ('Phone'::character varying)::text, ('Disabled'::character varying)::text]))
 );
 
-alter table app_group
+alter table public.app_group
     owner to stevetosak;
 
-create table app
+create table public.app
 (
     id                             serial
         primary key,
     name                           varchar(255) not null,
     user_id                        integer      not null
-        references users
+        references public.users
             on delete cascade,
     client_id                      varchar(255) not null
         unique,
@@ -94,7 +94,7 @@ create table app
     client_secret_expires_at       timestamp,
     created_at                     timestamp    not null,
     group_id                       integer
-        references app_group
+        references public.app_group
             on delete cascade,
     grant_types                    varchar(256) not null,
     logo_uri                       text,
@@ -110,38 +110,38 @@ create table app
     duster_callback_uri            text
 );
 
-alter table app
+alter table public.app
     owner to stevetosak;
 
-create table app_credentials
+create table public.app_credentials
 (
     app_id integer
-        references app,
+        references public.app,
     type   varchar(32) default 'client_secret'::character varying not null
 );
 
-alter table app_credentials
+alter table public.app_credentials
     owner to stevetosak;
 
-create table redirect_uris
+create table public.redirect_uris
 (
     app_id       integer not null
-        references app
+        references public.app
             on delete cascade,
     redirect_uri text    not null,
     primary key (app_id, redirect_uri)
 );
 
-alter table redirect_uris
+alter table public.redirect_uris
     owner to stevetosak;
 
-create table ppid
+create table public.ppid
 (
     group_id   integer     not null
-        references app_group
+        references public.app_group
             on delete cascade,
     user_id    integer     not null
-        references users
+        references public.users
             on delete cascade,
     salt       varchar(16) not null,
     created_at timestamp default CURRENT_TIMESTAMP,
@@ -149,44 +149,44 @@ create table ppid
     primary key (user_id, group_id)
 );
 
-alter table ppid
+alter table public.ppid
     owner to stevetosak;
 
-create table mfa_token
+create table public.mfa_token
 (
     id          serial
         primary key,
     token_value varchar(128) not null,
     user_id     integer      not null
-        references users,
+        references public.users,
     created_at  timestamp default CURRENT_TIMESTAMP,
     expires_at  timestamp,
     used        boolean   default false,
     type        varchar(32)
 );
 
-alter table mfa_token
+alter table public.mfa_token
     owner to stevetosak;
 
-create table authorization_code
+create table public.authorization_code
 (
     code_hash    varchar(64) not null
         primary key,
     issued_at    timestamp default now(),
     client_id    varchar(255)
-        references app (client_id),
+        references public.app (client_id),
     redirect_uri text,
     scope        varchar(128),
     expires_at   timestamp,
     used         boolean   default false,
     user_id      integer
-        references users
+        references public.users
 );
 
-alter table authorization_code
+alter table public.authorization_code
     owner to stevetosak;
 
-create table access_token
+create table public.access_token
 (
     token_hash varchar(64) not null
         primary key,
@@ -195,19 +195,19 @@ create table access_token
     created_at timestamp default now(),
     revoked    boolean   default false,
     user_id    integer
-        references users,
+        references public.users,
     scope      varchar(128)
 );
 
-alter table access_token
+alter table public.access_token
     owner to stevetosak;
 
-create table issued_id_tokens
+create table public.issued_id_tokens
 (
     jti               varchar(36) not null
         primary key,
     access_token_hash varchar(64)
-                                  references access_token
+                                  references public.access_token
                                       on delete set null,
     audience          varchar(255),
     issue_time        timestamp,
@@ -218,10 +218,10 @@ create table issued_id_tokens
     ip_hash           varchar(64)
 );
 
-alter table issued_id_tokens
+alter table public.issued_id_tokens
     owner to stevetosak;
 
-create table refresh_token
+create table public.refresh_token
 (
     client_id    varchar(64)  not null,
     token_val    varchar(128) not null,
@@ -231,23 +231,23 @@ create table refresh_token
     last_used_at timestamp,
     scope        varchar(128) not null,
     user_id      integer      not null
-        references users,
+        references public.users,
     token_hash   varchar(64),
     primary key (client_id, user_id)
 );
 
-alter table refresh_token
+alter table public.refresh_token
     owner to stevetosak;
 
 create index token_hash_idx
-    on refresh_token using hash (token_hash);
+    on public.refresh_token using hash (token_hash);
 
-create table duster_app
+create table public.duster_app
 (
     id               serial
         primary key,
     user_id          integer      not null
-        references users,
+        references public.users,
     client_id        varchar(255) not null,
     client_secret    varchar(255) not null,
     created_at       timestamp   default now(),
@@ -258,6 +258,6 @@ create table duster_app
                    ((ARRAY ['auto'::character varying, 'fresh'::character varying])::text[]))
 );
 
-alter table duster_app
+alter table public.duster_app
     owner to stevetosak;
 
