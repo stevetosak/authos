@@ -38,7 +38,7 @@ class User(
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "last_login_at")
-    val lastLoginAt: LocalDateTime? = null,
+    var lastLoginAt: LocalDateTime? = null,
 
     @Column(name = "is_active")
     var isActive: Boolean = false,
@@ -47,7 +47,7 @@ class User(
     val emailVerified: Boolean = false,
 
     @Column(name = "mfa_enabled")
-    val mfaEnabled: Boolean = false,
+    var mfaEnabled: Boolean = false,
 
     val recoveryCodes: String? = null,
     @Column(name = "middle_name")
@@ -57,6 +57,9 @@ class User(
     val failedLoginAttempts: Int = 0,
 
     val gender : String? = null,
+
+    @Column(name = "totp_secret")
+    var totpSecret: String? = null,
 
     @Column(name = "locked_until")
     val lockedUntil: LocalDateTime? = null
@@ -73,7 +76,7 @@ class User(
 
 
     override fun toDTO(): UserDTO {
-        return UserDTO(email,givenName,familyName,phoneNumber)
+        return UserDTO(email,givenName,familyName,phoneNumber,lastLoginAt,emailVerified,mfaEnabled)
     }
 
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {

@@ -21,12 +21,15 @@ export function Layout() {
     if(authLoading || pageLoading) return  <Loader/>
     return (
             <SidebarProvider>
-                <div className="flex flex-row min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white w-full">
+                <div className="flex flex-row min-h-screen bg-gradient-main text-white w-full">
                     <AppSidebar />
                     <SidebarTriggerWrapper/>
-                    <main className="flex-1 p-8 overflow-y-auto w-3/4]">
+                    <main className="flex-1 py-8 overflow-y-auto w-3/4]">
                         <Navbar></Navbar>
-                        <Outlet/>
+                        <div className={"px-8 flex flex-col justify-center items-center"}>
+                            <Outlet/>
+                        </div>
+
                     </main>
                     <Toaster richColors={true} position={"bottom-right"}/>
                 </div>

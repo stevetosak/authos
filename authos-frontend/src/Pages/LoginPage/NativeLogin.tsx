@@ -2,8 +2,9 @@ import React, {useState} from "react";
 import {LoginForm} from "@/Pages/components/login-form.tsx";
 import {useAuth} from "@/services/useAuth.ts";
 import {api} from "@/services/netconfig.ts";
-import {LoginResponse} from "@/services/types.ts";
+import {LoginResponse, UserInfoResponse} from "@/services/types.ts";
 import {useNavigate} from "react-router-dom";
+import {validateResponse} from "@/services/jwtService.ts";
 
 
 const NativeLogin: React.FC = () => {
@@ -13,11 +14,14 @@ const NativeLogin: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [error, setError] = useState<string | null>(null);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [loading, setLoading] = useState<boolean>(false);
-    const {setContext, setIsAuthenticated} = useAuth()
+    const {refreshAuth} = useAuth();
     const nav = useNavigate()
 
-    const handleSubmit = async (e: React.FormEvent<Element>) => {
+
+
+
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
@@ -27,28 +31,33 @@ const NativeLogin: React.FC = () => {
         }
 
 
-        setLoading(true);
-
         const formData = new URLSearchParams();
         formData.append('email', email);
         formData.append('password', password);
 
 
-        await api.post<LoginResponse>("native-login", formData, {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            withCredentials: true
-        }).then(resp => {
-            setContext(resp.data)
-            setIsAuthenticated(true)
-            setLoading(false);
-            nav("/dashboard")
-        }).catch(err => {
-            console.error(err)
-        })
+        try {
+            const resp = await api.post<LoginResponse>("native-login", formData, {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                withCredentials: true
+            })
+            console.log(resp.data)
+            if (resp.data.status === "SUCCESS") {
+                await refreshAuth();
+                nav("/profile")
+            }
+            if (resp.data.status === "MFA_REQUIRED") {
+                console.log("vleze mfa f")
+                nav("/2fa/totp/verify")
+            }
+            // nav("/dashboard")
+        } catch (err) {
+            console.error("Auth error occurred")
+            console.log(err)
+        }
 
-        setLoading(false);
 
 
     };
@@ -57,7 +66,8 @@ const NativeLogin: React.FC = () => {
     return (
         <div className="flex min-h-screen w-full items-center justify-center">
             <div className="w-full max-w-3xl">
-                <LoginForm className={""} handleSubmit={handleSubmit} setEmail={setEmail} setPassword={setPassword}/>
+                <LoginForm className={""} handleSubmit={handleSubmit} setEmail={setEmail}
+                           setPassword={setPassword}/>
             </div>
         </div>
     );

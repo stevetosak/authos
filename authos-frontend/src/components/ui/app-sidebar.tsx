@@ -101,8 +101,8 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-      <Sidebar {...props} className="bg-gray-800/50 border-r border-gray-700/50 backdrop-blur-sm">
-        <SidebarHeader className="p-4 border-b border-gray-700/50">
+      <Sidebar {...props} className="bg-gradient-main backdrop-blur-sm">
+        <SidebarHeader className="p-4 border-b bg-gradient">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -128,7 +128,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           />
         </SidebarHeader>
 
-        <SidebarContent className="p-2">
+        <SidebarContent className="p-2 bg-sidebar">
           <SidebarGroup>
             <SidebarMenu>
               {data.navMain.map((item, index) => (
@@ -179,7 +179,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarRail className="bg-gray-800/50 border-gray-700/50" />
+        <SidebarRail className="" />
       </Sidebar>
   );
 }

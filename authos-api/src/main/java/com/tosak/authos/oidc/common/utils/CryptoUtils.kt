@@ -12,7 +12,6 @@ fun getHash(value: String): ByteArray {
 
 }
 
-// len = num bytes
 fun getSecureRandomValue(numBytes: Int) : ByteArray {
     val bytes = ByteArray(numBytes)
     SecureRandom().nextBytes(bytes)

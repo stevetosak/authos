@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {App, AppGroup, defaultApp, defaultUser, LoginResponse, User} from "@/services/types.ts";
+import {App, AppGroup, defaultApp, defaultUser, UserInfoResponse, User} from "@/services/types.ts";
 import axios, {AxiosResponse} from "axios";
 import {AuthContext} from "@/Pages/components/context/AuthContext.tsx";
 import {apiGetAuthenticated} from "@/services/netconfig.ts";
@@ -18,7 +18,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
     const [pageLoading, setPageLoading] = useState<boolean>(true);
 
 
-    const setContext = (data: LoginResponse) => {
+    const setContext = (data: UserInfoResponse) => {
         setUser(data.user)
         setApps(data.apps)
         setGroups(data.groups)
@@ -29,8 +29,8 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
         setGroups([])
     }
 
-    const verifyToken = async (): Promise<LoginResponse> => {
-        const response = await apiGetAuthenticated<LoginResponse>("/verify")
+    const verifyToken = async (): Promise<UserInfoResponse> => {
+        const response = await apiGetAuthenticated<UserInfoResponse>("/verify")
         return response.data;
     };
 
@@ -59,7 +59,6 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
         const interval = setInterval(() => {
             if (isAuthenticated) {
                 refreshAuth()
-                // silentAuthTest()
             }
         }, 5 * 60 * 1000);
         return () => clearInterval(interval)

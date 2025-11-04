@@ -86,7 +86,7 @@ open class TokenService(
             )
 
         val refreshToken = refreshTokenRepository.save(token)
-        return RefreshTokenWrapper(aesUtil.decrypt(b64UrlSafeDecoder(refreshToken.tokenValue)), refreshToken)
+        return RefreshTokenWrapper(aesUtil.decryptBytes(b64UrlSafeDecoder(refreshToken.tokenValue)), refreshToken)
     }
 
     @Transactional

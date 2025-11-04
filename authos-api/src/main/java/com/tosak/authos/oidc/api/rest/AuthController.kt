@@ -1,11 +1,17 @@
 package com.tosak.authos.oidc.api.rest
 
 import com.tosak.authos.oidc.common.dto.CreateUserAccountDTO
-import com.tosak.authos.oidc.common.dto.LoginDTO
+import com.tosak.authos.oidc.common.dto.UserInfoResponse
+import com.tosak.authos.oidc.common.dto.LoginResponse
+import com.tosak.authos.oidc.common.dto.QrCodeDTO
+import com.tosak.authos.oidc.common.enums.LoginResponseStatus
+
 import com.tosak.authos.oidc.common.pojo.RedirectResponseTokenStrategy
 import com.tosak.authos.oidc.common.utils.JwtTokenFactory
+import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.service.AppGroupService
 import com.tosak.authos.oidc.service.AppService
+import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.service.PPIDService
 import com.tosak.authos.oidc.service.SSOSessionService
 import com.tosak.authos.oidc.service.UserService
@@ -18,6 +24,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
+import java.time.LocalDateTime
 
 
 /**
@@ -34,7 +41,9 @@ open class AuthController(
     private val appService: AppService,
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
-    private val ppidService: PPIDService
+    private val ppidService: PPIDService,
+    private val jwtTokenFactory: JwtTokenFactory,
+    private val jwtService: JwtService
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -71,7 +80,7 @@ open class AuthController(
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpSession: HttpSession,
         request: HttpServletRequest,
-    ): ResponseEntity<LoginDTO> {
+    ): ResponseEntity<UserInfoResponse> {
 
 
         val user = userService.verifyCredentials(email, password);
@@ -86,7 +95,7 @@ open class AuthController(
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
 
-        val headers = userService.generateLoginCredentials(user, request, app.group)
+        val headers = userService.getLoginCookieHeaders(user, request, app.group)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
         ssoSessionService.initializeSession(user, app, httpSession, request)
@@ -96,7 +105,7 @@ open class AuthController(
         val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url,apiHost))
 
         return ResponseEntity.status(200).headers(headers).body(
-            LoginDTO(
+            UserInfoResponse(
                 user.toDTO(),
                 apps.map { a -> appService.toDTO(a) },
                 groups.map { gr -> gr.toDTO() },
@@ -123,22 +132,29 @@ open class AuthController(
         @RequestParam email: String,
         @RequestParam password: String,
         request: HttpServletRequest
-    ): ResponseEntity<LoginDTO> {
+    ): ResponseEntity<LoginResponse> {
 
         val user = userService.verifyCredentials(email, password);
-        val headers = userService.generateLoginCredentials(user, request)
-        val apps = appService.getAllAppsForUser(user.id!!)
-        val groups = appGroupService.getAllGroupsForUser(user.id)
 
+        //todo da odlucam kakov response trebit da sa vratit poso vaka idit dva razlicni responses
+        // todo resenie: ovaj metod ne vrakjat user data, samo setvit cookies. primer ako nemat mfa enabled:
+        // todo direk vo response vrakjat cookies za auth, pa frontendot samo posle pret baramje na dr endponint za user data
+        // todo ako e mfa enabled ne setvit cookies
+        // todo vo dvata slucai vrakjat response so e pojke ko metadata primer:
+        // todo {status: mfa_pending ili success,time:...,}
+        if(user.mfaEnabled){
+            val mfaTokenHeader = userService.getMfaCookieHeader(user);
+            return ResponseEntity
+                .status(201)
+                .headers(mfaTokenHeader)
+                .body(LoginResponse(LoginResponseStatus.MFA_REQUIRED))
+        }
+
+        val headers = userService.getLoginCookieHeaders(user, request)
         return ResponseEntity
-            .status(201)
+            .status(200)
             .headers(headers)
-            .body(
-                LoginDTO(
-                    user.toDTO(),
-                    apps.map { app -> appService.toDTO(app) },
-                    groups.map { group -> group.toDTO() })
-            );
+            .body(LoginResponse(LoginResponseStatus.SUCCESS));
 
     }
 
@@ -169,12 +185,12 @@ open class AuthController(
      * @return a ResponseEntity containing a LoginDTO with the user's information, associated applications, and groups.
      */
     @GetMapping("/verify")
-    fun verify(authentication: Authentication?): ResponseEntity<LoginDTO> {
+    fun verify(authentication: Authentication?): ResponseEntity<UserInfoResponse> {
         val user = userService.getUserFromAuthentication(authentication);
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
         return ResponseEntity.ok(
-            LoginDTO(
+            UserInfoResponse(
                 user.toDTO(),
                 apps.map { app -> appService.toDTO(app) },
                 groups.map { group -> group.toDTO() })
@@ -186,22 +202,82 @@ open class AuthController(
     fun verifySub(
         @CookieValue(name = "sub", required = false) sub: String?,
         httpServletRequest: HttpServletRequest
-    ): ResponseEntity<LoginDTO> {
+    ): ResponseEntity<UserInfoResponse> {
         if (sub == null) return ResponseEntity.badRequest().build()
         val ppid = ppidService.getPPIDBySub(sub)
         val user = userService.getById(ppid.key.userId!!)
-        val headers = userService.generateLoginCredentials(user, httpServletRequest)
+        val headers = userService.getLoginCookieHeaders(user, httpServletRequest)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
         return ResponseEntity
             .status(201).headers(headers).body(
-                LoginDTO(
+                UserInfoResponse(
                     user.toDTO(),
                     apps.map { app -> appService.toDTO(app) },
                     groups.map { group -> group.toDTO() })
             )
 
     }
+
+    @GetMapping("/generate-totp-qr")
+    fun generateTotpQrCode(authentication: Authentication?): ResponseEntity<QrCodeDTO> {
+        val user = userService.getUserFromAuthentication(authentication)
+        try{
+            val qrCodeDTO = userService.getTotpQr(user)
+            return ResponseEntity.ok(qrCodeDTO)
+        }catch (e: AuthosException){
+            return ResponseEntity.badRequest().build()
+        }
+
+    }
+
+    @GetMapping("/check-totp-status")
+    fun checkTotpStatus(authentication: Authentication?): ResponseEntity<Unit> {
+        val user = userService.getUserFromAuthentication(authentication)
+        return if(user.totpSecret.isNullOrEmpty()) ResponseEntity.badRequest().build()
+        else ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/enable-totp")
+    fun enableTotp(authentication: Authentication?): ResponseEntity<Unit> {
+        val user = userService.getUserFromAuthentication(authentication)
+        userService.generateTotpSecret(user)
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/verify-totp-setup")
+    fun verifyTotpSetup(authentication: Authentication?, @RequestParam("otp") otp: String): ResponseEntity<String> {
+        val user = userService.getUserFromAuthentication(authentication)
+        val result = userService.enableTotp(user, otp)
+
+        return if(result) ResponseEntity.ok().build()
+        else ResponseEntity.badRequest().build()
+    }
+    @PostMapping("/verify-totp")
+    fun verifyTotp(@CookieValue(name = "MFA_TOKEN") mfaToken: String, @RequestParam("otp") otp: String, httpServletRequest: HttpServletRequest): ResponseEntity<String> {
+        val token = jwtService.verifyToken(mfaToken)
+        val user = userService.getById(token.jwtClaimsSet.subject.toInt())
+        val result = userService.verifyTotp(user, otp)
+        val headers = userService.getLoginCookieHeaders(user,httpServletRequest)
+        return if(result) ResponseEntity.ok().headers(headers).build()
+        else ResponseEntity.badRequest().build()
+    }
+    @PostMapping("/disable-totp")
+    fun disableTotpForUser(authentication: Authentication?,otp: String): ResponseEntity<String> {
+
+
+        val user = userService.getUserFromAuthentication(authentication)
+
+        val result = userService.verifyTotp(user,otp);
+        if(result) {
+            userService.disableTotp(user)
+            return ResponseEntity.ok().build()
+        }
+
+        return ResponseEntity.status(400).body("Invalid otp");
+
+    }
+
 
 //    /**
 //     * Clears all active sessions and invalidates the current HTTP session.
@@ -224,7 +300,7 @@ open class AuthController(
     @PostMapping("/logout")
     fun logout(authentication: Authentication?, request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
-        val headers = userService.generateLoginCredentials(user = user, request = request, clear = true);
+        val headers = userService.getLoginCookieHeaders(user = user, request = request, clear = true);
         return ResponseEntity.status(200).headers(headers).build();
     }
 

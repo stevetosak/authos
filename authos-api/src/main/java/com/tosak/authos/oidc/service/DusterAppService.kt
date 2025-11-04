@@ -43,7 +43,7 @@ class DusterAppService(private val dusterAppRepository: DusterAppRepository, pri
         return DusterAppDto(
             dusterApp.id,
             dusterApp.clientId,
-            aesUtil.decrypt(b64UrlSafeDecoder(dusterApp.clientSecret)),
+            aesUtil.decryptBytes(b64UrlSafeDecoder(dusterApp.clientSecret)),
             tokenFetchMode = dusterApp.tokenFetchMode,
             dusterApp.createdAt
         )
@@ -54,7 +54,7 @@ class DusterAppService(private val dusterAppRepository: DusterAppRepository, pri
             "invalid client",
             InvalidClientCredentialsException()
         )
-        val decryptedSecret = aesUtil.decrypt(b64UrlSafeDecoder(dusterApp.clientSecret))
+        val decryptedSecret = aesUtil.decryptBytes(b64UrlSafeDecoder(dusterApp.clientSecret))
         demand(decryptedSecret == clientSecret)
         { AuthosException("bad client", InvalidClientCredentialsException()) }
         return dusterApp;

@@ -21,6 +21,8 @@ import {apiGetAuthenticated} from "@/services/netconfig.ts";
 import {defaultUser} from "@/services/types.ts";
 import {AuthCallback} from "@/Pages/components/AuthCallback.tsx";
 import {AccountConfirmationPage} from "@/Pages/UserRegistrationPage/AccountConfirmationPage.tsx";
+import {TotpForm} from "@/Pages/2FA/TotpForm.tsx";
+import {TotpSetupPage} from "@/Pages/2FA/TotpSetupPage.tsx";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -30,12 +32,19 @@ export const router = createBrowserRouter(
                 <Route path="login" element={<NativeLogin/>}/>
                 <Route path="register" element={<UserRegistrationPage/>}/>
                 <Route path="error" element={<ErrorPage/>}/>
+                <Route path={"/2fa/totp/verify"} element={<TotpForm action={"/verify-totp"}/>}/>
                 <Route element={<ProtectedRoute/>}>
                     <Route path="dashboard" element={<Dashboard/>}/>
                     <Route path="dashboard/:appId" element={<AppDetailsPage/>}/>
                     <Route path="connect/register" element={<RegisterAppPage/>}/>
                     <Route path="profile" element={<ProfilePage/>}/>
-                    <Route path="/duster" element={<DusterClientPage/>}></Route>
+                    <Route path="duster" element={<DusterClientPage/>}></Route>
+                    <Route path={'2fa/totp'}>
+                        <Route path={"enable"} element={<TotpForm action={"/verify-totp-setup"}/>}/>
+                        <Route path={"setup"} element={<TotpSetupPage/>}/>
+                        <Route path={"disable"} element={<TotpForm action={"/disable-totp"}/>}/>
+
+                    </Route>
                 </Route>
 
                 <Route path="docs">

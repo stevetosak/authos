@@ -107,7 +107,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
 
                         <div className="mt-8 text-center text-sm text-gray-400">
                             Don't have an account?{' '}
-                            <Link to={"/register-user"}
+                            <Link to={"/register"}
                                   className="text-emerald-500 hover:text-emerald-400 hover:underline">
                                 Create one now
                             </Link>

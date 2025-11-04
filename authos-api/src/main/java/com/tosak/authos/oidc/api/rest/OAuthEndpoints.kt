@@ -184,7 +184,7 @@ class OAuthEndpoints(
     fun logout(authentication: Authentication?,request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
         sessionService.terminateAllByUser(user)
-        val headers = userService.generateLoginCredentials(user = user,request = request,clear = true);
+        val headers = userService.getLoginCookieHeaders(user = user,request = request,clear = true);
         return ResponseEntity.status(200).headers(headers).build();
     }
 }

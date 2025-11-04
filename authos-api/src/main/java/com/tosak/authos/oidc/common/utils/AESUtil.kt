@@ -30,7 +30,7 @@ class AESUtil(
     }
 
 
-    fun decrypt(cipherMessage: ByteArray): String {
+    fun decryptBytes(cipherMessage: ByteArray): String {
         val iv = cipherMessage.copyOfRange(0, IV_LENGTH_BYTE)
         val cipherText = cipherMessage.copyOfRange(IV_LENGTH_BYTE, cipherMessage.size)
 

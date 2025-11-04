@@ -50,7 +50,7 @@ class DusterEndpoints(
         val ppid = pPIDService.getPPIDBySub(sub)
         val user = userService.getById(ppid.key.userId!!)
         val group = appGroupService.findGroupByIdAndUser(ppid.key.groupId!!, user)
-        val headers = userService.generateLoginCredentials(user, httpServletRequest)
+        val headers = userService.getLoginCookieHeaders(user, httpServletRequest)
         return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
     }
 
@@ -84,7 +84,7 @@ class DusterEndpoints(
         return ResponseEntity.status(200).body(
             AuthosAppSyncDto(
                 clientId = authosApp.clientId,
-                clientSecret = aESUtil.decrypt(b64UrlSafeDecoder(authosApp.clientSecret)),
+                clientSecret = aESUtil.decryptBytes(b64UrlSafeDecoder(authosApp.clientSecret)),
                 redirectUri = dusterRedirectUri.id!!.redirectUri,
                 grantType = "authorization_code",
                 scope = authosApp.scopes,

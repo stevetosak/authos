@@ -2,7 +2,7 @@ package com.tosak.authos.oidc.common.dto
 
 import java.net.URI
 
-data class LoginDTO (
+data class UserInfoResponse (
     val user: UserDTO,
     val apps: List<AppDTO>,
     val groups: List<AppGroupDTO>,

@@ -1,9 +1,14 @@
+import {AxiosResponse} from "axios";
+
 export interface User{
     id: number,
     email: string,
     firstName: string,
     lastName: string,
     phone?: string,
+    lastLoginAt?: Date,
+    mfaEnabled: boolean,
+    emailVerified:boolean
 }
 
 export interface App {
@@ -89,12 +94,17 @@ export const defaultAppGroup: AppGroup = {
     mfaPolicy: "Disabled"
 };
 
-export type LoginResponse = {
+export type UserInfoResponse = {
     user: User,
     apps: App[],
     groups: AppGroup[],
     redirectUri?: string,
     signature?: string
+}
+
+export type LoginResponse = {
+    status: "SUCCESS" | "MFA_REQUIRED" | "FAILURE"
+    time: Date
 }
 
 export interface JwkKey {
@@ -110,3 +120,6 @@ export interface JwkKey {
 export interface JwksResponse {
     keys: JwkKey[];
 }
+
+export type ProfileTabProps = {active?: boolean,user:User}
+export type TotpModalProps = {dialogOpen:boolean,onOpenChange: (open: boolean) => void, user: User, onSubmit: (otp: string) => Promise<AxiosResponse>,onSuccess?: () => void}
