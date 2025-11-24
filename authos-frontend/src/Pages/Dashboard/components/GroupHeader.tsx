@@ -65,13 +65,13 @@ export const GroupHeader = () => {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-gray-400 hover:text-emerald-400 hover:bg-gray-700/50"
+                                            className="h-8 w-8 text-gray-400 hover:text-teal-300 hover:bg-gray-700/50"
                                             onClick={() => toggleEditGroup()}
                                         >
                                             <Pencil className="w-4 h-4"/>
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Edit group details</TooltipContent>
+                                    <TooltipContent className={"p-2"}>Edit group details</TooltipContent>
                                 </Tooltip>
                             )}
                         </div>
@@ -118,7 +118,7 @@ export const GroupHeader = () => {
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent
-                                className={" border-gray-700 border-s-2"}>
+                                className={" bg-gradient-secondary border-gray-700 border-s-2"}>
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                                     <AlertDialogDescription>
@@ -130,12 +130,12 @@ export const GroupHeader = () => {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                     <AlertDialogCancel
-                                        className={"bg-emerald-600 border-gray-900 border-2 hover:bg-emerald-400"}>
+                                        className={"bg-gray-800 border border-gray-700 hover:bg-gray-700/80"}>
                                         Cancel
                                     </AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteGroup()}
-                                                       className={"border-red-500 hover:bg-red-700 hover:translate-x-0.5 hover:-translate-y-0.5"}>
-                                        Confirm
+                                    <AlertDialogAction  onClick={() => handleDeleteGroup()}
+                                                       className={"border-red-500 text-red-500 hover:translate-x-0.5 hover:-translate-y-0.5"}>
+                                        Delete
                                     </AlertDialogAction>
 
                                 </AlertDialogFooter>

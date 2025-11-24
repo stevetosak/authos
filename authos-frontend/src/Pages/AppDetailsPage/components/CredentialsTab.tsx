@@ -22,7 +22,7 @@ export const CredentialsTab = ({value = "credentials", app, isEditing, regenerat
 
     return (
         <TabsContent value={value} className="p-6 space-y-6">
-            <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+            <div className="bg-gray-700/30 p-4 rounded-lg border border-gray-600">
                 <div className="flex items-center justify-between mb-2">
                     <Label className="text-gray-300 flex items-center gap-2">
                         <KeyIcon className="w-4 h-4"/>
@@ -43,12 +43,12 @@ export const CredentialsTab = ({value = "credentials", app, isEditing, regenerat
                         <TooltipContent>Copy to clipboard</TooltipContent>
                     </Tooltip>
                 </div>
-                <code className="block bg-gray-800 px-3 py-2 rounded text-sm font-mono break-all">
+                <code className="block bg-gray-800/80 px-3 py-2 rounded-md text-sm font-mono break-all">
                     {app.clientId}
                 </code>
             </div>
 
-            <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+            <div className="bg-gray-700/30 p-4 rounded-lg border border-gray-600">
                 <div className="flex items-center justify-between mb-2">
                     <Label className="text-gray-300 flex items-center gap-2">
                         <LockIcon className="w-4 h-4"/>
@@ -115,7 +115,7 @@ export const CredentialsTab = ({value = "credentials", app, isEditing, regenerat
                     </div>
                 </div>
                 <code className="block bg-gray-800 px-3 py-2 rounded text-sm font-mono break-all">
-                    {showSecret ? app.clientSecret : '••••••••••••••••••••••••••••••••'}
+                    {showSecret ? app.clientSecret : '•'.repeat(app.clientSecret.length)}
                 </code>
                 <p className="mt-2 text-xs text-gray-400 italic">
                     Do not share this secret with anyone

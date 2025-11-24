@@ -13,7 +13,7 @@ export const SettingsTab = ({value = "settings",baseState,app,handleChange}: Set
     return (
         <TabsContent value={value} className="p-6 space-y-8">
             <div className="space-y-6">
-                <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                <div className="bg-gray-700/30 p-5 rounded-lg border border-gray-600">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <GlobeIcon className="w-4 h-4"/>
                         Redirect URIs
@@ -21,7 +21,7 @@ export const SettingsTab = ({value = "settings",baseState,app,handleChange}: Set
                     <DataWrapper state={{...baseState}} wrapper={"redirectUri"}/>
                 </div>
 
-                <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                <div className="bg-gray-700/30 p-5 rounded-lg border border-gray-600">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <ShieldIcon className="w-4 h-4"/>
                         Permissions
@@ -38,7 +38,7 @@ export const SettingsTab = ({value = "settings",baseState,app,handleChange}: Set
                     </div>
                 </div>
 
-                <div className="bg-gray-700/50 p-5 rounded-lg border border-gray-600">
+                <div className="bg-gray-700/30 p-5 rounded-lg border border-gray-600">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <CodeIcon className="w-4 h-4"/>
                         Response Configuration

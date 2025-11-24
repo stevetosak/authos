@@ -15,9 +15,9 @@ export const AppGroupSidebar = () => {
     const {selectedGroup,handleGroupClick} = useContextGuarded<DashboardContextType>(DashboardContext)
 
     return (
-        <div className="lg:w-72 flex-shrink-0 bg-gradient-primary">
+        <div className="lg:w-72 flex-shrink-0">
             <div className="sticky top-6 h-[calc(100vh-3rem)] overflow-hidden">
-                <Card className="backdrop-blur-sm border border-gray-800 rounded-2xl overflow-hidden">
+                <Card className="bg-gray-900 backdrop-blur-sm border border-gray-800 rounded-2xl overflow-hidden">
                     <CardHeader className="border-b border-gray-700/50 pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="flex items-center gap-2 text-lg">

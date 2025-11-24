@@ -32,7 +32,7 @@ const Dashboard: React.FC = () => {
 
                     <div className="flex-1">
                         <div className="top-0 z-10 pb-6 pt-2">
-                            <Card className="border border-gray-700/50 backdrop-blur-sm">
+                            <Card className="border bg-gray-900/70 border-gray-700/50 backdrop-blur-sm">
                                 <CardHeader className="pb-3">
                                     <div id="group-section" className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">

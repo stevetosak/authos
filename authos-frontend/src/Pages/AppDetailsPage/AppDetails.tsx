@@ -156,9 +156,8 @@ export default function AppDetails() {
 
     return (
             <div
-                className="min-h-screen lg:min-w-4xl bg-gradient-to-br text-gray-100 p-4 md:p-10 font-sans">
-                <Card
-                    className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-4xl mx-auto">
+                className="min-h-screen lg:min-w-4xl text-gray-100 p-4 md:p-10 font-sans">
+                <Card className="border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-4xl mx-auto">
                     <CardHeader className="border-b border-gray-700 p-6">
                         <div className="flex flex-col md:flex-row justify-between gap-4">
                             <div className="space-y-2">
@@ -185,17 +184,17 @@ export default function AppDetails() {
                     <CardContent className="p-0 w-full">
                         <Tabs defaultValue="credentials" className="w-full">
                             <div className="border-b border-gray-700 h-17">
-                                <TabsList className="grid grid-cols-3 bg-gray-800 rounded-none">
+                                <TabsList className="grid grid-cols-3 rounded-none h-fit">
                                     <TabsTrigger
                                         value="credentials"
-                                        className="py-4 data-[state=active]:bg-gray-700 text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
+                                        className="p-4 data-[state=active]:bg-gray-700/30 text-gray-100 data-[state=active]:shadow-[0_-2px_0_0_theme(colors.teal.300)_inset]"
                                     >
                                         <KeyIcon className="w-4 h-4 mr-2"/>
                                         Credentials
                                     </TabsTrigger>
                                     <TabsTrigger
                                         value="settings"
-                                        className="py-4 data-[state=active]:bg-gray-700 text-white data-[state=active]:shadow-[0_-2px_0_0_theme(colors.emerald.500)_inset]"
+                                        className="p-4 data-[state=active]:bg-gray-700/30 text-gray-100 data-[state=active]:shadow-[0_-2px_0_0_theme(colors.teal.300)_inset]"
                                     >
                                         <SlidersIcon className="w-4 h-4 mr-2"/>
                                         Settings
@@ -203,7 +202,7 @@ export default function AppDetails() {
                                 </TabsList>
                             </div>
 
-                            <CredentialsTab  app={currentApp} isEditing={isEditing} regenerateSecret={regenerateSecret} isRegeneratingSecret={isRegeneratingSecret}/>
+                            <CredentialsTab app={currentApp} isEditing={isEditing} regenerateSecret={regenerateSecret} isRegeneratingSecret={isRegeneratingSecret}/>
                             <SettingsTab baseState={baseState} app={app} handleChange={handleChange}/>
 
 
@@ -215,7 +214,7 @@ export default function AppDetails() {
                         {isEditing ? (
                             <>
                                 <Button
-                                    variant="outline"
+                                    variant="secondary"
                                     onClick={handleCancel}
                                     className="text-gray-300 border-gray-600 hover:bg-gray-700 w-full sm:w-auto"
                                 >
@@ -224,7 +223,7 @@ export default function AppDetails() {
                                 </Button>
                                 <Button
                                     onClick={handleSave}
-                                    className="bg-emerald-600 hover:bg-emerald-500 w-full sm:w-auto"
+                                    className="w-full sm:w-auto"
                                 >
                                     <CheckIcon className="w-4 h-4 mr-2"/>
                                     Save Changes
@@ -233,9 +232,9 @@ export default function AppDetails() {
                         ) : (
                             <>
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     onClick={handleEdit}
-                                    className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10 w-full sm:w-auto"
+                                    className=" w-full sm:w-auto"
                                 >
                                     <EditIcon className="w-4 h-4 mr-2"/>
                                     Edit Application
@@ -243,7 +242,7 @@ export default function AppDetails() {
                                 <Button
                                     variant="destructive"
                                     onClick={deleteApp}
-                                    className="hover:bg-red-500/90 w-full sm:w-auto"
+                                    className=" w-full sm:w-auto"
                                 >
                                     <TrashIcon className="w-4 h-4 mr-2"/>
                                     Delete Application

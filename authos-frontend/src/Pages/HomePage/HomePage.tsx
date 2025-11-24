@@ -18,15 +18,15 @@ const HomePage: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-            <div className="min-h-screen w-fulltext-white space-y-2">
-                <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen w-full text-white space-y-2">
+                <section className="relative py-24 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-7xl mx-auto text-center">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
                         >
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-green-300">
+                            <h1 className="text-6xl font-bold bg-gradient-to-r from-teal-700 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
                                 Authos
                             </h1>
                             <p className="mt-6 text-xl text-gray-300 max-w-3xl mx-auto">
@@ -34,7 +34,7 @@ const HomePage: React.FC = () => {
                             </p>
                             <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                                 <Button
-                                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-6 text-lg font-medium transition-all hover:shadow-lg hover:shadow-emerald-500/20"
+                                    className=" px-8 py-6 text-lg font-medium transition-all"
                                     onClick={() => navigate("/dashboard")}
                                 >
                                     <LayoutDashboard className="w-6 h-6 mr-2" />
@@ -42,7 +42,7 @@ const HomePage: React.FC = () => {
                                 </Button>
                                 <Button
                                     variant="secondary"
-                                    className="border-emerald-400 hover:bg-emerald-400/10 px-8 py-6 text-lg font-medium"
+                                    className="border-gray-700 px-8 py-6 text-lg font-medium"
                                 >
                                     <BookOpen className="w-6 h-6 mr-2" />
                                     Documentation

@@ -177,13 +177,16 @@ body {
         );
     }
 
-
     .bg-gradient-secondary {
         @apply bg-gradient-to-br from-gray-800 to-gray-900
     }
 
     .btn-primary {
         @apply hover:translate-y-[1px] font-semibold border-b-gray-700 border-1 text-gray-300 hover:bg-emerald-600
+    }
+
+    .bg-secondary {
+        @apply bg-gray-700
     }
 
     .bg-foreground {

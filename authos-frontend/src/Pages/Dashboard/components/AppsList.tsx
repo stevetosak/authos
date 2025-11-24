@@ -35,7 +35,7 @@ export const AppsList = () => {
                         whileHover={{y: -3}}
                     >
                         <Card
-                            className="h-full border border-gray-700/50 hover:border-teal-300/30 transition-colors group overflow-hidden">
+                            className="bg-gray-900/80 h-full border border-gray-700/50 hover:border-teal-300/30 transition-colors group overflow-hidden">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div>
