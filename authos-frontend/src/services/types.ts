@@ -1,6 +1,6 @@
 import {AxiosResponse} from "axios";
 
-export interface User{
+export interface User {
     id: number,
     email: string,
     firstName: string,
@@ -8,7 +8,7 @@ export interface User{
     phone?: string,
     lastLoginAt?: Date,
     mfaEnabled: boolean,
-    emailVerified:boolean
+    emailVerified: boolean
 }
 
 export interface App {
@@ -27,7 +27,7 @@ export interface App {
     logoUri: string,
     appUrl: string
     group: number,
-    dusterCallbackUri:string
+    dusterCallbackUri: string
 }
 
 export interface AppGroup {
@@ -38,14 +38,17 @@ export interface AppGroup {
     ssoPolicy: SSOPolicyValue,
     mfaPolicy: MFAPolicyValue
 }
-export type SSOPolicyValue =  "Full" | "Partial" | "Same Domain" | "Disabled";
+
+export type SSOPolicyValue = "Full" | "Partial" | "Same Domain" | "Disabled";
 export type MFAPolicyValue = "Email" | "Phone" | "Disabled";
+
 export interface CreateAppGroupDTO {
     name: string,
     isDefault: boolean,
     ssoPolicy: SSOPolicyValue,
     mfaPolicy: MFAPolicyValue
 }
+
 export type AppGroupEditableField = "isDefault" | "name" | "ssoPolicy" | "mfaPolicy"
 
 export interface DusterApp {
@@ -56,6 +59,7 @@ export interface DusterApp {
     userId: number,
     createdAt: string
 }
+
 export const defaultDusterApp: DusterApp = {
     id: -1,
     clientId: "",
@@ -65,7 +69,7 @@ export const defaultDusterApp: DusterApp = {
     createdAt: Date()
 }
 
-export const defaultUser: User = {id: -1,email: "",firstName: "",lastName: "", phone: ""}
+export const defaultUser: User = {id: -1, email: "", firstName: "", lastName: "", phone: ""}
 export const defaultApp: App = {
     id: -1,
     name: "",
@@ -121,5 +125,28 @@ export interface JwksResponse {
     keys: JwkKey[];
 }
 
-export type ProfileTabProps = {active?: boolean,user:User}
-export type TotpModalProps = {dialogOpen:boolean,onOpenChange: (open: boolean) => void, user: User, onSubmit: (otp: string) => Promise<AxiosResponse>,onSuccess?: () => void}
+export type DashboardStatePropsType = {
+    apps: App[],
+    selectedGroup: AppGroup,
+    selectedGroupEditing: AppGroup
+    isEditingGroup: boolean,
+}
+
+export type DashboardHandlersPropType = {
+    handleGroupUpdate: (param: AppGroupEditableField, value: string | boolean) => void,
+    handleAppClick: (appId: number) => void
+    handleGroupSave: () => Promise<void>
+    toggleEditGroup: () => void
+    handleDeleteGroup: () => Promise<void>
+    handleGroupCancel: () => void
+}
+
+
+export type ProfileTabProps = { active?: boolean, user: User }
+export type TotpModalProps = {
+    dialogOpen: boolean,
+    onOpenChange: (open: boolean) => void,
+    user: User,
+    onSubmit: (otp: string) => Promise<AxiosResponse>,
+    onSuccess?: () => void
+}

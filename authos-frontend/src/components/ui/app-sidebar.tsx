@@ -101,7 +101,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-      <Sidebar {...props} className="bg-gradient-main backdrop-blur-sm">
+      <Sidebar {...props} className="bg-gradient-dark backdrop-blur-sm">
         <SidebarHeader className="p-4 border-b bg-gradient">
           <SidebarMenu>
             <SidebarMenuItem>

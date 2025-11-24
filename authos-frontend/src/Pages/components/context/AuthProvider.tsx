@@ -52,6 +52,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
 
 
 
+
     useEffect(() => {
        console.log("context load")
         refreshAuth()

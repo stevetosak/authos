@@ -113,7 +113,7 @@ export const DusterClientPage = () => {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white p-4 md:p-8">
+        <div className="min-h-screen text-white p-4 md:p-8 w-full">
             <div className="max-w-6xl mx-auto">
                 {!isConfigured && (
                     <Card className="bg-gray-800/50 border-2 border-dashed border-gray-600/50 backdrop-blur-sm mb-6">

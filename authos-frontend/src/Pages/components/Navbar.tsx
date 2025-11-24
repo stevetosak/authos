@@ -62,11 +62,8 @@ const Navbar = () => {
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center space-x-4">
                         <Link to="/" className="flex items-center space-x-2">
-                            <Key className="w-6 h-6 text-green-400"/>
-                            <span
-                                className="text-xl font-bold bg-gradient-to-r from-green-400 to-green-600 bg-clip-text text-transparent">
-                Authos
-              </span>
+                            <Key className="w-6 h-6 text-primary"/>
+                            <h1 className="text-xl font-bold bg-gradient-to-r from-teal-700 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Authos</h1>
                         </Link>
 
                         <div className="hidden md:flex items-center space-x-1">
@@ -213,7 +210,7 @@ const NavLink = ({to, children, isActive, icon} : {to: string,children: React.Re
         to={to}
         className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isActive
-                ? 'bg-gray-700/50 text-green-400'
+                ? 'bg-gray-700/50 text-primary'
                 : 'text-gray-300 hover:bg-gray-700/30 hover:text-white'
         }`}
     >

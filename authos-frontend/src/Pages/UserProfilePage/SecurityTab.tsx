@@ -1,16 +1,12 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {AlertTriangle, Copy, Download, Lock, RotateCw, Shield, Smartphone} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
-import {Switch} from "@/components/ui/switch.tsx";
 import {ProfileTabProps, User} from "@/services/types.ts";
 import {useEffect, useState} from "react";
 import {Label} from "@/components/ui/label";
 import {Input} from "@/components/ui/input.tsx";
-import {apiGetAuthenticated, apiPostAuthenticated} from "@/services/netconfig";
-import {TotpQrCodeDisplay} from "@/Pages/components/totp/TotpQrCodeDisplay.tsx";
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "@/components/ui/dialog.tsx";
+import {apiPostAuthenticated} from "@/services/netconfig";
 import {ConfirmDisable2FAModal} from "@/Pages/components/totp/ConfirmDisable2FAModal.tsx";
-import { Disable2FATotpModal } from "../components/totp/Disable2FATotpModal";
 import {useNavigate} from "react-router-dom";
 
 type SecurityTabProps = { user: User }
@@ -96,17 +92,17 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                             <CardContent className="p-6 space-y-6">
                                 {isMfaEnabled ? (
                                     <div className="space-y-4">
-                                        <div
-                                            className="flex items-center gap-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600/50">
-                                            <Smartphone className="w-5 h-5 text-emerald-400"/>
-                                            <div>
-                                                <p className="font-medium">Authenticator App</p>
-                                                <p className="text-sm text-gray-400">Configured with Google
-                                                    Authenticator</p>
+                                        <div className="flex items-center gap-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600/50">
+                                            <Smartphone className="w-10 h-10 text-emerald-400"/>
+                                            <div className={"w-full"}>
+                                                <p className="font-medium">Time-based One Time Password </p>
+                                                <p className="text-sm text-gray-400">Authenticator App</p>
+                                            </div>
+                                            <div className={"flex w-full justify-end"}>
+                                                <Button className={'bg-red-500 hover:bg-red-700'}
+                                                        onClick={() => setShowConfirmationModal(true)}>Disable 2FA</Button>
                                             </div>
                                         </div>
-                                        <Button className={'bg-red-500 hover:bg-red-700'}
-                                                onClick={() => setShowConfirmationModal(true)}>Disable 2FA</Button>
 
                                         {recoveryCodes.length > 0 ? (
                                             <div className="space-y-4">
@@ -144,6 +140,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                                                         <RotateCw className="w-4 h-4 mr-2"/>
                                                         Regenerate
                                                     </Button>
+
                                                 </div>
                                             </div>
                                         ) : (

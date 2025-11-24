@@ -18,7 +18,7 @@ const HomePage: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-white">
+            <div className="min-h-screen w-fulltext-white space-y-2">
                 <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-7xl mx-auto text-center">
                         <motion.div
@@ -41,8 +41,8 @@ const HomePage: React.FC = () => {
                                     Go to Dashboard
                                 </Button>
                                 <Button
-                                    variant="outline"
-                                    className="border-emerald-400 text-emerald-400 hover:bg-emerald-400/10 px-8 py-6 text-lg font-medium"
+                                    variant="secondary"
+                                    className="border-emerald-400 hover:bg-emerald-400/10 px-8 py-6 text-lg font-medium"
                                 >
                                     <BookOpen className="w-6 h-6 mr-2" />
                                     Documentation
@@ -52,7 +52,7 @@ const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900/50">
+                <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <Badge className="bg-emerald-500/10 text-emerald-400 px-4 py-1.5 text-sm font-medium mb-4">
@@ -160,7 +160,7 @@ const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-gray-950">
+                <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
                             <Badge className="bg-indigo-500/10 text-indigo-400 px-4 py-1.5 text-sm font-medium mb-4">

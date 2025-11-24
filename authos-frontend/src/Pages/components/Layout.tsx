@@ -21,7 +21,7 @@ export function Layout() {
     if(authLoading || pageLoading) return  <Loader/>
     return (
             <SidebarProvider>
-                <div className="flex flex-row min-h-screen bg-gradient-main text-white w-full">
+                <div className="flex flex-row min-h-screen bg-gradient-dark text-white w-full">
                     <AppSidebar />
                     <SidebarTriggerWrapper/>
                     <main className="flex-1 py-8 overflow-y-auto w-3/4]">
