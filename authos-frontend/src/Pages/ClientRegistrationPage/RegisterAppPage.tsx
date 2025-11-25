@@ -105,7 +105,7 @@ export default function RegisterAppPage() {
                                 </CardDescription>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm"
+                                <Button size="sm"
                                         className="border-gray-600 hover:bg-gray-700/50">
                                     <HelpCircle className="w-4 h-4 mr-2"/>
                                     Guide

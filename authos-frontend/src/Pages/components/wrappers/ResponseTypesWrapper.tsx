@@ -25,7 +25,6 @@ export const ResponseTypesWrapper = ({
                     />
                     <Button
                         onClick={() => addElement("responseTypes")}
-                        variant="outline"
                         className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
                     >
                         Add
