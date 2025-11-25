@@ -33,8 +33,8 @@ export const RedirectUriWrapper = ({
                     />
                     <Button
                         onClick={() => addElement("redirectUris")}
-                        variant="outline"
-                        className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
+                        variant="default"
+                        className=""
                     >
                         Add
                     </Button>
@@ -49,7 +49,7 @@ export const RedirectUriWrapper = ({
                             {uri}
                             <button
                                 onClick={() => removeElement("redirectUris",uri)}
-                                className="ml-2 text-gray-400 hover:text-red-400 p-1 rounded-full"
+                                className="ml-2 text-red-500 hover:text-red-700 p-1 rounded-full"
                             >
                                 <TrashIcon className="w-3 h-3"/>
                             </button>

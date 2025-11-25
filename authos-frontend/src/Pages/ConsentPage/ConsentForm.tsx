@@ -51,7 +51,8 @@ const ConsentForm: React.FC = () => {
 
     const handleApprove = async () => {
         const query = checkQuery();
-        window.location.href = `http://localhost:9000/oauth/approve?client_id=${query.clientId}&redirect_uri=${query.redirectUri}&state=${query.state}&scope=${query.scope}`
+        const apiUrl  = import.meta.env.VITE_API_BASE_URL
+        window.location.href = `${apiUrl}/oauth/approve?client_id=${query.clientId}&redirect_uri=${query.redirectUri}&state=${query.state}&scope=${query.scope}`
 
     }
 

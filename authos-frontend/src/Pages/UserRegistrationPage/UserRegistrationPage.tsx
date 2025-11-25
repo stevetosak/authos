@@ -44,14 +44,12 @@ export default function UserRegistration() {
 
     return (
 
-            <div
-                className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 text-gray-100 p-4 md:p-10 font-sans">
+            <div className="min-h-screen text-gray-100 p-4 md:p-10 ">
                 <Card
-                    className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-2xl mx-auto">
+                    className="border border-gray-700 shadow-xl rounded-xl overflow-hidden max-w-2xl mx-auto">
                     <CardHeader className="border-b border-gray-700 p-6">
                         <div className="flex flex-col items-center space-y-2">
-                            <h2 className="text-2xl font-bold text-emerald-500">User Registration</h2>
-                            <p className="text-gray-400 text-sm">Create an account</p>
+                            <h2 className="text-2xl font-bold text-primary">Register</h2>
                         </div>
                     </CardHeader>
 
@@ -153,7 +151,7 @@ export default function UserRegistration() {
                                     <div className="pt-2">
                                         <Button
                                             type="submit"
-                                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-medium"
+                                            className="w-full  py-3 rounded-lg font-medium"
                                         >
                                             <UserPlusIcon className="w-5 h-5 mr-2"/>
                                             Create Account
@@ -165,7 +163,7 @@ export default function UserRegistration() {
                     <CardFooter className="flex justify-center border-t border-gray-700 p-6">
                         <p className="text-sm text-gray-400">
                             Already have an account?{' '}
-                            <Link to="/login" className="text-emerald-500 hover:underline">
+                            <Link to="/login" className="text-primary hover:underline">
                                 Sign in here
                             </Link>
                         </p>

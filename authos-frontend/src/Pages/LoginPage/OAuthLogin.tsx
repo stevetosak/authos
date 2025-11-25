@@ -2,7 +2,7 @@ import {Link, useNavigate} from "react-router-dom";
 import React, {useState} from "react";
 import {LoginForm} from "@/Pages/components/login-form.tsx";
 import {api} from "@/services/netconfig.ts";
-import {LoginResponse} from "@/services/types.ts";
+import {UserInfoResponse} from "@/services/types.ts";
 import {validateResponse} from "@/services/jwtService.ts";
 import {warn} from "recharts/types/util/LogUtils";
 
@@ -39,7 +39,7 @@ export const OAuthLogin: React.FC = () => {
         formData.append("duster_uid",params.get("duster_uid") || '')
 
         try{
-            const resp = await api.post<LoginResponse>("/oauth-login", formData, {
+            const resp = await api.post<UserInfoResponse>("/oauth-login", formData, {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
@@ -56,7 +56,8 @@ export const OAuthLogin: React.FC = () => {
             const valid = await validateResponse(resp.data.signature)
             console.warn("VALID:",valid)
             if(!valid) console.error("Could not verify response signature")
-            window.location.href = valid ? resp.data.redirectUri : "http://localhost:5173/error"
+            const baseUrl = import.meta.env.VITE_BASE_URL
+            window.location.href = valid ? resp.data.redirectUri : `${baseUrl}/error`
         } catch (err){
             console.error("ERROR oauth login: " + err)
             nav("/error")

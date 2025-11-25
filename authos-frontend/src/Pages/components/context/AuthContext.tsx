@@ -1,5 +1,5 @@
 import React, {createContext, Dispatch, SetStateAction} from "react";
-import {App, AppGroup, LoginResponse, User} from "@/services/types.ts";
+import {App, AppGroup, UserInfoResponse, User} from "@/services/types.ts";
 
 interface AuthContextType{
     user: User,
@@ -15,7 +15,7 @@ interface AuthContextType{
     groups: AppGroup[]
     setGroups: Dispatch<SetStateAction<AppGroup[]>>
     refreshAuth: () => Promise<void>,
-    setContext: (resp: LoginResponse) => void
+    setContext: (resp: UserInfoResponse) => void
     resetContext: () => void
 }
 

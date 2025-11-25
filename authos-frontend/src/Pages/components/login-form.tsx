@@ -15,15 +15,15 @@ interface LoginFormProps {
 }
 
 export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginFormProps) {
-
+    // rgb(17, 24, 39);
 
     return (
-        <div className={cn("flex items-center justify-center min-h-[calc(100vh-5rem)] w-full", className)} >
+        <div className={cn("flex items-center justify-center", className)} >
             <Card
-                className="bg-gray-800 border border-gray-700 shadow-xl rounded-xl w-full max-w-4xl min-h-[500px] flex flex-col">
+                className="border border-gray-700 shadow-xl rounded-xl w-full max-w-2xl  flex flex-col">
                 <CardHeader className="border-b border-gray-700 p-8">
                     <div className="flex flex-col items-center space-y-2">
-                        <LockIcon className="w-10 h-10 text-emerald-500"/>
+                        <LockIcon className="w-10 h-10 text-primary"/>
                         <CardTitle className="text-white text-2xl font-bold">Welcome Back</CardTitle>
                         <CardDescription className="text-gray-400">
                             Sign in to access your account
@@ -57,7 +57,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                     </Label>
                                     <a
                                         href="#"
-                                        className="text-sm text-emerald-500 hover:text-emerald-400 hover:underline"
+                                        className="text-sm text-primary hover:underline"
                                     >
                                         Forgot password?
                                     </a>
@@ -71,13 +71,14 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                 />
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-4 w-3/4 mx-auto">
                                 <Button
                                     type="submit"
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white h-12 text-md font-medium"
+                                    variant={"default"}
+                                    className="w-full h-12 text-md font-medium"
                                 >
                                     <LogInIcon className="w-5 h-5 mr-2"/>
-                                    Sign In
+                                    Log In
                                 </Button>
                             </div>
 
@@ -90,25 +91,29 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                 </div>
                             </div>
 
-                            <Button
-                                variant="outline"
-                                className="w-full border-gray-600 text-white hover:bg-gray-700 h-12"
-                                type="button"
-                            >
-                                <Chrome className="w-5 h-5 mr-2"/>
-                                Sign in with Google
-                            </Button>
-                            <Button variant={"outline"} type={"button"} className={'w-full text-white border-gray-600 hover:bg-gray-700'} onClick={() => {
-                                window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=auto"
-                            }}>
-                                Authos Login Test
-                            </Button>
+                            <div className={"space-y-5 w-3/4 mx-auto"}>
+                                <Button
+                                    variant="secondary"
+                                    className="w-full border-gray-600 text-white hover:bg-gray-700 h-12"
+                                    type="button"
+                                >
+                                    <Chrome className="w-5 h-5 mr-2"/>
+                                    Google
+                                </Button>
+                                <Button variant={"secondary"} type={"button"} className={'w-full text-white border-gray-600 hover:bg-gray-700 h-12'} onClick={() => {
+                                    window.location.href = "http://localhost:8785/duster/api/v1/oauth/start?client_id=33e16ab8cdb2c9d01de2400475db0472a1922949c34a3c987750e6abc2b6516f&mode=auto"
+                                }}>
+                                    Authos Login Test
+                                </Button>
+                            </div>
+
+
                         </div>
 
                         <div className="mt-8 text-center text-sm text-gray-400">
                             Don't have an account?{' '}
-                            <Link to={"/register-user"}
-                                  className="text-emerald-500 hover:text-emerald-400 hover:underline">
+                            <Link to={"/register"}
+                                  className="text-primary hover:underline">
                                 Create one now
                             </Link>
                         </div>

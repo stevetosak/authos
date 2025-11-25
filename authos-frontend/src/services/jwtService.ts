@@ -14,14 +14,13 @@ const getJWKPubKey = async (): Promise<JwkKey> => {
     return pubkey;
 };
 
-export const validateResponse = async (token: string): Promise<boolean> => {
+export const validateResponse = async (token: string,requiredClaims: string[] = ["sub","exp"]): Promise<boolean> => {
     const jwk = await getJWKPubKey();
     const pubkey = await importJWK(jwk, 'RS256')
-    console.log("token",token)
     try {
         await jwtVerify(token, pubkey, {
             issuer: import.meta.env.API_BASE_URL,
-            requiredClaims: ["exp", "sub"]
+            requiredClaims: requiredClaims
         })
         console.log("verified")
         return true;

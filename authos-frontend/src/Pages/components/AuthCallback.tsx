@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import {apiGetAuthenticated} from "@/services/netconfig.ts";
-import {defaultUser, LoginResponse} from "@/services/types.ts";
+import {defaultUser, UserInfoResponse} from "@/services/types.ts";
 import {useAuth} from "@/services/useAuth.ts";
 import {useNavigate} from "react-router-dom";
 
@@ -10,7 +10,7 @@ export const AuthCallback : React.FC  = () => {
     const nav = useNavigate()
     const verify = async () => {
         try {
-            const resp = await apiGetAuthenticated<LoginResponse>("/verify-sub")
+            const resp = await apiGetAuthenticated<UserInfoResponse>("/verify-sub")
             setAuthLoading(true);
             setContext(resp.data)
             setIsAuthenticated(true);
