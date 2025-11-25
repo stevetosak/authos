@@ -10,7 +10,8 @@ class IdTokenStrategy(
     private val ppidService: PPIDService,
     private val app: App,
     private val user: User,
-    private val issuer: String
+    private val issuer: String,
+    private val nonce: String?
 
     ) : JwtTokenStrategy {
         //TODO at_hash: b64 encodiran leva polovina na hash od access tokenot.
@@ -23,6 +24,7 @@ class IdTokenStrategy(
             .expirationTime(Date(System.currentTimeMillis() + 3600 * 1000)) // 1 sat
             .issueTime(Date())
             .jwtID(UUID.randomUUID().toString())
+            .claim("nonce", nonce)
             .claim("auth_time",Date())
             .build();
     }

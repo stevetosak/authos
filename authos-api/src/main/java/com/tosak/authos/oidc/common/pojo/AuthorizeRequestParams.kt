@@ -8,4 +8,5 @@ data class AuthorizeRequestParams(
     val idTokenHint:String?,
     val responseType:String,
     val dusterSub:String?,
+    val nonce:String?,
 )

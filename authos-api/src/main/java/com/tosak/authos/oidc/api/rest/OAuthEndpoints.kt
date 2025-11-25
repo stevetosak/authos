@@ -69,13 +69,14 @@ class OAuthEndpoints(
         @RequestParam("prompt", defaultValue = "login") prompt: String,
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
         @RequestParam(name = "response_type") responseType: String,
+        @RequestParam(name = "nonce", required = false) nonce: String?,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpSession: HttpSession,
         request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
-        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub),httpSession,request)
+        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub,nonce),httpSession,request)
 
 
     }
@@ -90,6 +91,7 @@ class OAuthEndpoints(
         @RequestParam("redirect_uri") redirectUri: String,
         @RequestParam("state") state: String,
         @RequestParam("scope") scope: String,
+        @RequestParam("nonce", required = false) nonce: String?,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpSession: HttpSession,
         httpServletRequest: HttpServletRequest,
@@ -135,12 +137,15 @@ class OAuthEndpoints(
         @RequestParam("client_id") clientId: String?,
         @RequestParam("client_secret") clientSecret: String?,
         @RequestParam("refresh_token") refreshToken: String?,
-        request: HttpServletRequest
+        request: HttpServletRequest,
+        session: HttpSession
     ): ResponseEntity<TokenResponse> {
 
         val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken)
-        val tokenWrapper = tokenService.handleTokenRequest(dto,request)
+        val tokenWrapper = tokenService.handleTokenRequest(dto,request,session)
         idTokenService.save(tokenWrapper.idToken,tokenWrapper.accessTokenWrapper.accessToken);
+
+
 
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
