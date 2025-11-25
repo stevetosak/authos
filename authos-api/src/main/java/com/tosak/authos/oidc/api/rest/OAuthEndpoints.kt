@@ -129,11 +129,17 @@ class OAuthEndpoints(
     // client secret basic header: b64(clientId:clientSecret)
     @PostMapping("/token",consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun token(
-        @ModelAttribute tokenRequestDto: TokenRequestDto,
+        @RequestParam("grant_type") grantType: String,
+        @RequestParam("code") code: String?,
+        @RequestParam("redirect_uri") redirectUri: String?,
+        @RequestParam("client_id") clientId: String?,
+        @RequestParam("client_secret") clientSecret: String?,
+        @RequestParam("refresh_token") refreshToken: String?,
         request: HttpServletRequest
     ): ResponseEntity<TokenResponse> {
 
-        val tokenWrapper = tokenService.handleTokenRequest(tokenRequestDto)
+        val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken)
+        val tokenWrapper = tokenService.handleTokenRequest(dto)
         idTokenService.save(tokenWrapper.idToken,tokenWrapper.accessTokenWrapper.accessToken);
 
         return ResponseEntity.ok()
