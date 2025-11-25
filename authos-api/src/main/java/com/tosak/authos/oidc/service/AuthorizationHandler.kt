@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpSession
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
+import org.springframework.session.data.redis.RedisIndexedSessionRepository
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.net.URLEncoder
@@ -28,7 +29,8 @@ class AuthorizationHandler(
     private val ppidService: PPIDService,
     private val sessionService: SSOSessionService,
     private val ssoSessionService: SSOSessionService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val sessionRepository: RedisIndexedSessionRepository
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -69,8 +71,12 @@ class AuthorizationHandler(
         demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
         { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
 
+        httpSession.invalidate()
+
         authorizeRequestParams.nonce?.let { nonce ->
-            httpSession.setAttribute("nonce", nonce)
+            val session = request.getSession(true)
+            session.setAttribute("nonce", nonce)
+            sessionRepository.afterPropertiesSet()
         }
 
 
