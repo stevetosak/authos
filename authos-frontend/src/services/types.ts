@@ -69,7 +69,7 @@ export const defaultDusterApp: DusterApp = {
     createdAt: Date()
 }
 
-export const defaultUser: User = {id: -1, email: "", firstName: "", lastName: "", phone: ""}
+export const defaultUser: User = {id: -1, email: "", firstName: "", lastName: "", phone: "",mfaEnabled:false,emailVerified:false}
 export const defaultApp: App = {
     id: -1,
     name: "",
