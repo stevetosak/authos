@@ -127,9 +127,9 @@ class OAuthEndpoints(
 
     // todo support for different client authentication methods: client_secret, private_key_jwt
     // client secret basic header: b64(clientId:clientSecret)
-    @PostMapping("/token")
+    @PostMapping("/token",consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun token(
-        @RequestBody tokenRequestDto: TokenRequestDto,
+        @ModelAttribute tokenRequestDto: TokenRequestDto,
         request: HttpServletRequest
     ): ResponseEntity<TokenResponse> {
 
