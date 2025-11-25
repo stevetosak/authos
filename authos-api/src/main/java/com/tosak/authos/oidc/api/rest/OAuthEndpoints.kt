@@ -82,6 +82,8 @@ class OAuthEndpoints(
     }
 
 
+    // TODO proble
+
     // direktno ako go pristapis ova mozda e slabost
 
     // todo ovaj metod samo od authos frontend app da e dostapen

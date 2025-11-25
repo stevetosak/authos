@@ -81,6 +81,7 @@ open class SSOSessionService(
     @Transactional
     open fun initializeSession(user: User, app: App, existingSession: HttpSession, request: HttpServletRequest) {
         val ssoGroupKey = ssoGroupKey(user.id!!, app.group.id!!)
+        val nonce = existingSession.getAttribute("nonce");
         if (!existingSession.isNew) {
             redisTemplate.opsForSet().remove(ssoGroupKey, existingSession.id)
             existingSession.invalidate()
@@ -89,6 +90,7 @@ open class SSOSessionService(
         freshSession.setAttribute("user", user.id)
         freshSession.setAttribute("app", app.id)
         freshSession.setAttribute("created_at", LocalDateTime.now())
+        freshSession.setAttribute("nonce", nonce)
         val paramHash = getRequestParamHash(request)
         freshSession.setAttribute("param_hash", paramHash)
 
