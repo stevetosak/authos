@@ -5,7 +5,6 @@ import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {FolderOpen, Settings} from "lucide-react";
 import {useAuth} from "@/services/useAuth.ts";
-import {useGroupManagement} from "@/Pages/components/hooks/useGroupManagment.ts";
 import {useNavigate} from "react-router-dom";
 import {useContextGuarded} from "@/services/useContextGuarded.ts";
 import {DashboardContext, DashboardContextType} from "@/Pages/Dashboard/components/context/DashboardContext.ts";

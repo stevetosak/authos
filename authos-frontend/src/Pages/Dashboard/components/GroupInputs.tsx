@@ -1,7 +1,6 @@
 import {AppGroup} from "@/services/types.ts";
 import React, {SetStateAction} from "react";
 import {useAuth} from "@/services/useAuth.ts";
-import {useGroupManagement} from "@/Pages/components/hooks/useGroupManagment.ts";
 import {Label} from "@/components/ui/label";
 import {Calendar, CheckCircle, Key, Shield} from "lucide-react";
 import {Select, SelectTrigger, SelectValue, SelectContent, SelectItem} from "@/components/ui/select";

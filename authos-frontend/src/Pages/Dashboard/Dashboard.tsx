@@ -1,21 +1,9 @@
 import React, {useState} from "react";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Users, CheckIcon, XIcon} from "lucide-react";
-import {useAuth} from "@/services/useAuth.ts";
-import {useNavigate} from "react-router-dom";
-import {Badge} from "@/components/ui/badge.tsx";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
-import {ScrollArea} from "@/components/ui/scroll-area";
-import {AddGroupModal} from "@/Pages/components/AddGroupModal.tsx";
-import {AppGroup, AppGroupEditableField, defaultAppGroup} from "@/services/types.ts";
-import {useGroupManagement} from "@/Pages/components/hooks/useGroupManagment.ts";
+
 import {GroupHeader} from "@/Pages/Dashboard/components/GroupHeader.tsx";
 import {GroupInputs} from "@/Pages/Dashboard/components/GroupInputs.tsx";
 import {AppsList} from "@/Pages/Dashboard/components/AppsList.tsx";
-import {apiPostAuthenticated} from "@/services/netconfig.ts";
-import {toast} from "sonner";
-import {DashboardContext} from "@/Pages/Dashboard/components/context/DashboardContext.ts";
 import {DashboardContextProvider} from "@/Pages/Dashboard/components/context/DashboardContextProvider.tsx";
 import {AppGroupSidebar} from "@/Pages/Dashboard/components/AppGroupSidebar.tsx";
 
