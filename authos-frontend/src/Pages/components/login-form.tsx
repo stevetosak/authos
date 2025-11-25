@@ -18,9 +18,9 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
     // rgb(17, 24, 39);
 
     return (
-        <div className={cn("flex items-center justify-center min-h-[calc(100vh-5rem)] w-full", className)} >
+        <div className={cn("flex items-center justify-center", className)} >
             <Card
-                className="border border-gray-700 shadow-xl rounded-xl w-full max-w-4xl min-h-[500px] flex flex-col">
+                className="border border-gray-700 shadow-xl rounded-xl w-full max-w-2xl  flex flex-col">
                 <CardHeader className="border-b border-gray-700 p-8">
                     <div className="flex flex-col items-center space-y-2">
                         <LockIcon className="w-10 h-10 text-primary"/>
@@ -57,7 +57,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                     </Label>
                                     <a
                                         href="#"
-                                        className="text-sm text-primary hover:text-emerald-400 hover:underline"
+                                        className="text-sm text-primary hover:underline"
                                     >
                                         Forgot password?
                                     </a>
@@ -113,7 +113,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                         <div className="mt-8 text-center text-sm text-gray-400">
                             Don't have an account?{' '}
                             <Link to={"/register"}
-                                  className="text-primary hover:text-emerald-400 hover:underline">
+                                  className="text-primary hover:underline">
                                 Create one now
                             </Link>
                         </div>
