@@ -28,6 +28,7 @@ import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.common.pojo.IdTokenStrategy
 import com.tosak.authos.oidc.repository.UserRepository
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -163,14 +164,14 @@ open class TokenService(
 
 
     @Transactional
-    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto): TokenWrapper {
+    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
             || tokenRequestDto.grantType == "client_credentials" && tokenRequestDto.clientSecret == null
         ) throw InvalidParameterException("parameters do not match grant type")
 
         return when (parseGrantType(tokenRequestDto.grantType)) {
-            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto)
+            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request)
             GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto)
             GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
             GrantType.PKCE -> TODO()
@@ -188,11 +189,11 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleAuthorizationCodeRequest(request: TokenRequestDto): TokenWrapper {
-        demand(request.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
+    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
+        demand(dto.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
 
-        val app = appService.validateAppCredentials(tokenRequestDto = request)
-        val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, request)
+        val app = appService.validateAppCredentials(tokenRequestDto = dto,request)
+        val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, dto)
         code.used = true;
         authorizationCodeRepository.save(code)
         var refreshTokenWrapper: RefreshTokenWrapper? = null
