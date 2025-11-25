@@ -46,7 +46,7 @@ export const ProfilePage = () => {
                             <Mail className="w-4 h-4"/> {user.email}
                         </p>
                         <p className="text-sm text-gray-500 mt-2">
-                            Last login: {new Date(user.lastLoginAt).toLocaleString()}
+                            Last login: {user.lastLoginAt?.toLocaleTimeString()}
                         </p>
                     </div>
                 </div>
