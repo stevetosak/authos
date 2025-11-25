@@ -32,9 +32,11 @@ class AuthorizationHandler(
 ) {
 
     @Value("\${authos.frontend.host}")
-    private lateinit var frontendHost : String
+    private lateinit var frontendHost: String
+
     @Value("\${authos.api.host}")
-    private lateinit var apiHost : String
+    private lateinit var apiHost: String
+
     /**
      * Handles an authorization request based on the specified prompt and authorization request parameters.
      *
@@ -67,6 +69,10 @@ class AuthorizationHandler(
         demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
         { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
 
+        authorizeRequestParams.nonce?.let { nonce ->
+            httpSession.setAttribute("nonce", nonce)
+        }
+
 
         var hasActiveSession = false;
         if (authorizeRequestParams.idTokenHint != null && authorizeRequestParams.idTokenHint.isNotEmpty()) {
@@ -75,6 +81,8 @@ class AuthorizationHandler(
             val user = userService.getById(ppid.key.userId!!)
             hasActiveSession = sessionService.hasActiveSession(user.id!!, app.group.id!!)
             if (hasActiveSession) ssoSessionService.initializeSession(user, app, httpSession, request)
+
+
         }
 
         if (promptType == PromptType.LOGIN || !hasActiveSession) {
@@ -83,7 +91,8 @@ class AuthorizationHandler(
                 authorizeRequestParams.redirectUri,
                 authorizeRequestParams.state,
                 authorizeRequestParams.scope,
-                dusterSub = authorizeRequestParams.dusterSub
+                dusterSub = authorizeRequestParams.dusterSub,
+                nonce = authorizeRequestParams.nonce,
             )
         }
 
@@ -154,13 +163,25 @@ class AuthorizationHandler(
         ).build();
     }
 
-    fun redirectToLogin(clientId: String, redirectUri: String, state: String, scope: String, dusterSub: String?) : ResponseEntity<Void> {
+    fun redirectToLogin(
+        clientId: String,
+        redirectUri: String,
+        state: String,
+        scope: String,
+        dusterSub: String? = null,
+        nonce: String? = null
+    ): ResponseEntity<Void> {
 
         println("Redirecting to login...")
-        val url = StringBuilder("${frontendHost}/oauth/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${URLEncoder.encode(scope, "UTF-8")}")
-        dusterSub?.let {
-            url.append("&duster_uid=$dusterSub")
-        }
+        val url = StringBuilder(
+            "${frontendHost}/oauth/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${
+                URLEncoder.encode(
+                    scope,
+                    "UTF-8"
+                )
+            }"
+        )
+        dusterSub?.let { url.append("&duster_uid=$dusterSub") }
         return ResponseEntity
             .status(303)
             .location(URI(url.toString()))

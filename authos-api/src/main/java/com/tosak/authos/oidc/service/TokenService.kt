@@ -29,6 +29,7 @@ import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.common.pojo.IdTokenStrategy
 import com.tosak.authos.oidc.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpSession
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -164,15 +165,15 @@ open class TokenService(
 
 
     @Transactional
-    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
+    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest,session: HttpSession): TokenWrapper {
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
             || tokenRequestDto.grantType == "client_credentials" && tokenRequestDto.clientSecret == null
         ) throw InvalidParameterException("parameters do not match grant type")
 
         return when (parseGrantType(tokenRequestDto.grantType)) {
-            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request)
-            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto)
+            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request,session)
+            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto,session)
             GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
             GrantType.PKCE -> TODO()
             GrantType.DEVICE_CODE -> TODO()
@@ -189,7 +190,7 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
+    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto,request: HttpServletRequest,httpSession: HttpSession): TokenWrapper {
         demand(dto.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
 
         val app = appService.validateAppCredentials(tokenRequestDto = dto,request)
@@ -208,7 +209,8 @@ open class TokenService(
                     ppidService,
                     app,
                     accessTokenWrapper.accessToken.user!!,
-                    apiHost
+                    apiHost,
+                    httpSession.getAttribute("nonce") as String?,
                 )
             )
 
@@ -220,7 +222,7 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleRefreshTokenRequest(request: TokenRequestDto): TokenWrapper {
+    open fun handleRefreshTokenRequest(request: TokenRequestDto,httpSession: HttpSession): TokenWrapper {
         val app = appService.validateAppCredentials(tokenRequestDto = request)
         val refreshTokenWrapper = validateRefreshToken(request.refreshToken!!, clientId = app.clientId)
         val accessTokenWrapper = generateAccessToken(
@@ -234,7 +236,8 @@ open class TokenService(
                     ppidService,
                     app,
                     accessTokenWrapper.accessToken.user!!,
-                    apiHost
+                    apiHost,
+                    httpSession.getAttribute("nonce") as String?,
                 )
             )
         return TokenWrapper(
