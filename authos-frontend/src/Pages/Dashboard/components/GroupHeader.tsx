@@ -15,8 +15,6 @@ import {
 import {AlertDialogTrigger} from "@radix-ui/react-alert-dialog";
 import {DashboardHandlersPropType, DashboardStatePropsType, defaultAppGroup} from "@/services/types.ts";
 import {useNavigate} from "react-router-dom";
-import {useAuth} from "@/services/useAuth.ts";
-import {useGroupManagement} from "@/Pages/components/hooks/useGroupManagment.ts";
 import {useContextGuarded} from "@/services/useContextGuarded.ts";
 import {DashboardContext, DashboardContextType} from "@/Pages/Dashboard/components/context/DashboardContext.ts";
 import React from "react";
