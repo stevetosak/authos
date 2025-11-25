@@ -139,7 +139,7 @@ class OAuthEndpoints(
     ): ResponseEntity<TokenResponse> {
 
         val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken)
-        val tokenWrapper = tokenService.handleTokenRequest(dto)
+        val tokenWrapper = tokenService.handleTokenRequest(dto,request)
         idTokenService.save(tokenWrapper.idToken,tokenWrapper.accessTokenWrapper.accessToken);
 
         return ResponseEntity.ok()
