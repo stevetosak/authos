@@ -36,6 +36,7 @@ class ClaimService(
                         val value = property.getter.call(accessToken.user)
                         if (value == null || value is String && value.isEmpty()){
                             println("Property is empty: $c")
+                            claims[c] = null;
                         }else {
                             println("Property - $value")
                             claims[c] = value
