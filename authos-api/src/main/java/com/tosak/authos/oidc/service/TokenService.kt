@@ -29,7 +29,6 @@ import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.common.pojo.IdTokenStrategy
 import com.tosak.authos.oidc.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpSession
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -58,7 +57,8 @@ open class TokenService(
     private val jwtTokenFactory: JwtTokenFactory,
     private val ppidService: PPIDService,
     private val dusterAppService: DusterAppService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val authorizationSessionService: AuthorizationSessionService
 ) {
     @Value("\${authos.api.host}")
     private lateinit var apiHost: String;
@@ -165,15 +165,16 @@ open class TokenService(
 
 
     @Transactional
-    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest,session: HttpSession): TokenWrapper {
+    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
             || tokenRequestDto.grantType == "client_credentials" && tokenRequestDto.clientSecret == null
         ) throw InvalidParameterException("parameters do not match grant type")
 
+
         return when (parseGrantType(tokenRequestDto.grantType)) {
-            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request,session)
-            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto,session)
+            GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request)
+            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto)
             GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
             GrantType.PKCE -> TODO()
             GrantType.DEVICE_CODE -> TODO()
@@ -190,19 +191,22 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto,request: HttpServletRequest,httpSession: HttpSession): TokenWrapper {
+    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
         demand(dto.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
 
         val app = appService.validateAppCredentials(tokenRequestDto = dto,request)
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, dto)
         code.used = true;
         authorizationCodeRepository.save(code)
+
         var refreshTokenWrapper: RefreshTokenWrapper? = null
         if (code.scope.contains("offline_access")) {
             refreshTokenWrapper = getRefreshToken(authorizationCode = code, app = app)
         }
         val accessTokenWrapper =
             generateAccessToken(clientId = app.clientId, authorizationCode = code, refreshToken = null)
+        val authorizationSession = authorizationSessionService.getSessionByCode(code.codeVal)
+
         val idToken =
             jwtTokenFactory.createToken(
                 IdTokenStrategy(
@@ -210,7 +214,7 @@ open class TokenService(
                     app,
                     accessTokenWrapper.accessToken.user!!,
                     apiHost,
-                    httpSession.getAttribute("nonce") as String?,
+                    authorizationSession?.nonce
                 )
             )
 
@@ -222,13 +226,14 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleRefreshTokenRequest(request: TokenRequestDto,httpSession: HttpSession): TokenWrapper {
+    open fun handleRefreshTokenRequest(request: TokenRequestDto): TokenWrapper {
         val app = appService.validateAppCredentials(tokenRequestDto = request)
         val refreshTokenWrapper = validateRefreshToken(request.refreshToken!!, clientId = app.clientId)
         val accessTokenWrapper = generateAccessToken(
             clientId = app.clientId,
             refreshToken = refreshTokenWrapper.refreshToken,
         )
+
 
         val idToken =
             jwtTokenFactory.createToken(
@@ -237,7 +242,6 @@ open class TokenService(
                     app,
                     accessTokenWrapper.accessToken.user!!,
                     apiHost,
-                    httpSession.getAttribute("nonce") as String?,
                 )
             )
         return TokenWrapper(

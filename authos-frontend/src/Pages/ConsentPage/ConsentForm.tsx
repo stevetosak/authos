@@ -32,11 +32,14 @@ const ConsentForm: React.FC = () => {
         const redirectUri = query.get("redirect_uri")
         const state = query.get("state")
         const scope = query.get("scope")
+        const authzId = query.get("authz_id")
+
 
 
 
         if (!clientId || !redirectUri || !state || !scope) {
             console.error("missing query params")
+            //TODO tuka trebit da sa pustit request za da sa iscistit temp sesijata so id authz_id
             navigate("/")
         }
 
@@ -44,7 +47,8 @@ const ConsentForm: React.FC = () => {
             clientId,
             redirectUri,
             state,
-            scope
+            scope,
+            authzId
         }
 
     }
@@ -52,7 +56,7 @@ const ConsentForm: React.FC = () => {
     const handleApprove = async () => {
         const query = checkQuery();
         const apiUrl  = import.meta.env.VITE_API_BASE_URL
-        window.location.href = `${apiUrl}/oauth/approve?client_id=${query.clientId}&redirect_uri=${query.redirectUri}&state=${query.state}&scope=${query.scope}`
+        window.location.href = `${apiUrl}/oauth/approve?client_id=${query.clientId}&redirect_uri=${query.redirectUri}&state=${query.state}&scope=${query.scope}&authz_id=${query.authzId}`
 
     }
 

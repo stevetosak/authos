@@ -35,7 +35,6 @@ open class WebSecurityConfig (private val jwtFilter: JwtFilter, private val user
                    .deleteCookies("AUTH_TOKEN")
                    .deleteCookies("XSRF_TOKEN")
                    .clearAuthentication(true)
-                   .invalidateHttpSession(true)
                    .logoutSuccessHandler{request, response, authentication ->
                        response.status = HttpServletResponse.SC_OK
                    }

@@ -29,14 +29,19 @@ export const OAuthLogin: React.FC = () => {
         formData.append('redirect_uri', params.get("redirect_uri") || '');
         formData.append('state', params.get("state") || '');
         formData.append('scope', params.get("scope") || '')
-
+        formData.append('authz_id',params.get("authz_id") || '')
 
         const isValidRequest = Array.from(formData.values()).every(val => val !== null && val !== '');
         if(!isValidRequest) {
             nav("/?error=invalid_oauth_parameters")
             return
         }
+
+        // ova deka e optinal zato otposle append
+
         formData.append("duster_uid",params.get("duster_uid") || '')
+
+
 
         try{
             const resp = await api.post<UserInfoResponse>("/oauth-login", formData, {
@@ -57,6 +62,7 @@ export const OAuthLogin: React.FC = () => {
             console.warn("VALID:",valid)
             if(!valid) console.error("Could not verify response signature")
             const baseUrl = import.meta.env.VITE_BASE_URL
+            //ovaj redirect uri tuka e /user-consent, ova mozit da sa podobrit poso mislam sekogas morat da e toj uri
             window.location.href = valid ? resp.data.redirectUri : `${baseUrl}/error`
         } catch (err){
             console.error("ERROR oauth login: " + err)
