@@ -38,7 +38,6 @@ class OAuthEndpoints(
     private val ppidService: PPIDService,
     private val sessionService: SSOSessionService,
     private val claimService: ClaimService,
-    private val factory: JwtTokenFactory,
     private val idTokenService: IdTokenService,
     private val authorizationHandler: AuthorizationHandler,
     private val authorizationSessionService: AuthorizationSessionService,
@@ -175,8 +174,7 @@ class OAuthEndpoints(
 
     }
 
-    @GetMapping("/logout")
-    @PostMapping("/logout")
+    @RequestMapping("/logout",method = [RequestMethod.GET, RequestMethod.POST])
     fun logout(
         @RequestParam(name = "id_token_hint") idTokenHint: String,
         @RequestParam(name = "client_id") clientId: String,
@@ -195,16 +193,19 @@ class OAuthEndpoints(
         // posle ova event do site rp kaj so bil najaven, distributed logout
     }
 
-    @GetMapping("/userinfo", produces = [APPLICATION_JSON_VALUE])
-    @PostMapping("/userinfo", produces = [APPLICATION_JSON_VALUE])
+    @RequestMapping(
+        "/userinfo",
+        method = [RequestMethod.GET, RequestMethod.POST],
+        produces = [APPLICATION_JSON_VALUE]
+    )
     fun userinfo(@RequestHeader("Authorization") authorization: String): ResponseEntity<Map<String, Any?>> {
-        val accessToken = tokenService.validateAccessToken(authorization.substring(7, authorization.length))
+        val accessToken = tokenService.validateAccessToken(authorization.substring(7))
         val claims = claimService.resolve(accessToken)
-        return ResponseEntity.status(200).body(claims)
+        return ResponseEntity.ok(claims)
     }
 
-    @GetMapping("/logout/all")
-    @PostMapping("/logout/all")
+
+  @RequestMapping("/logout/all",method = [RequestMethod.GET, RequestMethod.POST])
     fun logout(authentication: Authentication?, request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
         sessionService.terminateAllByUser(user)
