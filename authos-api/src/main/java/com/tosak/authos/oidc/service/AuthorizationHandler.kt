@@ -82,7 +82,7 @@ class AuthorizationHandler(
         }
 
 
-        if (promptType == PromptType.LOGIN || !hasActiveSession) {
+        if (promptType == PromptType.LOGIN) {
             return redirectToLogin(
                 authorizeRequestParams.clientId,
                 authorizeRequestParams.redirectUri,
