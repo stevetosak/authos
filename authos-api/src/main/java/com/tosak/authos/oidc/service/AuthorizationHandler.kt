@@ -8,6 +8,7 @@ import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.exceptions.badreq.BadPromptException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
@@ -95,7 +96,7 @@ class AuthorizationHandler(
 
 
         return when (promptType) {
-            PromptType.NONE -> handleNone(authorizeRequestParams)
+            PromptType.NONE -> handleNone(authorizeRequestParams,hasActiveSession)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams,authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
@@ -111,8 +112,11 @@ class AuthorizationHandler(
      * @return A ResponseEntity with a 302 status code and a location header pointing to the approval endpoint.
      */
     private fun handleNone(
-        authorizeRequestParams: AuthorizeRequestParams
+        authorizeRequestParams: AuthorizeRequestParams,
+        hasActiveSession: Boolean
     ): ResponseEntity<Void> {
+
+        demand(hasActiveSession){ AuthosException("login_required", HttpBadRequestException()) }
 
         return ResponseEntity.status(302)
             .location(
