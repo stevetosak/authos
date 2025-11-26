@@ -196,7 +196,7 @@ class OAuthEndpoints(
     @RequestMapping(
         "/userinfo",
         method = [RequestMethod.GET, RequestMethod.POST],
-        consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
+        consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE, APPLICATION_JSON_VALUE],
         produces = [APPLICATION_JSON_VALUE]
     )
     fun userinfo(@RequestHeader("Authorization", required = false) authorization: String?,@RequestParam(name = "token", required = false) token: String?): ResponseEntity<Map<String, Any?>> {;
