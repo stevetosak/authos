@@ -6,6 +6,9 @@ import com.tosak.authos.oidc.common.dto.TokenResponse
 import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.common.utils.JwtTokenFactory
+import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.base.AuthosException
+import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.service.AppService
 import com.tosak.authos.oidc.service.AuthorizationCodeService
 import com.tosak.authos.oidc.service.AuthorizationHandler
@@ -64,14 +67,25 @@ class OAuthEndpoints(
         @RequestParam("scope") scope: String,
         @RequestParam("prompt", defaultValue = "login") prompt: String,
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
-        @RequestParam(name = "response_type") responseType: String,
+        @RequestParam(name = "response_type", required = false) responseType: String?,
         @RequestParam(name = "nonce", required = false) nonce: String?,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         request: HttpServletRequest,
         response: HttpServletResponse
     ): ResponseEntity<Void> {
 
-        return authorizationHandler.handleRequest(prompt, AuthorizeRequestParams(clientId,redirectUri,state,scope,idTokenHint,responseType,dusterSub,nonce),request)
+        demand(responseType != null) {
+            AuthosException(
+                "unsupported response type",
+                HttpBadRequestException()
+            )
+        }
+
+        return authorizationHandler.handleRequest(
+            prompt,
+            AuthorizeRequestParams(clientId, redirectUri, state, scope, idTokenHint, responseType!!, dusterSub, nonce),
+            request
+        )
 
 
     }
@@ -98,7 +112,6 @@ class OAuthEndpoints(
         val ppidHash = requireNotNull(authorizationSession.ppid)
         val ppid = requireNotNull(ppidService.getPPIDBySub(ppidHash))
 
-        
 
 //        val userId = httpSession.getAttribute("user") as Int?
 //        val appId = httpSession.getAttribute("app") as Int?
@@ -111,7 +124,6 @@ class OAuthEndpoints(
 //            MissingSessionAttributesException()) }
 
 
-
         val app = appService.getAppByClientId(clientId);
         val user = userService.getById(ppid.key.userId!!)
 
@@ -119,14 +131,12 @@ class OAuthEndpoints(
         // todo zemam app preku client id i provervam vo sso sesija.
 
 
-
-
-        if(!dusterSub.isNullOrBlank()) {
-            check(ppidService.getPPIDBySub(dusterSub).key.userId == user.id){"Invalid Duster client request"}
+        if (!dusterSub.isNullOrBlank()) {
+            check(ppidService.getPPIDBySub(dusterSub).key.userId == user.id) { "Invalid Duster client request" }
         }
-        val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri,scope,user)
+        val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri, scope, user)
 
-        authorizationSessionService.bindCode(authzId,code)
+        authorizationSessionService.bindCode(authzId, code)
 
         return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
     }
@@ -134,7 +144,7 @@ class OAuthEndpoints(
 
     // todo support for different client authentication methods: client_secret, private_key_jwt
     // client secret basic header: b64(clientId:clientSecret)
-    @PostMapping("/token",consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
+    @PostMapping("/token", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
     fun token(
         @RequestParam("grant_type") grantType: String,
         @RequestParam("code") code: String?,
@@ -147,8 +157,8 @@ class OAuthEndpoints(
 
         val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken)
 
-        val tokenWrapper = tokenService.handleTokenRequest(dto,request)
-        idTokenService.save(tokenWrapper.idToken,tokenWrapper.accessTokenWrapper.accessToken);
+        val tokenWrapper = tokenService.handleTokenRequest(dto, request)
+        idTokenService.save(tokenWrapper.idToken, tokenWrapper.accessTokenWrapper.accessToken);
 
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
@@ -174,30 +184,31 @@ class OAuthEndpoints(
         @RequestParam(required = false) logoutHint: String?,
         @RequestParam(required = false) state: String?,
         @RequestParam(required = false) uiLocales: String?,
-    ){
+    ) {
 
         val idToken = jwtService.verifyToken(idTokenHint)
         val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
         val user = userService.getById(ppid.key.userId!!)
         val app = appService.getAppByClientId(clientId);
 
-        sessionService.terminateSSOSession(user,app)
+        sessionService.terminateSSOSession(user, app)
         // posle ova event do site rp kaj so bil najaven, distributed logout
     }
 
     @GetMapping("/userinfo", produces = [APPLICATION_JSON_VALUE])
-    @PostMapping("/userinfo",produces = [APPLICATION_JSON_VALUE])
-    fun userinfo(@RequestHeader("Authorization") authorization: String) : ResponseEntity<Map<String,Any?>>{
+    @PostMapping("/userinfo", produces = [APPLICATION_JSON_VALUE])
+    fun userinfo(@RequestHeader("Authorization") authorization: String): ResponseEntity<Map<String, Any?>> {
         val accessToken = tokenService.validateAccessToken(authorization.substring(7, authorization.length))
         val claims = claimService.resolve(accessToken)
         return ResponseEntity.status(200).body(claims)
     }
+
     @GetMapping("/logout/all")
     @PostMapping("/logout/all")
-    fun logout(authentication: Authentication?,request: HttpServletRequest): ResponseEntity<Void> {
+    fun logout(authentication: Authentication?, request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
         sessionService.terminateAllByUser(user)
-        val headers = userService.getLoginCookieHeaders(user = user,request = request,clear = true);
+        val headers = userService.getLoginCookieHeaders(user = user, request = request, clear = true);
         return ResponseEntity.status(200).headers(headers).build();
     }
 }
