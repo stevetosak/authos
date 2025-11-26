@@ -116,7 +116,7 @@ class AuthorizationHandler(
         hasActiveSession: Boolean
     ): ResponseEntity<Void> {
 
-        demand(hasActiveSession){ AuthosException("login_required", HttpBadRequestException()) }
+        demand(hasActiveSession){ AuthosException("login_required", HttpBadRequestException(),authorizeRequestParams.redirectUri) }
 
         return ResponseEntity.status(302)
             .location(
