@@ -11,12 +11,12 @@ import com.tosak.authos.oidc.common.utils.JwtTokenFactory
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.service.AppGroupService
 import com.tosak.authos.oidc.service.AppService
+import com.tosak.authos.oidc.service.AuthorizationSessionService
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.service.PPIDService
 import com.tosak.authos.oidc.service.SSOSessionService
 import com.tosak.authos.oidc.service.UserService
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpSession
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -24,7 +24,6 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
-import java.time.LocalDateTime
 
 
 /**
@@ -43,7 +42,8 @@ open class AuthController(
     private val appGroupService: AppGroupService,
     private val ppidService: PPIDService,
     private val jwtTokenFactory: JwtTokenFactory,
-    private val jwtService: JwtService
+    private val jwtService: JwtService,
+    private val authorizationSessionService: AuthorizationSessionService
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -77,8 +77,8 @@ open class AuthController(
         @RequestParam(name = "redirect_uri") redirectUri: String,
         @RequestParam(name = "state") state: String,
         @RequestParam(name = "scope") scope: String,
+        @RequestParam(name = "authz_id") authzId: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
-        httpSession: HttpSession,
         request: HttpServletRequest,
     ): ResponseEntity<UserInfoResponse> {
 
@@ -90,7 +90,7 @@ open class AuthController(
 
         if (!dusterSub.isNullOrEmpty()) {
             println(dusterSub)
-            require(ppidService.getPPID(user, app.group, false) == dusterSub) { "Invalid Duster client request." }
+            require(ppidService.getPPIDSub(user, app.group, false) == dusterSub) { "Invalid Duster client request." }
         }
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
@@ -98,10 +98,12 @@ open class AuthController(
         val headers = userService.getLoginCookieHeaders(user, request, app.group)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        ssoSessionService.initializeSession(user, app, httpSession, request)
+        val ppidString = ppidService.getPPIDSub(user, app.group,false);
+        authorizationSessionService.addPPID(authzId,ppidString)
+        ssoSessionService.initializeSSOSession(user, app, request)
 
         val url = "${frontendHost}/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
-                "&state=${state}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
+                "&state=${state}&authz_id=${authzId}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
         val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url,apiHost))
 
         return ResponseEntity.status(200).headers(headers).body(

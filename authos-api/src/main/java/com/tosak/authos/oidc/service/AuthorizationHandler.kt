@@ -9,7 +9,6 @@ import com.tosak.authos.oidc.exceptions.badreq.BadPromptException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpSession
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -26,9 +25,9 @@ class AuthorizationHandler(
     private val jwtService: JwtService,
     private val appService: AppService,
     private val ppidService: PPIDService,
-    private val sessionService: SSOSessionService,
     private val ssoSessionService: SSOSessionService,
-    private val userService: UserService
+    private val userService: UserService,
+    private val authorizationSessionService: AuthorizationSessionService
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -50,7 +49,6 @@ class AuthorizationHandler(
     fun handleRequest(
         prompt: String,
         authorizeRequestParams: AuthorizeRequestParams,
-        httpSession: HttpSession,
         request: HttpServletRequest
     ): ResponseEntity<Void> {
         if (authorizeRequestParams.responseType != "code")
@@ -69,21 +67,19 @@ class AuthorizationHandler(
         demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
         { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
 
-        authorizeRequestParams.nonce?.let { nonce ->
-            httpSession.setAttribute("nonce", nonce)
-        }
 
+        val authzId = authorizationSessionService.generateTempSession(authorizeRequestParams)
 
         var hasActiveSession = false;
         if (authorizeRequestParams.idTokenHint != null && authorizeRequestParams.idTokenHint.isNotEmpty()) {
             val idToken = jwtService.verifyToken(authorizeRequestParams.idTokenHint)
             val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
             val user = userService.getById(ppid.key.userId!!)
-            hasActiveSession = sessionService.hasActiveSession(user.id!!, app.group.id!!)
-            if (hasActiveSession) ssoSessionService.initializeSession(user, app, httpSession, request)
-
+            hasActiveSession = ssoSessionService.hasActiveSession(user.id!!, app.group.id!!)
+            if (hasActiveSession) ssoSessionService.initializeSSOSession(user, app,  request)
 
         }
+
 
         if (promptType == PromptType.LOGIN || !hasActiveSession) {
             return redirectToLogin(
@@ -92,7 +88,7 @@ class AuthorizationHandler(
                 authorizeRequestParams.state,
                 authorizeRequestParams.scope,
                 dusterSub = authorizeRequestParams.dusterSub,
-                nonce = authorizeRequestParams.nonce,
+                authzId = authzId
             )
         }
 
@@ -100,7 +96,7 @@ class AuthorizationHandler(
 
         return when (promptType) {
             PromptType.NONE -> handleNone(authorizeRequestParams)
-            PromptType.CONSENT -> handleConsent(authorizeRequestParams)
+            PromptType.CONSENT -> handleConsent(authorizeRequestParams,authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
                 throw AuthosException("invalid request", BadPromptException())
@@ -142,11 +138,12 @@ class AuthorizationHandler(
      * such as client ID, redirect URI, state, scope, and optional ID token hint.
      * @return A ResponseEntity that redirects to the user consent page with HTTP status 303.
      */
-    private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams): ResponseEntity<Void> {
+    private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams,authzId: String): ResponseEntity<Void> {
 
         val url = StringBuilder(
             "${frontendHost}/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
                     "&redirect_uri=${authorizeRequestParams.redirectUri}" +
+                    "authz_id=$authzId" +
                     "&state=${authorizeRequestParams.state}&scope=${
                         URLEncoder.encode(
                             authorizeRequestParams.scope,
@@ -168,13 +165,13 @@ class AuthorizationHandler(
         redirectUri: String,
         state: String,
         scope: String,
+        authzId: String,
         dusterSub: String? = null,
-        nonce: String? = null
     ): ResponseEntity<Void> {
 
         println("Redirecting to login...")
         val url = StringBuilder(
-            "${frontendHost}/oauth/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&scope=${
+            "${frontendHost}/oauth/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&authz_id=$authzId&scope=${
                 URLEncoder.encode(
                     scope,
                     "UTF-8"

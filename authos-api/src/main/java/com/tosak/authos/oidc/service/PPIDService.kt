@@ -35,7 +35,7 @@ open class PPIDService (
      * @param group The application group associated with the user and the PPID.
      * @return The generated or retrieved PPID as a hex-encoded string.
      */
-    open fun getPPID(user: User, group: AppGroup,create: Boolean = true) : String{
+    open fun getPPIDSub(user: User, group: AppGroup, create: Boolean = true) : String{
         val ppidOpt = ppidRepository.findById(PPIDKey(group.id,user.id))
         if(ppidOpt.isPresent){
             val existingPpid = ppidOpt.get();
@@ -58,16 +58,16 @@ open class PPIDService (
 
     }
 /**
- * Retrieves the user ID associated with the provided hash value.
+ * Finds and returns the PPID subject string given a
  * Throws an exception if no matching hash is found.
  *
- * @param hash The hash value representing the PPID.
- * @return The user ID corresponding to the provided hash.
+ * @param sub The hash value representing the subject's PPID.
+ * @return PPID object
  * @throws InvalidPpidException if no PPID with the given hash is found.
  */
 //    @Cacheable(value = ["ppidUsers"], key = "#hash")
-    open fun getPPIDBySub(hash: String) : PPID {
-        val ppid = ppidRepository.findByPpidHash(hash)
+    open fun getPPIDBySub(sub: String) : PPID {
+        val ppid = ppidRepository.findByPpidHash(sub)
             ?: throw AuthosException("invalid subject",InvalidPpidException())
         return ppid
     }

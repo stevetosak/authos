@@ -11,12 +11,12 @@ class IdTokenStrategy(
     private val app: App,
     private val user: User,
     private val issuer: String,
-    private val nonce: String?
+    private val nonce: String? = null
 
     ) : JwtTokenStrategy {
         //TODO at_hash: b64 encodiran leva polovina na hash od access tokenot.
     override fun buildClaims(): JWTClaimsSet {
-        val sub = ppidService.getPPID(user,app.group)
+        val sub = ppidService.getPPIDSub(user,app.group)
         return JWTClaimsSet.Builder()
             .subject(sub)
             .issuer(issuer)
