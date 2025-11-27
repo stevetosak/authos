@@ -117,7 +117,7 @@ class AuthorizationHandler(
         hasActiveSession: Boolean
     ): ResponseEntity<Void> {
 
-        demand(hasActiveSession){ AuthosException("prompt parameter was none, but no recent session exists", LoginRequiredException(),authorizeRequestParams.redirectUri) }
+        demand(hasActiveSession){ AuthosException("prompt parameter was none, but no recent session exists", LoginRequiredException(),authorizeRequestParams.state,authorizeRequestParams.redirectUri) }
 
         return ResponseEntity.status(302)
             .location(

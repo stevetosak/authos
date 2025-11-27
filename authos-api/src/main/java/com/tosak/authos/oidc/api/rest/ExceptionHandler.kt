@@ -20,19 +20,24 @@ class ExceptionHandler {
         val error = URLEncoder.encode(ex.cause.message, "UTF-8")
         val description = URLEncoder.encode(ex.message , "UTF-8")
 
-        val redirect = URI("${ex.redirectUrl}?error=$error&error_description=$description")
+        var redirectUrlString = "${ex.redirectUrl}?error=$error&error_description=$description";
 
-        val status = when (ex.cause) {
-            is HttpBadRequestException -> HttpStatus.BAD_REQUEST
-            is HttpUnauthorizedException -> HttpStatus.UNAUTHORIZED
-            is HttpForbiddenException -> HttpStatus.FORBIDDEN
-            else -> {
-                println("CAUSE: ${ex.cause}")
-                HttpStatus.INTERNAL_SERVER_ERROR
-            }
+        ex.state?.let { state ->
+            redirectUrlString = "$redirectUrlString&state=$state"
         }
 
-        return ResponseEntity.status(status).location(redirect).build()
+
+//        val status = when (ex.cause) {
+//            is HttpBadRequestException -> HttpStatus.BAD_REQUEST
+//            is HttpUnauthorizedException -> HttpStatus.UNAUTHORIZED
+//            is HttpForbiddenException -> HttpStatus.FORBIDDEN
+//            else -> {
+//                println("CAUSE: ${ex.cause}")
+//                HttpStatus.INTERNAL_SERVER_ERROR
+//            }
+//        }
+
+        return ResponseEntity.status(302).location(URI(redirectUrlString)).build()
     }
 }
 
