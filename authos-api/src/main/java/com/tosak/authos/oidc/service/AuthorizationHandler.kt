@@ -8,6 +8,7 @@ import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.exceptions.badreq.BadPromptException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.badreq.LoginRequiredException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
@@ -77,7 +78,7 @@ class AuthorizationHandler(
             val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
             val user = userService.getById(ppid.key.userId!!)
             hasActiveSession = ssoSessionService.hasActiveSession(user.id!!, app.group.id!!)
-            if (hasActiveSession) ssoSessionService.initializeSSOSession(user, app,  request)
+            if (hasActiveSession) ssoSessionService.initializeSSOSession(user, app,  request) // ? zosto
 
         }
 
@@ -116,7 +117,7 @@ class AuthorizationHandler(
         hasActiveSession: Boolean
     ): ResponseEntity<Void> {
 
-        demand(hasActiveSession){ AuthosException("login_required", HttpBadRequestException(),authorizeRequestParams.redirectUri) }
+        demand(hasActiveSession){ AuthosException("prompt parameter was none, but no recent session exists", LoginRequiredException(),authorizeRequestParams.redirectUri) }
 
         return ResponseEntity.status(302)
             .location(

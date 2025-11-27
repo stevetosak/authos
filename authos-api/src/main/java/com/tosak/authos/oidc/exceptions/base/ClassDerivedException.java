@@ -11,7 +11,7 @@ public class ClassDerivedException extends Exception {
         for(int i = 0; i < name.length(); i++) {
             char c = name.charAt(i);
             if(Character.isUpperCase(c)) {
-                message.append(" ");
+                if(i != 0) message.append("_");
                 message.append(Character.toLowerCase(c));
             }else {
                 message.append(c);

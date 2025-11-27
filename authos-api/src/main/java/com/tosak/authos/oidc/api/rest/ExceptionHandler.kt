@@ -4,35 +4,35 @@ import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.exceptions.base.HttpForbiddenException
 import com.tosak.authos.oidc.exceptions.base.HttpUnauthorizedException
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import java.lang.Exception
 import java.net.URI
+import java.net.URLEncoder
 
-@Profile("prod")
+//@Profile("prod")
 @RestControllerAdvice
 class ExceptionHandler {
-    @ExceptionHandler(Exception::class)
-    fun handleInvalidClientCredentials(ex: AuthosException): ResponseEntity<Map<String,String?>> {
-        val errorBody: Map<String,String?> = mapOf("error" to ex.message,"description" to ex.cause.message)
-        if(ex.redirectUrl != null){
-           return ResponseEntity.status(302).location(URI(ex.redirectUrl)).body(errorBody)
-        }
-        return when(ex.cause){
-            is HttpBadRequestException -> {
-                ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody)
-            }
-            is HttpUnauthorizedException -> {
-                ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorBody)
-            }
-            is HttpForbiddenException -> {
-                ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorBody)
-            }
-            else -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorBody)
-        }
-    }
+    @ExceptionHandler(AuthosException::class)
+    fun handleOIDCErrors(ex: AuthosException): ResponseEntity<String> {
 
+        val error = URLEncoder.encode(ex.cause.message, "UTF-8")
+        val description = URLEncoder.encode(ex.message , "UTF-8")
+
+        val redirect = URI("${ex.redirectUrl}?error=$error&error_description=$description")
+
+        val status = when (ex.cause) {
+            is HttpBadRequestException -> HttpStatus.BAD_REQUEST
+            is HttpUnauthorizedException -> HttpStatus.UNAUTHORIZED
+            is HttpForbiddenException -> HttpStatus.FORBIDDEN
+            else -> {
+                println("CAUSE: ${ex.cause}")
+                HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+
+        return ResponseEntity.status(status).location(redirect).build()
+    }
 }
+

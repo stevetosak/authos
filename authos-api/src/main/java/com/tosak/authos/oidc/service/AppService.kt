@@ -38,13 +38,13 @@ open class AppService(
     ) {
     open fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
         return appRepository.findAppByClientIdAndRedirectUri(clientId, redirectUri)
-            ?: throw AuthosException("invalid client", InvalidClientCredentialsException())
+            ?: throw AuthosException("", InvalidClientCredentialsException())
     }
 
 
     open fun verifyClientIdAndRedirectUri(clientId: String, redirectUri: String) {
         if (!appRepository.existsByClientIdAndRedirectUri(clientId, redirectUri)) {
-            throw AuthosException("invalid client", InvalidClientCredentialsException())
+            throw AuthosException("", InvalidClientCredentialsException())
         }
     }
     open fun getAppByName(name: String): App {
