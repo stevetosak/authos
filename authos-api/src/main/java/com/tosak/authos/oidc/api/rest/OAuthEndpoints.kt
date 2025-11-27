@@ -3,11 +3,9 @@ package com.tosak.authos.oidc.api.rest
 import com.tosak.authos.oidc.common.enums.TokenType
 import com.tosak.authos.oidc.common.dto.TokenRequestDto
 import com.tosak.authos.oidc.common.dto.TokenResponse
-import com.tosak.authos.oidc.common.dto.UserInfoAccessTokenReqDTO
 import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.common.utils.demand
-import com.tosak.authos.oidc.entity.AccessToken
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.service.AppService
@@ -107,7 +105,6 @@ class OAuthEndpoints(
         httpServletRequest: HttpServletRequest,
     ): ResponseEntity<Void?> {
 
-
         val authorizationSession = requireNotNull(authorizationSessionService.getSessionByAuthzId(authzId))
         val ppidHash = requireNotNull(authorizationSession.ppid)
         val ppid = requireNotNull(ppidService.getPPIDBySub(ppidHash))
@@ -199,12 +196,12 @@ class OAuthEndpoints(
         method = [RequestMethod.GET, RequestMethod.POST],
         produces = [APPLICATION_JSON_VALUE]
     )
-    fun userinfo(@RequestHeader("Authorization", required = false) authorization: String?,@RequestBody(required = false) token: UserInfoAccessTokenReqDTO?): ResponseEntity<Map<String, Any?>> {;
+    fun userinfo(@RequestHeader("Authorization", required = false) authorization: String?,@RequestParam(name = "access_token") token: String?): ResponseEntity<Map<String, Any?>> {;
         val accessToken = if(authorization != null){
             tokenService.validateAccessToken(authorization.substring(7))
         }else{
             demand(token != null){AuthosException("invalid_token",HttpBadRequestException())}
-            tokenService.validateAccessToken(token!!.accessToken)
+            tokenService.validateAccessToken(token!!)
         }
 
         val claims = claimService.resolve(accessToken)

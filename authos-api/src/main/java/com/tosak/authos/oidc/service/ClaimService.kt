@@ -28,24 +28,16 @@ class ClaimService(
         val app = appService.getAppByClientId(accessToken.clientId);
         val sub = ppidService.getPPIDSub(accessToken.user!!,app.group)
         claims["sub"] = sub
+
+        println("access token scope in claims: ${accessToken.scope}")
+
         accessToken.scope.split(" ").forEach {s ->
             if(s != "openid"){
                 claimConfig.data[s]?.forEach { c ->
+                    println("resolving scope: $s")
                     val property = accessToken.user::class.memberProperties.find { it.name == mapToField(c) }
-                    if (property != null) {
-                        val value = property.getter.call(accessToken.user)
-                        if (value == null || value is String && value.isEmpty()){
-                            println("Property is empty: $c")
-                            claims[c] = null;
-                        }else {
-                            println("Property - $value")
-                            claims[c] = value
-                        }
-
-                    } else {
-                        println("No property found for key: $c")
-                    }
-
+                    val value = property?.getter?.call(accessToken.user)
+                    claims[c] = value
                 }
             }
         }
