@@ -37,7 +37,7 @@ class ClaimService(
                     println("resolving scope: $s")
                     val property = accessToken.user::class.memberProperties.find { it.name == mapToField(c) }
                     val value = property?.getter?.call(accessToken.user)
-                    claims[c] = value
+                    claims[c] = value ?: ""
                 }
             }
         }
