@@ -36,8 +36,19 @@ class ClaimService(
                 claimConfig.data[s]?.forEach { c ->
                     println("resolving scope: $s")
                     val property = accessToken.user::class.memberProperties.find { it.name == mapToField(c) }
-                    val value = property?.getter?.call(accessToken.user)
-                    claims[c] = value ?: ""
+                    if (property != null) {
+                        val value = property.getter.call(accessToken.user)
+                        if (value == null || value is String && value.isEmpty()){
+                            println("Property is empty: $c")
+                        }else {
+                            println("Property - $value")
+                            claims[c] = value
+                        }
+
+                    } else {
+                        println("No property found for key: $c")
+                    }
+
                 }
             }
         }
