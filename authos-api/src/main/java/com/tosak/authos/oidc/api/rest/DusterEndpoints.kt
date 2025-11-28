@@ -39,20 +39,21 @@ class DusterEndpoints(
     @Value("\${authos.frontend.host}")
     private lateinit var frontendHost: String
     // TODO cleanup na logika vo ovaj controller
-    @PostMapping("/test/callback")
-    fun testDusterCallback(
-        @RequestBody userinfo: Map<String, String>,
-        httpServletRequest: HttpServletRequest
-    ): ResponseEntity<Void> {
-        println("DUSTER TEST.")
-        print("RECIEVED USERINFO: $userinfo")
-        val sub: String = userinfo["sub"] ?: throw InvalidParameterException("sub parameter not present")
-        val ppid = pPIDService.getPPIDBySub(sub)
-        val user = userService.getById(ppid.key.userId!!)
-        val group = appGroupService.findGroupByIdAndUser(ppid.key.groupId!!, user)
-        val headers = userService.getLoginCookieHeaders(user, httpServletRequest)
-        return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
-    }
+    // TODO da vidime kako ke funckionirat ova so noviot session handling i AUTHOS_SESSION cookie
+//    @PostMapping("/test/callback")
+//    fun testDusterCallback(
+//        @RequestBody userinfo: Map<String, String>,
+//        httpServletRequest: HttpServletRequest
+//    ): ResponseEntity<Void> {
+//        println("DUSTER TEST.")
+//        print("RECIEVED USERINFO: $userinfo")
+//        val sub: String = userinfo["sub"] ?: throw InvalidParameterException("sub parameter not present")
+//        val ppid = pPIDService.getPPIDBySub(sub)
+//        val user = userService.getById(ppid.key.userId!!)
+//        val group = appGroupService.findGroupByIdAndUser(ppid.key.groupId!!, user)
+//        val headers = userService.getLoginCookieHeaders(user, httpServletRequest)
+//        return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
+//    }
 
     //todo client id = na aplikacijata, accesstoken= na duster
     // vo access token tabelata userid da mozit da e nullable za da rabotat i so Client Credentials Flow

@@ -1,4 +1,4 @@
-package com.tosak.authos.oidc.common.pojo
+package com.tosak.authos.oidc.common.pojo.strategy
 
 import com.nimbusds.jwt.JWTClaimsSet
 import com.tosak.authos.oidc.entity.User

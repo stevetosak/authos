@@ -5,7 +5,7 @@ import com.nimbusds.jose.JWSHeader
 import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.SignedJWT
-import com.tosak.authos.oidc.common.pojo.JwtTokenStrategy
+import com.tosak.authos.oidc.common.pojo.strategy.JwtTokenStrategy
 import org.springframework.stereotype.Service
 
 @Service

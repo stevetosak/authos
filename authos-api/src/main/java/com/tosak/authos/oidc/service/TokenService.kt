@@ -26,7 +26,7 @@ import com.tosak.authos.oidc.common.utils.JwtTokenFactory
 import com.tosak.authos.oidc.exceptions.badreq.MissingParametersException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
-import com.tosak.authos.oidc.common.pojo.IdTokenStrategy
+import com.tosak.authos.oidc.common.pojo.strategy.IdTokenStrategy
 import com.tosak.authos.oidc.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional

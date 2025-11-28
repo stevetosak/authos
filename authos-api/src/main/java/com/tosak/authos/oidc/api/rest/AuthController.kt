@@ -5,13 +5,15 @@ import com.tosak.authos.oidc.common.dto.UserInfoResponse
 import com.tosak.authos.oidc.common.dto.LoginResponse
 import com.tosak.authos.oidc.common.dto.QrCodeDTO
 import com.tosak.authos.oidc.common.enums.LoginResponseStatus
+import com.tosak.authos.oidc.common.pojo.strategy.LoginTokenStrategy
 
-import com.tosak.authos.oidc.common.pojo.RedirectResponseTokenStrategy
+import com.tosak.authos.oidc.common.pojo.strategy.RedirectResponseTokenStrategy
 import com.tosak.authos.oidc.common.utils.JwtTokenFactory
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.service.AppGroupService
 import com.tosak.authos.oidc.service.AppService
 import com.tosak.authos.oidc.service.AuthorizationSessionService
+import com.tosak.authos.oidc.service.CookieService
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.service.PPIDService
 import com.tosak.authos.oidc.service.SSOSessionService
@@ -41,9 +43,10 @@ open class AuthController(
     private val ssoSessionService: SSOSessionService,
     private val appGroupService: AppGroupService,
     private val ppidService: PPIDService,
-    private val jwtTokenFactory: JwtTokenFactory,
     private val jwtService: JwtService,
-    private val authorizationSessionService: AuthorizationSessionService
+    private val authorizationSessionService: AuthorizationSessionService,
+    private val cookieService: CookieService,
+    private val jwtTokenFactory: JwtTokenFactory
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -95,24 +98,27 @@ open class AuthController(
         //oauth request, validiraj client credentials i kreiraj sso sesija
 
 
-        val headers = userService.getLoginCookieHeaders(user, request, app.group)
+
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        val ppidString = ppidService.getPPIDSub(user, app.group,false);
-        authorizationSessionService.addPPID(authzId,ppidString)
-        ssoSessionService.initializeSSOSession(user, app, request)
+        val sub = ppidService.getPPIDSub(user, app.group,false);
+        authorizationSessionService.addPPID(authzId,sub)
+        val sessionId = ssoSessionService.initializeSSOSession(user, app, request)
+        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request));
+        val headers = cookieService.getSSOLoginCookieHeaders(token,sessionId);
 
         val url = "${frontendHost}/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&authz_id=${authzId}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
-        val token = tokenFactory.createToken(RedirectResponseTokenStrategy(url,apiHost))
+        val signatureToken = tokenFactory.createToken(RedirectResponseTokenStrategy(url,apiHost))
 
-        return ResponseEntity.status(200).headers(headers).body(
-            UserInfoResponse(
+        return ResponseEntity.status(200)
+            .headers(headers)
+            .body(UserInfoResponse(
                 user.toDTO(),
                 apps.map { a -> appService.toDTO(a) },
                 groups.map { gr -> gr.toDTO() },
                 URI(url),
-                token.serialize()
+                signatureToken.serialize()
             )
         )
 
@@ -152,7 +158,10 @@ open class AuthController(
                 .body(LoginResponse(LoginResponseStatus.MFA_REQUIRED))
         }
 
-        val headers = userService.getLoginCookieHeaders(user, request)
+
+        val sub = ppidService.getPPIDSub(user,appGroupService.getDefaultGroupForUser(user))
+        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
+        val headers = cookieService.getLoginCookieHeaders(token)
         return ResponseEntity
             .status(200)
             .headers(headers)
@@ -203,12 +212,13 @@ open class AuthController(
     @GetMapping("/verify-sub")
     fun verifySub(
         @CookieValue(name = "sub", required = false) sub: String?,
-        httpServletRequest: HttpServletRequest
+        request: HttpServletRequest
     ): ResponseEntity<UserInfoResponse> {
         if (sub == null) return ResponseEntity.badRequest().build()
         val ppid = ppidService.getPPIDBySub(sub)
         val user = userService.getById(ppid.key.userId!!)
-        val headers = userService.getLoginCookieHeaders(user, httpServletRequest)
+        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
+        val headers = cookieService.getLoginCookieHeaders(token)
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
         return ResponseEntity
@@ -256,11 +266,14 @@ open class AuthController(
         else ResponseEntity.badRequest().build()
     }
     @PostMapping("/verify-totp")
-    fun verifyTotp(@CookieValue(name = "MFA_TOKEN") mfaToken: String, @RequestParam("otp") otp: String, httpServletRequest: HttpServletRequest): ResponseEntity<String> {
-        val token = jwtService.verifyToken(mfaToken)
-        val user = userService.getById(token.jwtClaimsSet.subject.toInt())
+    fun verifyTotp(@CookieValue(name = "MFA_TOKEN") mfaToken: String, @RequestParam("otp") otp: String, request: HttpServletRequest): ResponseEntity<String> {
+        // todo store ppid sub in mfa token, not plain user id
+        val mfaTokenParsed = jwtService.verifyToken(mfaToken)
+        val user = userService.getById(mfaTokenParsed.jwtClaimsSet.subject.toInt())
         val result = userService.verifyTotp(user, otp)
-        val headers = userService.getLoginCookieHeaders(user,httpServletRequest)
+        val sub = ppidService.getPPIDSub(user, appGroupService.getDefaultGroupForUser(user))
+        val authToken = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
+        val headers = cookieService.getLoginCookieHeaders(authToken)
         return if(result) ResponseEntity.ok().headers(headers).build()
         else ResponseEntity.badRequest().build()
     }
@@ -279,31 +292,31 @@ open class AuthController(
         return ResponseEntity.status(400).body("Invalid otp");
 
     }
+    
+    
 
+    @RequestMapping("/logout",method = [RequestMethod.GET, RequestMethod.POST])
+    fun logout(
+        @RequestParam(name = "id_token_hint", required = false) idTokenHint: String,
+        @RequestParam(name = "client_id", required = false) clientId: String,
+        @RequestParam(required = false) postLogoutRedirectUri: String?,
+        @RequestParam(required = false) logoutHint: String?,
+        @RequestParam(required = false) state: String?,
+        @RequestParam(required = false) uiLocales: String?,
+        @CookieValue(name = "AUTHOS_SESSION", required = false) sessionId: String?,
+        request: HttpServletRequest,
+        authentication: Authentication?,
+    ) : ResponseEntity<Void>{
+        // todo tuka imat rabota za SSO policy. Dali sakas da terminiras sesija samo za tvojata aplikcacija ili za site vo grupata.
+        ssoSessionService.terminateSSOSession(sessionId = sessionId)
 
-//    /**
-//     * Clears all active sessions and invalidates the current HTTP session.
-//     * Also removes all session data stored in the Redis database.
-//     *
-//     * @param session the current HTTP session to be invalidated
-//     * @return a ResponseEntity containing the number of cleared keys from the Redis database
-//     */
-//    @Deprecated("This is a test method")
-//    @PostMapping("/sessions/clear")
-//    fun clearSessions(session: HttpSession): ResponseEntity<Int> {
-//        session.invalidate()
-//        val count = redisService.clearDb();
-//
-//
-//        return ResponseEntity.ok(count)
-//    }
-
-    @GetMapping("/logout")
-    @PostMapping("/logout")
-    fun logout(authentication: Authentication?, request: HttpServletRequest): ResponseEntity<Void> {
         val user = userService.getUserFromAuthentication(authentication);
-        val headers = userService.getLoginCookieHeaders(user = user, request = request, clear = true);
+        val sub = ppidService.getPPIDSub(user,appGroupService.getDefaultGroupForUser(user))
+        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
+        val headers = cookieService.getSSOLoginCookieHeaders(token,sessionId ?: "",true);
         return ResponseEntity.status(200).headers(headers).build();
+
+        // posle ova event do site rp kaj so bil najaven, distributed logout
     }
 
 

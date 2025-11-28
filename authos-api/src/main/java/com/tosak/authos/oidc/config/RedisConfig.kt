@@ -32,4 +32,5 @@ open class RedisConfig(private val connectionFactory: LettuceConnectionFactory, 
     @Bean
     open fun authorizationSessionRedisTemplate(): RedisTemplate<String, AuthorizationSession> = createTemplate()
 
+
 }

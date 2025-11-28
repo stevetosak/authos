@@ -69,7 +69,8 @@ class OAuthEndpoints(
         @RequestParam(name = "nonce", required = false) nonce: String?,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         request: HttpServletRequest,
-        response: HttpServletResponse
+        response: HttpServletResponse,
+        authentication: Authentication?,
     ): ResponseEntity<Void> {
 
         demand(responseType != null) {
@@ -82,7 +83,8 @@ class OAuthEndpoints(
         return authorizationHandler.handleRequest(
             prompt,
             AuthorizeRequestParams(clientId, redirectUri, state, scope, idTokenHint, responseType!!, dusterSub, nonce),
-            request
+            request,
+            authentication
         )
 
 
@@ -106,7 +108,7 @@ class OAuthEndpoints(
     ): ResponseEntity<Void?> {
 
         val authorizationSession = requireNotNull(authorizationSessionService.getSessionByAuthzId(authzId))
-        val ppidHash = requireNotNull(authorizationSession.ppid)
+        val ppidHash = requireNotNull(authorizationSession.sub)
         val ppid = requireNotNull(ppidService.getPPIDBySub(ppidHash))
 
 
@@ -172,25 +174,6 @@ class OAuthEndpoints(
 
     }
 
-    @RequestMapping("/logout",method = [RequestMethod.GET, RequestMethod.POST])
-    fun logout(
-        @RequestParam(name = "id_token_hint") idTokenHint: String,
-        @RequestParam(name = "client_id") clientId: String,
-        @RequestParam(required = false) postLogoutRedirectUri: String?,
-        @RequestParam(required = false) logoutHint: String?,
-        @RequestParam(required = false) state: String?,
-        @RequestParam(required = false) uiLocales: String?,
-    ) {
-
-        val idToken = jwtService.verifyToken(idTokenHint)
-        val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
-        val user = userService.getById(ppid.key.userId!!)
-        val app = appService.getAppByClientId(clientId);
-
-        sessionService.terminateSSOSession(user, app)
-        // posle ova event do site rp kaj so bil najaven, distributed logout
-    }
-
     @RequestMapping(
         "/userinfo",
         method = [RequestMethod.GET, RequestMethod.POST],
@@ -209,11 +192,6 @@ class OAuthEndpoints(
     }
 
 
-  @RequestMapping("/logout/all",method = [RequestMethod.GET, RequestMethod.POST])
-    fun logout(authentication: Authentication?, request: HttpServletRequest): ResponseEntity<Void> {
-        val user = userService.getUserFromAuthentication(authentication);
-        sessionService.terminateAllByUser(user)
-        val headers = userService.getLoginCookieHeaders(user = user, request = request, clear = true);
-        return ResponseEntity.status(200).headers(headers).build();
-    }
+
+
 }

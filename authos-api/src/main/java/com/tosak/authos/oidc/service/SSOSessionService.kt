@@ -1,21 +1,17 @@
 package com.tosak.authos.oidc.service
 
 import com.tosak.authos.oidc.common.pojo.SSOSession
-import com.tosak.authos.oidc.common.utils.getRequestParamHash
 import com.tosak.authos.oidc.entity.App
 import com.tosak.authos.oidc.entity.AppGroup
 import com.tosak.authos.oidc.entity.User
-import com.tosak.authos.oidc.repository.AppRepository
-import com.tosak.authos.oidc.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.session.data.redis.RedisIndexedSessionRepository
+import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 
 
@@ -27,17 +23,10 @@ import java.util.*
 @Service
 open class SSOSessionService(
     @Qualifier("ssoSessionRedisTemplate")
-    private val redisTemplate: RedisTemplate<String, SSOSession>
+    private val ssoRedisTemplate: RedisTemplate<String, SSOSession>,
+    private val stringRedisTemplate: RedisTemplate<String, String>
 ) {
-    /**
-     * Represents the session timeout duration as a configuration property.
-     * This value is injected from the `spring.session.timeout` property in the application's configuration.
-     *
-     * Typically used to define the expiration time for user sessions, ensuring session validity management
-     * throughout the system.
-     */
-    @Value("\${spring.session.timeout}")
-    private lateinit var sessionTimeout: String
+
 
     /**
      * Companion object for the SSOSessionService class.
@@ -54,7 +43,9 @@ open class SSOSessionService(
          *
          * Utilized in various SSO operations such as session creation, validation, and termination.
          */
-        const val AUTHOS_SSO_KEY_PREFIX = "authos:sso"
+        const val SSO_SESSION_PREFIX = "authos:sso:session:"
+        const val SESSIONS_USER_PREFIX = "sessions:user:"
+        const val SESSIONS_GROUP_PREFIX = "sessions:group:"
 
 
     }
@@ -67,7 +58,7 @@ open class SSOSessionService(
      * @return A string representing the SSO key for the given user and group.
      */
     open fun ssoGroupKey(userId: Int, groupId: Int): String {
-        return "$AUTHOS_SSO_KEY_PREFIX:${userId}:${groupId}"
+        return "$:${userId}:${groupId}"
     }
 
 
@@ -78,58 +69,58 @@ open class SSOSessionService(
      * @param app The application instance to associate with the session.
      */
     @Transactional
-    open fun initializeSSOSession(user: User, app: App, request: HttpServletRequest) {
-        val ssoGroupKey = ssoGroupKey(user.id!!, app.group.id!!)
-        redisTemplate.opsForValue().set(ssoGroupKey, SSOSession(userId = user.id,app.id!!, request = request),Duration.ofHours(1))
+    open fun initializeSSOSession(user: User, app: App, request: HttpServletRequest): String {
+        val sessionId = UUID.randomUUID().toString()
+        ssoRedisTemplate.opsForValue().set(
+            "$SSO_SESSION_PREFIX$sessionId",
+            SSOSession(userId = user.id!!, app.id!!,app.group.id!!, request = request),
+            Duration.ofHours(1)
+        )
+        stringRedisTemplate.opsForSet().add("$SESSIONS_USER_PREFIX${user.id}",sessionId)
+        stringRedisTemplate.opsForSet().add("$SESSIONS_GROUP_PREFIX${app.group.id}",sessionId)
+
+
+        return sessionId;
 
     }
 
 
-    //TODO
-    open fun getSsoSession(user: User,app: App){
-
+    open fun getSsoSession(sessionId: String): SSOSession? {
+        return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_PREFIX$sessionId")
     }
 
 
-    /**
-     * Determines if a user has an active session for a given application based on stored session data.
-     *
-     * @param userId the unique identifier of the user whose active session is being checked
-     * @param appId the unique identifier of the application for which the session is being validated
-     * @return true if the user has an active session for the specified application, false otherwise
-     */
-    open fun hasActiveSession(userId: Int, groupId: Int): Boolean {
-        return redisTemplate.hasKey(ssoGroupKey(userId, groupId))
+    open fun hasActiveSession(sessionId: String): Boolean {
+        return ssoRedisTemplate.hasKey("$SSO_SESSION_PREFIX$sessionId")
     }
 
-    /**
-     * Terminates all active sessions for the specified user and group.
-     * This involves deleting and invalidating individual spring sessions and the Authos SSO sessions in the Redis store.
-     *
-     * @param user Represents the user whose session is to be terminated.
-     * @param app Represents the application associated with the user's session.
-     */
-    open fun terminateSSOSession(user: User, app: App): Boolean {
-        return redisTemplate.delete(ssoGroupKey(user.id!!, app.group.id!!))
+    @Transactional(rollbackFor = [Exception::class])
+    open fun terminateSSOSession(sessionId: String?): Boolean {
+        if(sessionId == null) return false
 
+        val session = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_PREFIX$sessionId")
+        if(session != null) {
+            ssoRedisTemplate.delete("$SSO_SESSION_PREFIX$sessionId")
+            stringRedisTemplate.opsForSet().remove("$SESSIONS_USER_PREFIX${session.userId}",sessionId)
+            stringRedisTemplate.opsForSet().remove("$SESSIONS_GROUP_PREFIX${session.groupId}",sessionId)
+            return true
+        } else return false
     }
-
 
     private fun terminateByPattern(keyPattern: String) {
-        val ssoSessionKeys = redisTemplate.keys(keyPattern)
+        val ssoSessionKeys = ssoRedisTemplate.keys(keyPattern)
         ssoSessionKeys.forEach { key ->
-            redisTemplate.delete(key);
+            ssoRedisTemplate.delete(key);
         }
     }
 
-
     open fun terminateAllByUser(user: User) {
-        val keyPattern = "$AUTHOS_SSO_KEY_PREFIX:${user.id}*";
+        val keyPattern = "$:${user.id}*";
         terminateByPattern(keyPattern)
     }
 
     open fun terminateAllByGroup(appGroup: AppGroup) {
-        val keyPattern = "$AUTHOS_SSO_KEY_PREFIX:*:${appGroup.id}"
+        val keyPattern = "$:*:${appGroup.id}"
         terminateByPattern(keyPattern)
     }
 

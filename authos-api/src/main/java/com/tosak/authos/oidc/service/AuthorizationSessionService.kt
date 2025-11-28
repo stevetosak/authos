@@ -34,10 +34,10 @@ open class AuthorizationSessionService(
     }
 
 
-    open fun addPPID(authzId: String,ppId: String) {
+    open fun addPPID(authzId: String, sub: String) {
         val session = getSessionByAuthzId(authzId);
         if (session != null) {
-            session.ppid = ppId
+            session.sub = sub
             redisTemplate.opsForValue().set("shortsession:authz:$authzId",session,Duration.ofMinutes(5))
         }
 

@@ -5,8 +5,7 @@ import com.tosak.authos.oidc.common.dto.QrCodeDTO
 import com.tosak.authos.oidc.entity.AppGroup
 import com.tosak.authos.oidc.entity.User
 import com.tosak.authos.oidc.exceptions.unauthorized.InvalidUserCredentials
-import com.tosak.authos.oidc.common.pojo.LoginTokenStrategy
-import com.tosak.authos.oidc.common.pojo.MFATokenStrategy
+import com.tosak.authos.oidc.common.pojo.strategy.MFATokenStrategy
 import com.tosak.authos.oidc.common.utils.AESUtil
 import com.tosak.authos.oidc.repository.AppGroupRepository
 import com.tosak.authos.oidc.repository.UserRepository
@@ -24,7 +23,6 @@ import dev.samstevens.totp.qr.ZxingPngQrGenerator
 import dev.samstevens.totp.secret.DefaultSecretGenerator
 import dev.samstevens.totp.time.SystemTimeProvider
 import dev.samstevens.totp.util.Utils.getDataUriForImage
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -34,7 +32,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.http.HttpHeaders
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.Optional
 
 @Service
@@ -83,43 +80,43 @@ open class UserService @Autowired constructor(
         return authentication!!.principal as User
     }
 
-    open fun getLoginCookieHeaders(
-        user: User,
-        request: HttpServletRequest,
-        group: AppGroup? = null,
-        clear: Boolean = false
-    ): HttpHeaders {
-
-        user.lastLoginAt = LocalDateTime.now()
-        userRepository.save(user)
-
-        val maxAge = if (clear) Duration.ZERO else Duration.ofHours(1);
-        val token =
-            tokenFactory.createToken(LoginTokenStrategy(user, ppidService, request, group, appGroupService, apiHost))
-        val jwtCookie = ResponseCookie
-            .from("AUTH_TOKEN", token.serialize())
-            .httpOnly(true)
-            .secure(true)
-            .path("/")
-            .domain(cookieDomain)
-            .sameSite("None")
-            .maxAge(maxAge)
-            .build()
-
-        val xsrfCookie = ResponseCookie.from("XSRF-TOKEN", token.jwtClaimsSet.getStringClaim("xsrf_token"))
-            .httpOnly(false)
-            .secure(true)
-            .path("/")
-            .domain(cookieDomain)
-            .sameSite("None")
-            .maxAge(maxAge)
-            .build()
-
-        val headers = HttpHeaders()
-        headers.add("Set-Cookie", jwtCookie.toString())
-        headers.add("Set-Cookie", xsrfCookie.toString())
-        return headers;
-    }
+//    open fun getLoginCookieHeaders(
+//        user: User,
+//        request: HttpServletRequest,
+//        group: AppGroup? = null,
+//        clear: Boolean = false
+//    ): HttpHeaders {
+//
+//        user.lastLoginAt = LocalDateTime.now()
+//        userRepository.save(user)
+//
+//        val maxAge = if (clear) Duration.ZERO else Duration.ofHours(1);
+//        val token = tokenFactory.createToken(LoginTokenStrategy(user, ppidService, request, group, appGroupService, apiHost))
+//        val jwtCookie = ResponseCookie
+//            .from("AUTH_TOKEN", token.serialize())
+//            .httpOnly(true)
+//            .secure(true)
+//            .path("/")
+//            .domain(cookieDomain)
+//            .sameSite("None")
+//            .maxAge(maxAge)
+//            .build()
+//
+//        val xsrfCookie = ResponseCookie.from("XSRF-TOKEN", token.jwtClaimsSet.getStringClaim("xsrf_token"))
+//            .httpOnly(false)
+//            .secure(true)
+//            .path("/")
+//            .domain(cookieDomain)
+//            .sameSite("None")
+//            .maxAge(maxAge)
+//            .build()
+//
+//
+//        val headers = HttpHeaders()
+//        headers.add("Set-Cookie", jwtCookie.toString())
+//        headers.add("Set-Cookie", xsrfCookie.toString())
+//        return headers;
+//    }
 
     open fun getMfaCookieHeader(user: User) : HttpHeaders {
         val mfaToken = jwtTokenFactory.createToken(MFATokenStrategy(user,apiHost))

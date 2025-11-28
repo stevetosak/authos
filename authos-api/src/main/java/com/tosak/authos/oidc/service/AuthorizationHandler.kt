@@ -13,6 +13,7 @@ import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.net.URLEncoder
@@ -51,7 +52,8 @@ class AuthorizationHandler(
     fun handleRequest(
         prompt: String,
         authorizeRequestParams: AuthorizeRequestParams,
-        request: HttpServletRequest
+        request: HttpServletRequest,
+        authentication: Authentication?,
     ): ResponseEntity<Void> {
         if (authorizeRequestParams.responseType != "code")
             throw UnsupportedResponseTypeException("unsupported response type ${authorizeRequestParams.responseType}")
@@ -72,15 +74,7 @@ class AuthorizationHandler(
 
         val authzId = authorizationSessionService.generateTempSession(authorizeRequestParams)
 
-        var hasActiveSession = false;
-        if (authorizeRequestParams.idTokenHint != null && authorizeRequestParams.idTokenHint.isNotEmpty()) {
-            val idToken = jwtService.verifyToken(authorizeRequestParams.idTokenHint)
-            val ppid = ppidService.getPPIDBySub(idToken.jwtClaimsSet.subject)
-            val user = userService.getById(ppid.key.userId!!)
-            hasActiveSession = ssoSessionService.hasActiveSession(user.id!!, app.group.id!!)
-            if (hasActiveSession) ssoSessionService.initializeSSOSession(user, app,  request) // ? zosto
-
-        }
+//
 
 
         if (promptType == PromptType.LOGIN) {
@@ -94,11 +88,27 @@ class AuthorizationHandler(
             )
         }
 
-
+        val sessionId = request.cookies.find { it.name == "AUTHOS_SESSION" }?.value
+        demand(sessionId != null) {
+            AuthosException(
+                "invalid session",
+                LoginRequiredException(),
+                authorizeRequestParams.state,
+                authorizeRequestParams.redirectUri
+            )
+        }
+        demand(ssoSessionService.hasActiveSession(sessionId!!)) {
+            AuthosException(
+                "invalid session",
+                LoginRequiredException(),
+                state = authorizeRequestParams.state,
+                authorizeRequestParams.redirectUri
+            )
+        }
 
         return when (promptType) {
-            PromptType.NONE -> handleNone(authorizeRequestParams,hasActiveSession)
-            PromptType.CONSENT -> handleConsent(authorizeRequestParams,authzId)
+            PromptType.NONE -> handleNone(authorizeRequestParams)
+            PromptType.CONSENT -> handleConsent(authorizeRequestParams, authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
                 throw AuthosException("invalid request", BadPromptException())
@@ -114,10 +124,7 @@ class AuthorizationHandler(
      */
     private fun handleNone(
         authorizeRequestParams: AuthorizeRequestParams,
-        hasActiveSession: Boolean
     ): ResponseEntity<Void> {
-
-        demand(hasActiveSession){ AuthosException("prompt parameter was none, but no recent session exists", LoginRequiredException(),authorizeRequestParams.state,authorizeRequestParams.redirectUri) }
 
         return ResponseEntity.status(302)
             .location(
@@ -143,7 +150,7 @@ class AuthorizationHandler(
      * such as client ID, redirect URI, state, scope, and optional ID token hint.
      * @return A ResponseEntity that redirects to the user consent page with HTTP status 303.
      */
-    private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams,authzId: String): ResponseEntity<Void> {
+    private fun handleConsent(authorizeRequestParams: AuthorizeRequestParams, authzId: String): ResponseEntity<Void> {
 
         val url = StringBuilder(
             "${frontendHost}/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
