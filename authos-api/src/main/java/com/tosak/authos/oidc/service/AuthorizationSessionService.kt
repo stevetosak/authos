@@ -2,6 +2,7 @@ package com.tosak.authos.oidc.service
 
 import com.tosak.authos.oidc.common.pojo.AuthorizationSession
 import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
+import com.tosak.authos.oidc.exceptions.base.AuthosException
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
@@ -39,6 +40,8 @@ open class AuthorizationSessionService(
         if (session != null) {
             session.sub = sub
             redisTemplate.opsForValue().set("shortsession:authz:$authzId",session,Duration.ofMinutes(5))
+        } else {
+            println("no shortsession present")
         }
 
     }

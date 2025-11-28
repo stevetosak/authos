@@ -102,14 +102,22 @@ class OAuthEndpoints(
         @RequestParam("redirect_uri") redirectUri: String,
         @RequestParam("state") state: String,
         @RequestParam("scope") scope: String,
-        @RequestParam("authz_id", required = false) authzId: String,
+        @RequestParam("authz_id") authzId: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpServletRequest: HttpServletRequest,
     ): ResponseEntity<Void?> {
 
-        val authorizationSession = requireNotNull(authorizationSessionService.getSessionByAuthzId(authzId))
-        val ppidHash = requireNotNull(authorizationSession.sub)
-        val ppid = requireNotNull(ppidService.getPPIDBySub(ppidHash))
+        val authorizationSession = authorizationSessionService.getSessionByAuthzId(authzId);
+        if(authorizationSession == null) {
+            println("authorizationSession not found")
+        }
+
+        val ppidHash = authorizationSession?.sub
+        if(ppidHash == null) {
+            println("pidHash not found")
+        }
+
+        val ppid = requireNotNull(ppidService.getPPIDBySub(ppidHash!!))
 
 
 //        val userId = httpSession.getAttribute("user") as Int?
