@@ -106,7 +106,7 @@ class AuthorizationHandler(
         }
 
         return when (promptType) {
-            PromptType.NONE -> handleNone(authorizeRequestParams)
+            PromptType.NONE -> handleNone(authorizeRequestParams, authzId)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams, authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
@@ -123,14 +123,20 @@ class AuthorizationHandler(
      */
     private fun handleNone(
         authorizeRequestParams: AuthorizeRequestParams,
+        authzId: String
     ): ResponseEntity<Void> {
+
 
         return ResponseEntity.status(302)
             .location(
                 URI(
-                    "${apiHost}/oauth/approve?client_id=${authorizeRequestParams.clientId}&redirect_uri=${authorizeRequestParams.redirectUri}&state=${authorizeRequestParams.state}&scope=${
-                        URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")
-                    }"
+                    "${apiHost}/oauth/approve?client_id=${authorizeRequestParams.clientId}" +
+                            "&redirect_uri=${authorizeRequestParams.redirectUri}" +
+                            "&state=${authorizeRequestParams.state}" +
+                            "&scope=${
+                                URLEncoder.encode(authorizeRequestParams.scope, "UTF-8") +
+                                        "&authz_id=$authzId"
+                            }"
                 )
             ).build();
 
