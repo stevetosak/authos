@@ -4,6 +4,7 @@ import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.exceptions.base.HttpForbiddenException
 import com.tosak.authos.oidc.exceptions.base.HttpUnauthorizedException
+import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.net.URI
 import java.net.URLEncoder
 
-//@Profile("prod")
+@Profile("prod")
 @RestControllerAdvice
 class ExceptionHandler {
     @ExceptionHandler(AuthosException::class)
