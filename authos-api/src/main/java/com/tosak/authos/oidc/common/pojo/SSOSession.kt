@@ -1,19 +1,17 @@
-package com.tosak.authos.oidc.common.pojo
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import java.time.LocalDateTime
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class SSOSession(
     val userId: Int,
     val appId: Int,
     val groupId: Int,
     val ipAddress: String,
     val createdAt: String = LocalDateTime.now().toString(),
-){
-
-    //TODO parse user agent and get params
-
-    constructor(userId: Int, appId: Int, groupId: Int,request: HttpServletRequest) : this(userId,appId,groupId,request.remoteAddr)
-
+) {
+    companion object {
+        fun fromRequest(userId: Int, appId: Int, groupId: Int, req: HttpServletRequest) =
+            SSOSession(userId, appId, groupId, req.remoteAddr)
+    }
 }

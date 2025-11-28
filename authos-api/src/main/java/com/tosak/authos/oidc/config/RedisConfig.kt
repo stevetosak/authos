@@ -1,8 +1,8 @@
 package com.tosak.authos.oidc.config
 
+import SSOSession
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tosak.authos.oidc.common.pojo.AuthorizationSession
-import com.tosak.authos.oidc.common.pojo.SSOSession
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory

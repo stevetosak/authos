@@ -293,31 +293,6 @@ open class AuthController(
 
     }
     
-    
-
-    @RequestMapping("/logout",method = [RequestMethod.GET, RequestMethod.POST])
-    fun logout(
-        @RequestParam(name = "id_token_hint", required = false) idTokenHint: String,
-        @RequestParam(name = "client_id", required = false) clientId: String,
-        @RequestParam(required = false) postLogoutRedirectUri: String?,
-        @RequestParam(required = false) logoutHint: String?,
-        @RequestParam(required = false) state: String?,
-        @RequestParam(required = false) uiLocales: String?,
-        @CookieValue(name = "AUTHOS_SESSION", required = false) sessionId: String?,
-        request: HttpServletRequest,
-        authentication: Authentication?,
-    ) : ResponseEntity<Void>{
-        // todo tuka imat rabota za SSO policy. Dali sakas da terminiras sesija samo za tvojata aplikcacija ili za site vo grupata.
-        ssoSessionService.terminateSSOSession(sessionId = sessionId)
-
-        val user = userService.getUserFromAuthentication(authentication);
-        val sub = ppidService.getPPIDSub(user,appGroupService.getDefaultGroupForUser(user))
-        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
-        val headers = cookieService.getSSOLoginCookieHeaders(token,sessionId ?: "",true);
-        return ResponseEntity.status(200).headers(headers).build();
-
-        // posle ova event do site rp kaj so bil najaven, distributed logout
-    }
 
 
 }

@@ -1,6 +1,6 @@
 package com.tosak.authos.oidc.service
 
-import com.tosak.authos.oidc.common.pojo.SSOSession
+import SSOSession
 import com.tosak.authos.oidc.entity.App
 import com.tosak.authos.oidc.entity.AppGroup
 import com.tosak.authos.oidc.entity.User
@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.util.WebUtils
 import java.time.Duration
 import java.util.*
 
@@ -71,9 +72,13 @@ open class SSOSessionService(
     @Transactional
     open fun initializeSSOSession(user: User, app: App, request: HttpServletRequest): String {
         val sessionId = UUID.randomUUID().toString()
+
+        val oldSessionCookie = WebUtils.getCookie(request,"AUTHOS_SESSION");
+        terminateSSOSession(oldSessionCookie?.value)
+
         ssoRedisTemplate.opsForValue().set(
             "$SSO_SESSION_PREFIX$sessionId",
-            SSOSession(userId = user.id!!, app.id!!,app.group.id!!, request = request),
+            SSOSession.fromRequest(userId = user.id!!,app.id!!,app.group.id!!,request),
             Duration.ofHours(1)
         )
         stringRedisTemplate.opsForSet().add("$SESSIONS_USER_PREFIX${user.id}",sessionId)

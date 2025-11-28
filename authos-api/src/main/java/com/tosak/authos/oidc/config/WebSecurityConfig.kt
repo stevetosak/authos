@@ -1,6 +1,8 @@
 package com.tosak.authos.oidc.config
 
 import com.tosak.authos.oidc.api.filter.JwtFilter
+import com.tosak.authos.oidc.service.LogoutSuccessHandler
+import com.tosak.authos.oidc.service.SSOSessionService
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,7 +24,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
-open class WebSecurityConfig (private val jwtFilter: JwtFilter, private val userDetailsService: UserDetailsService){
+open class WebSecurityConfig (private val jwtFilter: JwtFilter, private val userDetailsService: UserDetailsService,private val ssoSessionService: SSOSessionService) {
+
+
+    @Bean
+    open fun logoutSuccessHandler() = LogoutSuccessHandler(ssoSessionService = ssoSessionService)
+
+
     @Bean
     open fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
        return http
@@ -34,10 +42,9 @@ open class WebSecurityConfig (private val jwtFilter: JwtFilter, private val user
                logout.logoutUrl("/logout")
                    .deleteCookies("AUTH_TOKEN")
                    .deleteCookies("XSRF_TOKEN")
+                   .deleteCookies("AUTHOS_SESSION")
                    .clearAuthentication(true)
-                   .logoutSuccessHandler{request, response, authentication ->
-                       response.status = HttpServletResponse.SC_OK
-                   }
+                   .logoutSuccessHandler(logoutSuccessHandler())
            }
            .build();
 
