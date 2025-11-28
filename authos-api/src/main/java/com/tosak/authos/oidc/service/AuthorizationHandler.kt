@@ -76,7 +76,6 @@ class AuthorizationHandler(
 
 //
 
-
         if (promptType == PromptType.LOGIN) {
             return redirectToLogin(
                 authorizeRequestParams.clientId,
@@ -88,7 +87,7 @@ class AuthorizationHandler(
             )
         }
 
-        val sessionId = request.cookies.find { it.name == "AUTHOS_SESSION" }?.value
+        val sessionId = request.cookies?.find { it.name == "AUTHOS_SESSION" }?.value
         demand(sessionId != null) {
             AuthosException(
                 "invalid session",
