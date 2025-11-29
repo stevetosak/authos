@@ -101,8 +101,7 @@ open class AuthController(
 
         val apps = appService.getAllAppsForUser(user.id!!)
         val groups = appGroupService.getAllGroupsForUser(user.id)
-        val sub = ppidService.getPPIDSub(user, app.group,false);
-        authorizationSessionService.addPPID(authzId,sub)
+        val sub = ppidService.getPPIDSub(user, app.group);
         val sessionId = ssoSessionService.initializeSSOSession(user, app, request)
         val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request));
         val headers = cookieService.getSSOLoginCookieHeaders(token,sessionId);

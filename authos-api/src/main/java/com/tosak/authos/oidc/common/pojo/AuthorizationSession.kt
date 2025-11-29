@@ -10,5 +10,4 @@ data class AuthorizationSession(
     val responseType: String,
     val nonce: String? = null,
     val createdAt: String = LocalDateTime.now().toString(),
-    var sub: String? = null,
 )

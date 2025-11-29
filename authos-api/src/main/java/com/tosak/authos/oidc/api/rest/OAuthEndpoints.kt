@@ -105,19 +105,17 @@ class OAuthEndpoints(
         @RequestParam("authz_id") authzId: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpServletRequest: HttpServletRequest,
+        authentication: Authentication?
     ): ResponseEntity<Void?> {
 
+        val user = userService.getUserFromAuthentication(authentication)
         val authorizationSession = authorizationSessionService.getSessionByAuthzId(authzId);
         if(authorizationSession == null) {
             println("authorizationSession not found")
         }
 
-        val ppidHash = authorizationSession?.sub
-        if(ppidHash == null) {
-            println("pidHash not found")
-        }
+        val app = appService.getAppByClientId(clientId);
 
-        val ppid = requireNotNull(ppidService.getPPIDBySub(ppidHash!!))
 
 
 //        val userId = httpSession.getAttribute("user") as Int?
@@ -131,8 +129,7 @@ class OAuthEndpoints(
 //            MissingSessionAttributesException()) }
 
 
-        val app = appService.getAppByClientId(clientId);
-        val user = userService.getById(ppid.key.userId!!)
+
 
         // todo tuka mozam verify da napram na parametrive
         // todo zemam app preku client id i provervam vo sso sesija.

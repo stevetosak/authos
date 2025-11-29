@@ -23,7 +23,9 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/native-login",
         "/oauth-login",
         "/register",
-        "/oauth/*",
+        "/oauth/authorize",
+        "/oauth/token",
+        "/oauth/userinfo",
         "/.well-known/*",
         "/test/*",
         "/duster/pull",
@@ -52,7 +54,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         try{
             val token = getJwtFromRequest(request)
             val jwt = jwtService.verifyToken(token);
-            verifyXsrf(jwt, request)
+//            verifyXsrf(jwt, request) // todo drug filter za endpoints kaj so kreiras/menvis podatoci tamu trebit xsrf proverka
             val userDetails = userDetailsService.loadById(jwt.jwtClaimsSet.subject)
             val authentication = UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
@@ -74,6 +76,8 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
     private fun verifyXsrf(jwt: SignedJWT,request: HttpServletRequest){
         val xsrfCookie = jwt.jwtClaimsSet.getStringClaim("xsrf_token");
         val xsrfHeader = request.getHeader("X-XSRF-TOKEN");
+
+        println("xsrfHeader: $xsrfHeader")
 
         demand(xsrfCookie != null && xsrfHeader != null && xsrfHeader == xsrfCookie)
         { AuthosException("bad xsrf", HttpForbiddenException()) }

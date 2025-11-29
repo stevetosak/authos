@@ -134,9 +134,8 @@ class AuthorizationHandler(
                             "&redirect_uri=${authorizeRequestParams.redirectUri}" +
                             "&state=${authorizeRequestParams.state}" +
                             "&scope=${
-                                URLEncoder.encode(authorizeRequestParams.scope, "UTF-8") +
-                                        "&authz_id=$authzId"
-                            }"
+                                URLEncoder.encode(authorizeRequestParams.scope, "UTF-8") 
+                            }&authz_id=$authzId"
                 )
             ).build();
 

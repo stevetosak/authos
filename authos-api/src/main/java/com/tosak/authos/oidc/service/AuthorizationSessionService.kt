@@ -35,16 +35,6 @@ open class AuthorizationSessionService(
     }
 
 
-    open fun addPPID(authzId: String, sub: String) {
-        val session = getSessionByAuthzId(authzId);
-        if (session != null) {
-            session.sub = sub
-            redisTemplate.opsForValue().set("shortsession:authz:$authzId",session,Duration.ofMinutes(5))
-        } else {
-            println("no shortsession present")
-        }
-
-    }
 
     @Transactional
     open fun bindCode(authzId: String,code: String) {
