@@ -40,7 +40,7 @@ class AuthorizationCodeService(
             app.clientId,
             redirectUris.map { ru -> ru.id!!.redirectUri },
             tokenRequestDto.code!!
-        ) ?: throw AuthosException("invalid grant",InvalidAuthorizationCodeException())
+        ) ?: throw AuthosException("invalid grant",InvalidAuthorizationCodeException(), redirectUrl = tokenRequestDto.redirectUri)
 
         demand(authorizationCode.expiresAt > LocalDateTime.now()) { AuthosException("invalid_grant", AuthorizationCodeExpiredException()) }
 
