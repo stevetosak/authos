@@ -12,7 +12,8 @@ class AccessToken (
     @Column(name = "client_id")
     val clientId : String = "",
     val scope: String = "",
-    @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne
     @JoinColumn(name = "authorization_code", referencedColumnName = "code_hash")
     val authorizationCode: AuthorizationCode = AuthorizationCode(),
     @Column(name = "expires_at")

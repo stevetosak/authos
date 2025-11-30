@@ -48,8 +48,6 @@ class AuthorizationCodeService(
 
 
 
-
-
         demand(authorizationCode != null) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
         if (authorizationCode!!.used) {
