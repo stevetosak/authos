@@ -30,7 +30,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/test/*",
         "/duster/pull",
         "/duster/validate-token",
-        "/verify-sub"
+        "/verify-sub",
     )
 
 

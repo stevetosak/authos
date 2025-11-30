@@ -32,7 +32,7 @@ class LogoutSuccessHandler(private val ssoSessionService: SSOSessionService) : L
 
             if (request.isSecure) cookie.secure = true
 
-            if(name == "AUTHOS_SESSION") cookie.domain = apiDomain
+            if(name == "AUTHOS_SESSION") cookie.domain = apiDomain else cookie.domain = frontendDomain
             response.addCookie(cookie)
         }
 
