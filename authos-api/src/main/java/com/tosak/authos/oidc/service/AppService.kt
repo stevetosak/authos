@@ -19,6 +19,8 @@ import com.tosak.authos.oidc.common.utils.hex
 import com.tosak.authos.oidc.exceptions.badreq.MissingParametersException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.TokenEndpointException
+import com.tosak.authos.oidc.exceptions.TokenErrorCode
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.springframework.http.HttpStatus
@@ -71,21 +73,17 @@ open class AppService(
         val authHeader = request?.getHeader("Authorization")
         if (authHeader != null) {
             val (clientId,clientSecret) = decodeBasicAuth(authHeader)
-            println("HEADER: $authHeader")
-            println("CREDENTIALS: $clientId and $clientSecret")
             tokenRequestDto.clientId = clientId
             tokenRequestDto.clientSecret = clientSecret
-            require(tokenRequestDto.clientId != null && tokenRequestDto.clientSecret != null) {"Cant parse Auth header"}
         } else {
             demand(tokenRequestDto.clientId != null && tokenRequestDto.clientSecret != null)
-            {AuthosException("invalid request", MissingParametersException())}
+            { TokenEndpointException(TokenErrorCode.UNAUTHORIZED_CLIENT) }
         }
 
-        println("TOKEN DTO: ${tokenRequestDto.toString()}")
 
         val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri!!)
         val secretDecrypted = aesUtil.decryptBytes(b64UrlSafeDecoder(app.clientSecret))
-        demand(secretDecrypted == tokenRequestDto.clientSecret){ AuthosException("invalid client", InvalidClientCredentialsException()) }
+        demand(secretDecrypted == tokenRequestDto.clientSecret){ TokenEndpointException(TokenErrorCode.UNAUTHORIZED_CLIENT) }
         return app;
     }
 

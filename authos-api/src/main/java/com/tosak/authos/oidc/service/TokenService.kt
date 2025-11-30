@@ -27,6 +27,8 @@ import com.tosak.authos.oidc.exceptions.badreq.MissingParametersException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.common.pojo.strategy.IdTokenStrategy
+import com.tosak.authos.oidc.exceptions.TokenEndpointException
+import com.tosak.authos.oidc.exceptions.TokenErrorCode
 import com.tosak.authos.oidc.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
@@ -195,7 +197,8 @@ open class TokenService(
 
     @Transactional
     open fun handleAuthorizationCodeRequest(dto: TokenRequestDto, request: HttpServletRequest): TokenWrapper {
-        demand(dto.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
+        demand(dto.redirectUri != null) { TokenEndpointException(TokenErrorCode.INVALID_REQUEST,"missing redirect_uri",null,null) }
+
 
         val app = appService.validateAppCredentials(tokenRequestDto = dto, request)
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, dto)

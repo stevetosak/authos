@@ -1,11 +1,12 @@
 package com.tosak.authos.oidc.api.rest
 
+import com.tosak.authos.oidc.common.dto.ErrorResponse
+import com.tosak.authos.oidc.exceptions.AuthorizationEndpointException
+import com.tosak.authos.oidc.exceptions.AuthorizationErrorCode
+import com.tosak.authos.oidc.exceptions.TokenEndpointException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
-import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
-import com.tosak.authos.oidc.exceptions.base.HttpForbiddenException
-import com.tosak.authos.oidc.exceptions.base.HttpUnauthorizedException
+import com.tosak.authos.oidc.exceptions.buildErrorRedirect
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -17,22 +18,13 @@ import java.net.URLEncoder
 @RestControllerAdvice
 class ExceptionHandler {
 
+    @Value("\${authos.frontend.host}")
+    private lateinit var frontendHost: String
+
     @ExceptionHandler(AuthosException::class)
-    fun handleOIDCErrors(ex: AuthosException): ResponseEntity<String> {
+    fun handleInternalErrors(ex: AuthosException): ResponseEntity<String> {
 
-        ex.printStackTrace()
-
-        val error = URLEncoder.encode(ex.cause.message, "UTF-8")
-        val description = URLEncoder.encode(ex.message , "UTF-8")
-
-        var redirectUrlString = "${ex.redirectUrl}?error=$error&error_description=$description";
-
-        ex.state?.let { state ->
-            redirectUrlString = "$redirectUrlString&state=$state"
-        }
-
-
-        return ResponseEntity.status(302).location(URI(redirectUrlString)).build()
+        return ResponseEntity.status(400).build()
     }
 
     @ExceptionHandler(Exception::class)
@@ -47,6 +39,20 @@ class ExceptionHandler {
         return ResponseEntity.status(302)
             .location(URI(redirectUrl))
             .build()
+    }
+
+    @ExceptionHandler(AuthorizationEndpointException::class)
+    fun handleAuthorizeEndpointExceptions(ex: AuthorizationEndpointException) : ResponseEntity<Void> {
+        if(ex.redirectUri == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+        val url = buildErrorRedirect(ex.redirectUri, ex.error as AuthorizationErrorCode, ex.errorDescription, ex.state)
+        return ResponseEntity.status(302).location(URI(url)).build()
+    }
+
+    @ExceptionHandler(TokenEndpointException::class)
+    fun handleTokenEndpointExceptions (ex: TokenEndpointException) : ResponseEntity<ErrorResponse> {
+        // todo error uri handling na frontend
+        val errorResponse = ErrorResponse(ex.error.code(),ex.errorDescription,"$frontendHost/error?error=${ex.error.code()}&error_description=${ex.errorDescription}")
+        return ResponseEntity.badRequest().body(errorResponse)
     }
 
 }

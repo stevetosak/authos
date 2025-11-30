@@ -9,6 +9,8 @@ import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.exceptions.badreq.BadPromptException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.AuthorizationEndpointException
+import com.tosak.authos.oidc.exceptions.AuthorizationErrorCode
 import com.tosak.authos.oidc.exceptions.badreq.LoginRequiredException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
@@ -63,10 +65,10 @@ class AuthorizationHandler(
 
 
         demand(!authorizeRequestParams.scope.isEmpty() && authorizeRequestParams.scope.contains("openid"))
-        { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
+        { AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,authorizeRequestParams.redirectUri,authorizeRequestParams.state) }
 
         demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
-        { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
+        { AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,"request prompt must be 'consent' if scope contains the value 'offline_access'",authorizeRequestParams.redirectUri,authorizeRequestParams.state) }
 
 
         val authzId = shortSessionService.generateTempSession(authorizeRequestParams)

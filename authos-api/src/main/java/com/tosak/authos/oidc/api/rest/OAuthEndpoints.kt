@@ -6,6 +6,9 @@ import com.tosak.authos.oidc.common.dto.TokenResponse
 import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.AuthorizationEndpointException
+import com.tosak.authos.oidc.exceptions.AuthorizationErrorCode
+import com.tosak.authos.oidc.exceptions.OidcErrorCode
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.service.AppService
@@ -74,11 +77,7 @@ class OAuthEndpoints(
     ): ResponseEntity<Void> {
 
         demand(responseType != null) {
-            AuthosException(
-                "unsupported response type",
-                HttpBadRequestException(),
-                redirectUrl = redirectUri,
-            )
+            AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,redirectUri,state)
         }
 
         return authorizationHandler.handleRequest(

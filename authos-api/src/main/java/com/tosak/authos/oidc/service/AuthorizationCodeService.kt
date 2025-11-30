@@ -11,6 +11,8 @@ import com.tosak.authos.oidc.exceptions.badreq.AuthorizationCodeUsedException
 import com.tosak.authos.oidc.exceptions.badreq.InvalidAuthorizationCodeException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.exceptions.TokenEndpointException
+import com.tosak.authos.oidc.exceptions.TokenErrorCode
 import com.tosak.authos.oidc.repository.AuthorizationCodeRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -40,13 +42,16 @@ class AuthorizationCodeService(
             app.clientId,
             redirectUris.map { ru -> ru.id!!.redirectUri },
             tokenRequestDto.code!!
-        ) ?: throw AuthosException("invalid grant",InvalidAuthorizationCodeException(), redirectUrl = tokenRequestDto.redirectUri)
+        )
 
-        demand(authorizationCode.expiresAt > LocalDateTime.now()) { AuthosException("invalid_grant", AuthorizationCodeExpiredException(), redirectUrl = tokenRequestDto.redirectUri) }
 
-        demand(!authorizationCode.used){ AuthosException("invalid_grant", AuthorizationCodeUsedException(), redirectUrl = tokenRequestDto.redirectUri) }
+        demand(authorizationCode != null){ TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
-        demand(authorizationCode.scope.contains("openid")){ AuthosException("invalid_grant", InvalidScopeException(), redirectUrl = tokenRequestDto.redirectUri) }
+        demand(authorizationCode!!.expiresAt > LocalDateTime.now()) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+
+        demand(!authorizationCode.used){ TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+
+        demand(authorizationCode.scope.contains("openid")){ TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
         return authorizationCode;
 
