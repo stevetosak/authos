@@ -8,7 +8,7 @@ data class SSOSession(
     val appId: Int,
     val groupId: Int,
     val ipAddress: String,
-    val createdAt: String = LocalDateTime.now().toString(),
+    val authTime: Long = System.currentTimeMillis(),
 ) {
     companion object {
         fun fromRequest(userId: Int, appId: Int, groupId: Int, req: HttpServletRequest) =

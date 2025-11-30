@@ -58,13 +58,14 @@ open class TokenService(
     private val ppidService: PPIDService,
     private val dusterAppService: DusterAppService,
     private val userRepository: UserRepository,
-    private val authorizationSessionService: AuthorizationSessionService
+    private val shortSessionService: ShortSessionService,
+    private val sSOSessionService: SSOSessionService
 ) {
     @Value("\${authos.api.host}")
     private lateinit var apiHost: String;
 
 
-    private fun generateRefreshToken(user: User, clientId: String, scope: String): RefreshToken {
+    private fun generateRefreshToken(user: User, clientId: String, scope: String, idToken: String): RefreshToken {
         val tokenBytes = getSecureRandomValue(32);
         val tokenVal = hex(tokenBytes)
         return RefreshToken(
@@ -72,19 +73,21 @@ open class TokenService(
             scope = scope,
             tokenValue = b64UrlSafeEncoder(aesUtil.encrypt(tokenVal)),
             tokenHash = b64UrlSafeEncoder(getHash(tokenVal)),
+            idToken = idToken
         )
 
     }
 
     @Transactional
-    open fun getRefreshToken(app: App, authorizationCode: AuthorizationCode): RefreshTokenWrapper {
+    open fun getRefreshToken(app: App, authorizationCode: AuthorizationCode, idToken: String): RefreshTokenWrapper {
         var token = refreshTokenRepository.findByKey(RefreshTokenKey(user = authorizationCode.user, app.clientId));
 
         token = token.takeIf { it != null && !app.refreshTokenRotationEnabled }
             ?: generateRefreshToken(
                 user = authorizationCode.user,
                 clientId = app.clientId,
-                scope = authorizationCode.scope
+                scope = authorizationCode.scope,
+                idToken = idToken
             )
 
         val refreshToken = refreshTokenRepository.save(token)
@@ -165,7 +168,7 @@ open class TokenService(
 
 
     @Transactional
-    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
+    open fun handleTokenRequest(tokenRequestDto: TokenRequestDto, request: HttpServletRequest): TokenWrapper {
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
             || tokenRequestDto.grantType == "client_credentials" && tokenRequestDto.clientSecret == null
@@ -191,32 +194,35 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
+    open fun handleAuthorizationCodeRequest(dto: TokenRequestDto, request: HttpServletRequest): TokenWrapper {
         demand(dto.redirectUri != null) { AuthosException("missing redirect uri", MissingParametersException()) }
 
-        val app = appService.validateAppCredentials(tokenRequestDto = dto,request)
+        val app = appService.validateAppCredentials(tokenRequestDto = dto, request)
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, dto)
         code.used = true;
         authorizationCodeRepository.save(code)
+        val authorizationSession = shortSessionService.getSessionByCode(code.codeVal)
+        val ssoSession = requireNotNull(sSOSessionService.getSessionByCode(code.codeVal))
 
-        var refreshTokenWrapper: RefreshTokenWrapper? = null
-        if (code.scope.contains("offline_access")) {
-            refreshTokenWrapper = getRefreshToken(authorizationCode = code, app = app)
-        }
+
         val accessTokenWrapper =
             generateAccessToken(clientId = app.clientId, authorizationCode = code, refreshToken = null)
-        val authorizationSession = authorizationSessionService.getSessionByCode(code.codeVal)
+
+        val sub = ppidService.getPPIDSub(user = accessTokenWrapper.accessToken.user!!, app.group)
 
         val idToken =
             jwtTokenFactory.createToken(
-                IdTokenStrategy(
-                    ppidService,
-                    app,
-                    accessTokenWrapper.accessToken.user!!,
-                    apiHost,
-                    authorizationSession?.nonce
-                )
+                IdTokenStrategy(sub, apiHost,
+                    listOf(app.clientId),
+                    ssoSession.authTime,
+                    authorizationSession?.nonce)
             )
+
+        var refreshTokenWrapper: RefreshTokenWrapper? = null
+        if (code.scope.contains("offline_access")) {
+            refreshTokenWrapper = getRefreshToken(authorizationCode = code, app = app, idToken = idToken.serialize())
+        }
+
 
         return TokenWrapper(
             accessTokenWrapper = accessTokenWrapper,
@@ -233,15 +239,17 @@ open class TokenService(
             clientId = app.clientId,
             refreshToken = refreshTokenWrapper.refreshToken,
         )
+        val initialIdToken = SignedJWT.parse(refreshTokenWrapper.refreshToken.idToken)
 
 
         val idToken =
             jwtTokenFactory.createToken(
                 IdTokenStrategy(
-                    ppidService,
-                    app,
-                    accessTokenWrapper.accessToken.user!!,
-                    apiHost,
+                    initialIdToken.jwtClaimsSet.subject,
+                    initialIdToken.jwtClaimsSet.issuer,
+                    initialIdToken.jwtClaimsSet.audience,
+                    initialIdToken.jwtClaimsSet.getLongClaim("auth_time")
+
                 )
             )
         return TokenWrapper(
@@ -266,12 +274,23 @@ open class TokenService(
     }
 
     open fun verifyRegistrationToken(user: User, token: String) {
-        val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(hex(getHash(token))) ?: throw AuthosException("invalid_token",
-            InvalidAccessTokenException())
-        demand(accessToken.scope == "registration:confirm" && accessToken.user!!.id == user.id){ AuthosException("invalid_token",
-            InvalidAccessTokenException()) }
-        demand(accessToken.expiresAt > LocalDateTime.now()){ AuthosException("invalid_token",
-            AccessTokenExpiredException())}
+        val accessToken =
+            accessTokenRepository.findByTokenHashAndRevokedFalse(hex(getHash(token))) ?: throw AuthosException(
+                "invalid_token",
+                InvalidAccessTokenException()
+            )
+        demand(accessToken.scope == "registration:confirm" && accessToken.user!!.id == user.id) {
+            AuthosException(
+                "invalid_token",
+                InvalidAccessTokenException()
+            )
+        }
+        demand(accessToken.expiresAt > LocalDateTime.now()) {
+            AuthosException(
+                "invalid_token",
+                AccessTokenExpiredException()
+            )
+        }
 
 
         accessToken.revoked = true

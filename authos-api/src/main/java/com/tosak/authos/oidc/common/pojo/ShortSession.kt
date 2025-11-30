@@ -2,7 +2,7 @@ package com.tosak.authos.oidc.common.pojo
 
 import java.time.LocalDateTime
 
-data class AuthorizationSession(
+data class ShortSession(
     val clientId: String = "",
     val redirectUri: String = "",
     val scope: String = "",

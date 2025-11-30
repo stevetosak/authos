@@ -1,17 +1,17 @@
 package com.tosak.authos.oidc.service
 
 import SSOSession
+import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.entity.App
 import com.tosak.authos.oidc.entity.AppGroup
 import com.tosak.authos.oidc.entity.User
+import com.tosak.authos.oidc.exceptions.badreq.InvalidAuthorizationCodeException
+import com.tosak.authos.oidc.exceptions.base.AuthosException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.util.WebUtils
 import java.time.Duration
 import java.util.*
 
@@ -25,6 +25,7 @@ import java.util.*
 open class SSOSessionService(
     @Qualifier("ssoSessionRedisTemplate")
     private val ssoRedisTemplate: RedisTemplate<String, SSOSession>,
+    @Qualifier("stringAuthosRedisTemplate")
     private val stringRedisTemplate: RedisTemplate<String, String>
 ) {
 
@@ -44,12 +45,17 @@ open class SSOSessionService(
          *
          * Utilized in various SSO operations such as session creation, validation, and termination.
          */
-        const val SSO_SESSION_PREFIX = "authos:sso:session:"
-        const val SESSIONS_USER_PREFIX = "sessions:user:"
-        const val SESSIONS_GROUP_PREFIX = "sessions:group:"
+        const val SSO_SESSION_ID_PREFIX = "authos:sso:session:id:"
+        const val SESSIONS_USER_PREFIX = "authos:sso:sessions:user:"
+        const val SESSIONS_GROUP_PREFIX = "authos:sso:sessions:group:"
+        const val SSO_SESSION_UG_PREFIX = "authos:sso:user:group:"
+        const val CODE_SESSION_PREFIX = "authos:sso:code:"
+
 
 
     }
+
+    private val SESSION_DURATION = Duration.ofHours(1);
 
     /**
      * Generates an SSO (Single Sign-On) key based on provided user and group identifiers.
@@ -73,39 +79,77 @@ open class SSOSessionService(
     open fun initializeSSOSession(user: User, app: App, request: HttpServletRequest): String {
         val sessionId = UUID.randomUUID().toString()
 
-        val oldSessionCookie = WebUtils.getCookie(request,"AUTHOS_SESSION");
-        terminateSSOSession(oldSessionCookie?.value)
+        val existingSessionId: String? = stringRedisTemplate.opsForValue().get("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}")
+        val session: SSOSession? = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$existingSessionId")
+        if(session != null) {
+            return existingSessionId!!
+        }
 
         ssoRedisTemplate.opsForValue().set(
-            "$SSO_SESSION_PREFIX$sessionId",
+            "$SSO_SESSION_ID_PREFIX$sessionId",
             SSOSession.fromRequest(userId = user.id!!,app.id!!,app.group.id!!,request),
-            Duration.ofHours(1)
+            SESSION_DURATION
         )
+        stringRedisTemplate.opsForValue().set("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}",sessionId,SESSION_DURATION)
         stringRedisTemplate.opsForSet().add("$SESSIONS_USER_PREFIX${user.id}",sessionId)
         stringRedisTemplate.opsForSet().add("$SESSIONS_GROUP_PREFIX${app.group.id}",sessionId)
-
 
         return sessionId;
 
     }
 
 
-    open fun getSsoSession(sessionId: String): SSOSession? {
-        return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_PREFIX$sessionId")
+
+    open fun getSessionById(sessionId: String): SSOSession? {
+        return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$sessionId")
+    }
+
+    open fun getSessionByUserIdAndGroupId(userId: Int, groupId: Int): SSOSession? {
+        return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_UG_PREFIX$userId:$groupId")
+    }
+
+    open fun bindCodeToSSOSession(code: String,sessionId: String) {
+        requireNotNull(getSessionById(sessionId));
+        stringRedisTemplate.opsForValue().set("$CODE_SESSION_PREFIX$code",sessionId, Duration.ofMinutes(5))
     }
 
 
-    open fun hasActiveSession(sessionId: String): Boolean {
-        return ssoRedisTemplate.hasKey("$SSO_SESSION_PREFIX$sessionId")
+    @Transactional
+    open fun getSessionByCode(code: String): SSOSession? {
+
+        val key = "$CODE_SESSION_PREFIX$code"
+        println("CODE in ses: $code")
+        println("KEY: $key")
+
+        // Show keys matching the prefix (for the app's connection)
+        val keys = stringRedisTemplate.keys("$CODE_SESSION_PREFIX*")
+        println("Keys (from stringRedisTemplate): $keys")
+
+        // Read raw value (and log it)
+        val raw = stringRedisTemplate.opsForValue().get(key)
+        println("Value read from stringRedisTemplate: $raw (class ${raw?.javaClass})")
+
+        val sessionId = raw ?: return null
+        println("Found sessionId = $sessionId - now fetching session object...")
+
+        return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$sessionId")
+    }
+
+
+    open fun hasActiveSessionById(sessionId: String): Boolean {
+        return ssoRedisTemplate.hasKey("$SSO_SESSION_ID_PREFIX$sessionId")
+    }
+    open fun hasActiveSessionForGroup(userId: Int, groupId: Int): Boolean? {
+        return ssoRedisTemplate.hasKey("$SSO_SESSION_UG_PREFIX$userId:$groupId")
     }
 
     @Transactional(rollbackFor = [Exception::class])
     open fun terminateSSOSession(sessionId: String?): Boolean {
         if(sessionId == null) return false
 
-        val session = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_PREFIX$sessionId")
+        val session = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$sessionId")
         if(session != null) {
-            ssoRedisTemplate.delete("$SSO_SESSION_PREFIX$sessionId")
+            ssoRedisTemplate.delete("$SSO_SESSION_ID_PREFIX$sessionId")
             stringRedisTemplate.opsForSet().remove("$SESSIONS_USER_PREFIX${session.userId}",sessionId)
             stringRedisTemplate.opsForSet().remove("$SESSIONS_GROUP_PREFIX${session.groupId}",sessionId)
             return true

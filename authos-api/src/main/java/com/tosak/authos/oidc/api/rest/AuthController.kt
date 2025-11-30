@@ -12,7 +12,7 @@ import com.tosak.authos.oidc.common.utils.JwtTokenFactory
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.service.AppGroupService
 import com.tosak.authos.oidc.service.AppService
-import com.tosak.authos.oidc.service.AuthorizationSessionService
+import com.tosak.authos.oidc.service.ShortSessionService
 import com.tosak.authos.oidc.service.CookieService
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.service.PPIDService
@@ -44,7 +44,7 @@ open class AuthController(
     private val appGroupService: AppGroupService,
     private val ppidService: PPIDService,
     private val jwtService: JwtService,
-    private val authorizationSessionService: AuthorizationSessionService,
+    private val shortSessionService: ShortSessionService,
     private val cookieService: CookieService,
     private val jwtTokenFactory: JwtTokenFactory
 ) {

@@ -21,6 +21,7 @@ class RefreshToken(
     @Column(name = "last_used_at")
     var lastUsedAt: LocalDateTime? = null,
     val scope: String = "",
+    val idToken : String? = null
 )
 {
 

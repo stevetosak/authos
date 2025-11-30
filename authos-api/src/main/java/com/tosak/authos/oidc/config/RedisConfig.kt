@@ -2,12 +2,11 @@ package com.tosak.authos.oidc.config
 
 import SSOSession
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tosak.authos.oidc.common.pojo.AuthorizationSession
+import com.tosak.authos.oidc.common.pojo.ShortSession
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.transaction.annotation.EnableTransactionManagement
@@ -20,9 +19,8 @@ open class RedisConfig(private val connectionFactory: LettuceConnectionFactory, 
         val template = RedisTemplate<String, T>()
         template.connectionFactory = connectionFactory
         template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = Jackson2JsonRedisSerializer(objectMapper,T::class.java)
+        template.valueSerializer = if(T::class != String::class) Jackson2JsonRedisSerializer(objectMapper,T::class.java) else StringRedisSerializer()
         template.setEnableTransactionSupport(true)
-        template.afterPropertiesSet()
         return template
     }
 
@@ -30,7 +28,8 @@ open class RedisConfig(private val connectionFactory: LettuceConnectionFactory, 
     open fun ssoSessionRedisTemplate(): RedisTemplate<String, SSOSession> = createTemplate()
 
     @Bean
-    open fun authorizationSessionRedisTemplate(): RedisTemplate<String, AuthorizationSession> = createTemplate()
+    open fun authorizationSessionRedisTemplate(): RedisTemplate<String, ShortSession> = createTemplate()
 
-
+    @Bean
+    open fun stringAuthosRedisTemplate() : RedisTemplate<String,String> = createTemplate()
 }

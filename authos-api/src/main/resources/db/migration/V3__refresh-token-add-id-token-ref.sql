@@ -1,0 +1,1 @@
+ALTER TABLE refresh_token ADD COLUMN id_token text

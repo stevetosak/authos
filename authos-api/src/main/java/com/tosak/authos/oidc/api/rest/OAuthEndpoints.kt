@@ -11,7 +11,7 @@ import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.service.AppService
 import com.tosak.authos.oidc.service.AuthorizationCodeService
 import com.tosak.authos.oidc.service.AuthorizationHandler
-import com.tosak.authos.oidc.service.AuthorizationSessionService
+import com.tosak.authos.oidc.service.ShortSessionService
 import com.tosak.authos.oidc.service.ClaimService
 import com.tosak.authos.oidc.service.IdTokenService
 import com.tosak.authos.oidc.service.PPIDService
@@ -35,11 +35,11 @@ class OAuthEndpoints(
     private val tokenService: TokenService,
     private val userService: UserService,
     private val ppidService: PPIDService,
-    private val sessionService: SSOSessionService,
+    private val ssoSessionService: SSOSessionService,
     private val claimService: ClaimService,
     private val idTokenService: IdTokenService,
     private val authorizationHandler: AuthorizationHandler,
-    private val authorizationSessionService: AuthorizationSessionService,
+    private val shortSessionService: ShortSessionService,
 ) {
 
 
@@ -105,16 +105,19 @@ class OAuthEndpoints(
         @RequestParam("authz_id") authzId: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         httpServletRequest: HttpServletRequest,
-        authentication: Authentication?
+        authentication: Authentication?,
+        @CookieValue(name = "AUTHOS_SESSION") sessionId: String
     ): ResponseEntity<Void?> {
 
         val user = userService.getUserFromAuthentication(authentication)
-        val authorizationSession = authorizationSessionService.getSessionByAuthzId(authzId);
+        val authorizationSession = shortSessionService.getSessionByAuthzId(authzId);
         if(authorizationSession == null) {
             println("authorizationSession not found")
         }
 
         val app = appService.getAppByClientId(clientId);
+
+
 
 
 
@@ -140,7 +143,8 @@ class OAuthEndpoints(
         }
         val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri, scope, user)
 
-        authorizationSessionService.bindCode(authzId, code)
+        shortSessionService.bindCodeToShortSession(authzId, code)
+        ssoSessionService.bindCodeToSSOSession(code,sessionId)
 
         return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
     }
@@ -162,7 +166,6 @@ class OAuthEndpoints(
         val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken)
 
         val tokenWrapper = tokenService.handleTokenRequest(dto, request)
-        idTokenService.save(tokenWrapper.idToken, tokenWrapper.accessTokenWrapper.accessToken);
 
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())

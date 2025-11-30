@@ -9,7 +9,6 @@ import com.tosak.authos.oidc.exceptions.badreq.BadPromptException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.exceptions.badreq.LoginRequiredException
-import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
@@ -30,7 +29,7 @@ class AuthorizationHandler(
     private val ppidService: PPIDService,
     private val ssoSessionService: SSOSessionService,
     private val userService: UserService,
-    private val authorizationSessionService: AuthorizationSessionService
+    private val shortSessionService: ShortSessionService
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -72,7 +71,7 @@ class AuthorizationHandler(
         { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
 
 
-        val authzId = authorizationSessionService.generateTempSession(authorizeRequestParams)
+        val authzId = shortSessionService.generateTempSession(authorizeRequestParams)
 
 //
 
@@ -96,7 +95,7 @@ class AuthorizationHandler(
                 authorizeRequestParams.redirectUri
             )
         }
-        demand(ssoSessionService.hasActiveSession(sessionId!!)) {
+        demand(ssoSessionService.hasActiveSessionById(sessionId!!)) {
             AuthosException(
                 "invalid session",
                 LoginRequiredException(),
