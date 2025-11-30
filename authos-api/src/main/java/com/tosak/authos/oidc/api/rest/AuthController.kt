@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.net.URI
 import java.net.URLEncoder
+import java.time.LocalDateTime
 
 
 /**
@@ -105,6 +106,7 @@ open class AuthController(
         val sessionId = ssoSessionService.initializeSSOSession(user, app, request)
         val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request));
         val headers = cookieService.getSSOLoginCookieHeaders(token,sessionId);
+        userService.onLoginSuccess(user)
 
         val url = "${frontendHost}/oauth/user-consent?client_id=${clientId}&redirect_uri=${redirectUri}" +
                 "&state=${state}&authz_id=${authzId}&scope=${URLEncoder.encode(scope, Charsets.UTF_8)}"
@@ -161,6 +163,7 @@ open class AuthController(
         val sub = ppidService.getPPIDSub(user,appGroupService.getDefaultGroupForUser(user))
         val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
         val headers = cookieService.getLoginCookieHeaders(token)
+        userService.onLoginSuccess(user)
         return ResponseEntity
             .status(200)
             .headers(headers)
@@ -273,8 +276,13 @@ open class AuthController(
         val sub = ppidService.getPPIDSub(user, appGroupService.getDefaultGroupForUser(user))
         val authToken = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,request))
         val headers = cookieService.getLoginCookieHeaders(authToken)
-        return if(result) ResponseEntity.ok().headers(headers).build()
-        else ResponseEntity.badRequest().build()
+
+        if(result) {
+            userService.onLoginSuccess(user)
+            return ResponseEntity.status(200).headers(headers).build()
+        } else {
+            return ResponseEntity.status(401).build()
+        }
     }
     @PostMapping("/disable-totp")
     fun disableTotpForUser(authentication: Authentication?,otp: String): ResponseEntity<String> {

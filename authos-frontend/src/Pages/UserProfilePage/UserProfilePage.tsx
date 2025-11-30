@@ -24,6 +24,19 @@ export const ProfilePage = () => {
     const {user} = useAuth()
     const [activeTab, setActiveTab] = useState('account');
 
+    const lastLoginAt = user.lastLoginAt ? new Date(user.lastLoginAt) : null;
+    const formattedLoginTime = lastLoginAt
+        ? lastLoginAt.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        })
+        : 'Never';
+
     return (
         <div className="min-h-screen text-white p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
@@ -46,7 +59,7 @@ export const ProfilePage = () => {
                             <Mail className="w-4 h-4"/> {user.email}
                         </p>
                         <p className="text-sm text-gray-500 mt-2">
-                            Last login: {user.lastLoginAt?.toLocaleTimeString()}
+                            Last login: {formattedLoginTime}
                         </p>
                     </div>
                 </div>

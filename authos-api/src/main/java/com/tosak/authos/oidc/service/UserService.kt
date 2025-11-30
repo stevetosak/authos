@@ -32,6 +32,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.http.HttpHeaders
 import java.time.Duration
+import java.time.LocalDateTime
 import java.util.Optional
 
 @Service
@@ -80,43 +81,6 @@ open class UserService @Autowired constructor(
         return authentication!!.principal as User
     }
 
-//    open fun getLoginCookieHeaders(
-//        user: User,
-//        request: HttpServletRequest,
-//        group: AppGroup? = null,
-//        clear: Boolean = false
-//    ): HttpHeaders {
-//
-//        user.lastLoginAt = LocalDateTime.now()
-//        userRepository.save(user)
-//
-//        val maxAge = if (clear) Duration.ZERO else Duration.ofHours(1);
-//        val token = tokenFactory.createToken(LoginTokenStrategy(user, ppidService, request, group, appGroupService, apiHost))
-//        val jwtCookie = ResponseCookie
-//            .from("AUTH_TOKEN", token.serialize())
-//            .httpOnly(true)
-//            .secure(true)
-//            .path("/")
-//            .domain(cookieDomain)
-//            .sameSite("None")
-//            .maxAge(maxAge)
-//            .build()
-//
-//        val xsrfCookie = ResponseCookie.from("XSRF-TOKEN", token.jwtClaimsSet.getStringClaim("xsrf_token"))
-//            .httpOnly(false)
-//            .secure(true)
-//            .path("/")
-//            .domain(cookieDomain)
-//            .sameSite("None")
-//            .maxAge(maxAge)
-//            .build()
-//
-//
-//        val headers = HttpHeaders()
-//        headers.add("Set-Cookie", jwtCookie.toString())
-//        headers.add("Set-Cookie", xsrfCookie.toString())
-//        return headers;
-//    }
 
     open fun getMfaCookieHeader(user: User) : HttpHeaders {
         val mfaToken = jwtTokenFactory.createToken(MFATokenStrategy(user,apiHost))
@@ -240,6 +204,11 @@ open class UserService @Autowired constructor(
     open fun disableTotp(user: User) {
         user.totpSecret = null
         user.mfaEnabled = false
+        userRepository.save(user)
+    }
+
+    open fun onLoginSuccess(user: User) {
+        user.lastLoginAt = LocalDateTime.now()
         userRepository.save(user)
     }
 

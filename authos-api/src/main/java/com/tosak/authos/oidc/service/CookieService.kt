@@ -12,6 +12,8 @@ class CookieService {
 
     @Value("\${authos.cookie.domain}")
     lateinit var cookieDomain: String
+    @Value("\${authos.api.cookie.domain}")
+    lateinit var apiCookieDomain: String
 
     fun createAuthTokenCookie(token: SignedJWT, clear: Boolean = false): ResponseCookie {
         val maxAge = if (clear) Duration.ZERO else Duration.ofHours(1);
@@ -45,6 +47,7 @@ class CookieService {
             .httpOnly(true)
             .secure(true)
             .path("/")
+            .domain(apiCookieDomain)
             .maxAge(maxAge)
             .sameSite("Lax")
             .build();
