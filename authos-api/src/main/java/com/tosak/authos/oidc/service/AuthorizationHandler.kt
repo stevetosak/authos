@@ -76,24 +76,17 @@ class AuthorizationHandler(
         }
 
         val sessionId = request.cookies?.find { it.name == "AUTHOS_SESSION" }?.value
-        demand(sessionId != null) {
-            AuthosException(
-                "invalid session",
-                LoginRequiredException(),
-                authorizeRequestParams.state,
-                authorizeRequestParams.redirectUri
-            )
-        }
-        val session = ssoSessionService.getSessionById(sessionId!!)
 
-        demand(session != null) {
-            AuthosException(
-                "invalid session",
-                LoginRequiredException(),
-                state = authorizeRequestParams.state,
-                authorizeRequestParams.redirectUri
-            )
+        if(sessionId == null){
+            return redirectToLogin(authorizeRequestParams,authzId)
         }
+
+        val session = ssoSessionService.getSessionById(sessionId)
+
+        if(session == null) {
+            return redirectToLogin(authorizeRequestParams,authzId)
+        }
+
 
         return when (promptType) {
             PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams,authzId, session!!)
