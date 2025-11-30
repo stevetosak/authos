@@ -1,5 +1,6 @@
 package com.tosak.authos.oidc.service
 
+import SSOSession
 import com.tosak.authos.oidc.common.enums.PromptType
 import com.tosak.authos.oidc.exceptions.oauth.InvalidScopeException
 import com.tosak.authos.oidc.exceptions.oauth.UnsupportedResponseTypeException
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service
 import java.net.URI
 import java.net.URLEncoder
 import java.security.InvalidParameterException
+import java.time.Instant
 
 /**
  * Service class responsible for handling authorization requests, enforcing OAuth2 standards
@@ -52,17 +54,13 @@ class AuthorizationHandler(
         prompt: String,
         authorizeRequestParams: AuthorizeRequestParams,
         request: HttpServletRequest,
-        authentication: Authentication?,
     ): ResponseEntity<Void> {
         if (authorizeRequestParams.responseType != "code")
             throw UnsupportedResponseTypeException("unsupported response type ${authorizeRequestParams.responseType}")
 
-        val app = appService.getAppByClientIdAndRedirectUri(
-            authorizeRequestParams.clientId,
-            authorizeRequestParams.redirectUri
-        )
 
         val promptType = PromptType.parse(prompt)
+
 
         demand(!authorizeRequestParams.scope.isEmpty() && authorizeRequestParams.scope.contains("openid"))
         { AuthosException("invalid scope", InvalidScopeException(), authorizeRequestParams.redirectUri) }
@@ -73,19 +71,8 @@ class AuthorizationHandler(
 
         val authzId = shortSessionService.generateTempSession(authorizeRequestParams)
 
-//
-
         if (promptType == PromptType.LOGIN) {
-
-
-            return redirectToLogin(
-                authorizeRequestParams.clientId,
-                authorizeRequestParams.redirectUri,
-                authorizeRequestParams.state,
-                authorizeRequestParams.scope,
-                dusterSub = authorizeRequestParams.dusterSub,
-                authzId = authzId
-            )
+            return redirectToLogin(authorizeRequestParams,authzId)
         }
 
         val sessionId = request.cookies?.find { it.name == "AUTHOS_SESSION" }?.value
@@ -97,7 +84,9 @@ class AuthorizationHandler(
                 authorizeRequestParams.redirectUri
             )
         }
-        demand(ssoSessionService.hasActiveSessionById(sessionId!!)) {
+        val session = ssoSessionService.getSessionById(sessionId!!)
+
+        demand(session != null) {
             AuthosException(
                 "invalid session",
                 LoginRequiredException(),
@@ -107,11 +96,12 @@ class AuthorizationHandler(
         }
 
         return when (promptType) {
-            PromptType.NONE -> handleNone(authorizeRequestParams, authzId)
+            PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams,authzId, session!!)
+            PromptType.NONE -> redirectToApprove(authorizeRequestParams, authzId)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams, authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
-                throw AuthosException("invalid request", BadPromptException())
+                throw IllegalStateException("how tf did this happen")
             }
         }
     }
@@ -122,7 +112,7 @@ class AuthorizationHandler(
      * @param authorizeRequestParams The parameters of the authorization request, including client ID, redirect URI, state, and scope.
      * @return A ResponseEntity with a 302 status code and a location header pointing to the approval endpoint.
      */
-    private fun handleNone(
+    private fun redirectToApprove(
         authorizeRequestParams: AuthorizeRequestParams,
         authzId: String
     ): ResponseEntity<Void> {
@@ -178,28 +168,35 @@ class AuthorizationHandler(
     }
 
     fun redirectToLogin(
-        clientId: String,
-        redirectUri: String,
-        state: String,
-        scope: String,
-        authzId: String,
-        dusterSub: String? = null,
+        authorizeRequestParams: AuthorizeRequestParams,
+        authzId: String
     ): ResponseEntity<Void> {
 
         println("Redirecting to login...")
+
         val url = StringBuilder(
-            "${frontendHost}/oauth/login?client_id=$clientId&redirect_uri=$redirectUri&state=$state&authz_id=$authzId&scope=${
-                URLEncoder.encode(
-                    scope,
-                    "UTF-8"
-                )
-            }"
+            "${frontendHost}/oauth/login?" +
+                    "client_id=${authorizeRequestParams.clientId}" +
+                    "&redirect_uri=${URLEncoder.encode(authorizeRequestParams.redirectUri, "UTF-8")}" +
+                    "&state=${authorizeRequestParams.state}" +
+                    "&authz_id=$authzId" +
+                    "&scope=${URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")}"
         )
-        dusterSub?.let { url.append("&duster_uid=$dusterSub") }
+
+        authorizeRequestParams.dusterSub?.let { url.append("&duster_uid=$it") }
+
         return ResponseEntity
-            .status(303)
+            .status(302)
             .location(URI(url.toString()))
             .build()
+    }
+
+
+    private fun handleNoPrompt(authorizeRequestParams: AuthorizeRequestParams,authzId: String,session:SSOSession) : ResponseEntity<Void> {
+        authorizeRequestParams.maxAge?.let { maxAge ->
+            if(Instant.now().epochSecond - session.authTime > maxAge) return redirectToLogin(authorizeRequestParams,authzId)
+        }
+        return redirectToApprove(authorizeRequestParams, authzId)
     }
 
 }

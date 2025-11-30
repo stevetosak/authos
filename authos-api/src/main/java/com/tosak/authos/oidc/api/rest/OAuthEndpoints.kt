@@ -63,14 +63,14 @@ class OAuthEndpoints(
         @RequestParam("redirect_uri") redirectUri: String,
         @RequestParam("state") state: String,
         @RequestParam("scope") scope: String,
-        @RequestParam("prompt", defaultValue = "login") prompt: String,
+        @RequestParam("prompt", defaultValue = "") prompt: String,
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
         @RequestParam(name = "response_type", required = false) responseType: String?,
         @RequestParam(name = "nonce", required = false) nonce: String?,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
+        @RequestParam(name = "max_age", required = false) maxAge: Int?,
         request: HttpServletRequest,
         response: HttpServletResponse,
-        authentication: Authentication?,
     ): ResponseEntity<Void> {
 
         demand(responseType != null) {
@@ -82,9 +82,8 @@ class OAuthEndpoints(
 
         return authorizationHandler.handleRequest(
             prompt,
-            AuthorizeRequestParams(clientId, redirectUri, state, scope, idTokenHint, responseType!!, dusterSub, nonce),
+            AuthorizeRequestParams(clientId, redirectUri, state, scope, idTokenHint, responseType!!, dusterSub, nonce,maxAge),
             request,
-            authentication
         )
 
 
@@ -111,14 +110,11 @@ class OAuthEndpoints(
 
         val user = userService.getUserFromAuthentication(authentication)
         val authorizationSession = shortSessionService.getSessionByAuthzId(authzId);
-        if(authorizationSession == null) {
+        if (authorizationSession == null) {
             println("authorizationSession not found")
         }
 
         val app = appService.getAppByClientId(clientId);
-
-
-
 
 
 //        val userId = httpSession.getAttribute("user") as Int?
@@ -132,8 +128,6 @@ class OAuthEndpoints(
 //            MissingSessionAttributesException()) }
 
 
-
-
         // todo tuka mozam verify da napram na parametrive
         // todo zemam app preku client id i provervam vo sso sesija.
 
@@ -144,7 +138,7 @@ class OAuthEndpoints(
         val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri, scope, user)
 
         shortSessionService.bindCodeToShortSession(authzId, code)
-        ssoSessionService.bindCodeToSSOSession(code,sessionId)
+        ssoSessionService.bindCodeToSSOSession(code, sessionId)
 
         return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
     }
@@ -187,19 +181,20 @@ class OAuthEndpoints(
         method = [RequestMethod.GET, RequestMethod.POST],
         produces = [APPLICATION_JSON_VALUE]
     )
-    fun userinfo(@RequestHeader("Authorization", required = false) authorization: String?,@RequestParam(name = "access_token") token: String?): ResponseEntity<Map<String, Any?>> {;
-        val accessToken = if(authorization != null){
+    fun userinfo(
+        @RequestHeader("Authorization", required = false) authorization: String?,
+        @RequestParam(name = "access_token") token: String?
+    ): ResponseEntity<Map<String, Any?>> {;
+        val accessToken = if (authorization != null) {
             tokenService.validateAccessToken(authorization.substring(7))
-        }else{
-            demand(token != null){AuthosException("invalid_token",HttpBadRequestException())}
+        } else {
+            demand(token != null) { AuthosException("invalid_token", HttpBadRequestException()) }
             tokenService.validateAccessToken(token!!)
         }
 
         val claims = claimService.resolve(accessToken)
         return ResponseEntity.ok(claims)
     }
-
-
 
 
 }
