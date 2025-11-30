@@ -76,7 +76,8 @@ class OAuthEndpoints(
         demand(responseType != null) {
             AuthosException(
                 "unsupported response type",
-                HttpBadRequestException()
+                HttpBadRequestException(),
+                redirectUrl = redirectUri,
             )
         }
 

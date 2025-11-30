@@ -42,11 +42,11 @@ class AuthorizationCodeService(
             tokenRequestDto.code!!
         ) ?: throw AuthosException("invalid grant",InvalidAuthorizationCodeException(), redirectUrl = tokenRequestDto.redirectUri)
 
-        demand(authorizationCode.expiresAt > LocalDateTime.now()) { AuthosException("invalid_grant", AuthorizationCodeExpiredException()) }
+        demand(authorizationCode.expiresAt > LocalDateTime.now()) { AuthosException("invalid_grant", AuthorizationCodeExpiredException(), redirectUrl = tokenRequestDto.redirectUri) }
 
-        demand(!authorizationCode.used){ AuthosException("invalid_grant", AuthorizationCodeUsedException()) }
+        demand(!authorizationCode.used){ AuthosException("invalid_grant", AuthorizationCodeUsedException(), redirectUrl = tokenRequestDto.redirectUri) }
 
-        demand(authorizationCode.scope.contains("openid")){ AuthosException("invalid_grant", InvalidScopeException()) }
+        demand(authorizationCode.scope.contains("openid")){ AuthosException("invalid_grant", InvalidScopeException(), redirectUrl = tokenRequestDto.redirectUri) }
 
         return authorizationCode;
 

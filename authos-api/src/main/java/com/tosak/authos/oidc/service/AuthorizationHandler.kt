@@ -89,7 +89,7 @@ class AuthorizationHandler(
 
 
         return when (promptType) {
-            PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams,authzId, session!!)
+            PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams,authzId, session)
             PromptType.NONE -> redirectToApprove(authorizeRequestParams, authzId)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams, authzId)
             PromptType.SELECT_ACCOUNT -> TODO()

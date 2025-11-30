@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.net.URI
 import java.net.URLEncoder
 
-@Profile("prod")
+//@Profile("prod")
 @RestControllerAdvice
 class ExceptionHandler {
 
