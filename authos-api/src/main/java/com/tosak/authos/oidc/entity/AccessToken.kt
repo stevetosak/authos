@@ -15,7 +15,7 @@ class AccessToken (
 
     @ManyToOne
     @JoinColumn(name = "authorization_code", referencedColumnName = "code_hash")
-    val authorizationCode: AuthorizationCode = AuthorizationCode(),
+    var authorizationCode: AuthorizationCode? = AuthorizationCode(),
     @Column(name = "expires_at")
     val expiresAt : LocalDateTime = LocalDateTime.now().plusHours(24),
     @Column(name = "created_at")

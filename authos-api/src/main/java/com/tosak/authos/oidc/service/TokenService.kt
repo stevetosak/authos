@@ -118,7 +118,8 @@ open class TokenService(
                 tokenHash = b64UrlSafeEncoder(tokenHash),
                 clientId = clientId,
                 user = user,
-                scope = scope
+                scope = scope,
+                authorizationCode = authorizationCode
             )
         )
 
