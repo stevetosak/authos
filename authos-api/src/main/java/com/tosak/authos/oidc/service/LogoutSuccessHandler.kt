@@ -35,10 +35,6 @@ class LogoutSuccessHandler(private val ssoSessionService: SSOSessionService) : L
             if(name == "AUTHOS_SESSION") cookie.domain = apiDomain else cookie.domain = frontendDomain
             response.addCookie(cookie)
         }
-
-
-        if(success) response.status = HttpServletResponse.SC_OK
-        else response.status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR
-
+        response.status = HttpServletResponse.SC_OK
     }
 }

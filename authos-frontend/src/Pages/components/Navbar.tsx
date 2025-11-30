@@ -41,7 +41,6 @@ const Navbar = () => {
                 setTimeout(() => {
                     setUser(defaultUser)
                     setIsAuthenticated(false)
-                    nav("/")
                 }, 1000)
             }).catch(err => {
             console.error(err)
