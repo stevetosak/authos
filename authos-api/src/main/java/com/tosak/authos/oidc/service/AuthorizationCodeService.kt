@@ -13,6 +13,7 @@ import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.exceptions.TokenEndpointException
 import com.tosak.authos.oidc.exceptions.TokenErrorCode
+import com.tosak.authos.oidc.repository.AccessTokenRepository
 import com.tosak.authos.oidc.repository.AuthorizationCodeRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -20,7 +21,8 @@ import java.time.LocalDateTime
 @Service
 class AuthorizationCodeService(
     private val authorizationCodeRepository: AuthorizationCodeRepository,
-    private val redirectUriService: RedirectUriService
+    private val redirectUriService: RedirectUriService,
+    private val accessTokenRepository: AccessTokenRepository
 ) {
 
     fun generateAuthorizationCode(clientId: String, redirectUri: String, scope: String, user: User): String {
@@ -45,13 +47,25 @@ class AuthorizationCodeService(
         )
 
 
-        demand(authorizationCode != null){ TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
-        demand(authorizationCode!!.expiresAt > LocalDateTime.now()) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
-        demand(!authorizationCode.used){ TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
-        demand(authorizationCode.scope.contains("openid")){ TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+        demand(authorizationCode != null) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+
+        if (authorizationCode!!.used) {
+            val accessToken = accessTokenRepository.findByAuthorizationCode(authorizationCode)
+            accessToken?.let { it ->
+                it.revoked = true;
+                accessTokenRepository.save(it)
+            }
+            throw TokenEndpointException(TokenErrorCode.INVALID_GRANT)
+
+        }
+
+        demand(authorizationCode.expiresAt > LocalDateTime.now()) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+
+        demand(authorizationCode.scope.contains("openid")) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+
 
         return authorizationCode;
 

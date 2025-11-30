@@ -147,14 +147,13 @@ open class TokenService(
     open fun validateAccessToken(token: String): AccessToken {
         val tokenVal = String(b64UrlSafeDecoder(token), StandardCharsets.US_ASCII)
         val tokenHash = b64UrlSafeEncoder(getHash(tokenVal))
-        val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(tokenHash) ?: throw AuthosException(
-            "invalid token",
-            InvalidAccessTokenException()
-        )
-        demand(!accessToken.revoked)
-        { AuthosException("invalid_token", AccessTokenRevokedException()) }
-        demand(accessToken.expiresAt.isAfter(LocalDateTime.now()))
-        { AuthosException("invalid_token", AccessTokenExpiredException()) }
+        val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(tokenHash);
+
+        demand(accessToken != null)
+        { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+
+        demand(accessToken!!.expiresAt.isAfter(LocalDateTime.now()))
+        { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
         return accessToken;
     }
@@ -163,7 +162,7 @@ open class TokenService(
         val grantType = try {
             GrantType.valueOf(grant.uppercase())
         } catch (e: IllegalArgumentException) {
-            throw AuthosException("invalid_grant", InvalidParameterException())
+            throw TokenEndpointException(TokenErrorCode.INVALID_GRANT)
         }
         return grantType;
     }
@@ -197,7 +196,14 @@ open class TokenService(
 
     @Transactional
     open fun handleAuthorizationCodeRequest(dto: TokenRequestDto, request: HttpServletRequest): TokenWrapper {
-        demand(dto.redirectUri != null) { TokenEndpointException(TokenErrorCode.INVALID_REQUEST,"missing redirect_uri",null,null) }
+        demand(dto.redirectUri != null) {
+            TokenEndpointException(
+                TokenErrorCode.INVALID_REQUEST,
+                "missing redirect_uri",
+                null,
+                null
+            )
+        }
 
 
         val app = appService.validateAppCredentials(tokenRequestDto = dto, request)
@@ -215,10 +221,12 @@ open class TokenService(
 
         val idToken =
             jwtTokenFactory.createToken(
-                IdTokenStrategy(sub, apiHost,
+                IdTokenStrategy(
+                    sub, apiHost,
                     listOf(app.clientId),
                     ssoSession.authTime,
-                    authorizationSession?.nonce)
+                    authorizationSession?.nonce
+                )
             )
 
         var refreshTokenWrapper: RefreshTokenWrapper? = null

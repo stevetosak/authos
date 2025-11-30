@@ -1,0 +1,1 @@
+ALTER TABLE access_token add column authorization_code varchar(255) references authorization_code(code_hash);
