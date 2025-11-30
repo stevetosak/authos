@@ -81,9 +81,9 @@ open class SSOSessionService(
 
         val existingSessionId: String? = stringRedisTemplate.opsForValue().get("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}")
         val session: SSOSession? = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$existingSessionId")
-        if(session != null) {
-            return existingSessionId!!
-        }
+//        if(session != null) {
+//            return existingSessionId!!
+//        }
 
         ssoRedisTemplate.opsForValue().set(
             "$SSO_SESSION_ID_PREFIX$sessionId",
