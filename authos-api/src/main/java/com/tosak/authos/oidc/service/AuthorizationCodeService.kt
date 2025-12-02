@@ -11,21 +11,24 @@ import com.tosak.authos.oidc.exceptions.badreq.AuthorizationCodeUsedException
 import com.tosak.authos.oidc.exceptions.badreq.InvalidAuthorizationCodeException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.common.utils.demand
+import com.tosak.authos.oidc.entity.AccessToken
 import com.tosak.authos.oidc.exceptions.TokenEndpointException
 import com.tosak.authos.oidc.exceptions.TokenErrorCode
 import com.tosak.authos.oidc.repository.AccessTokenRepository
 import com.tosak.authos.oidc.repository.AuthorizationCodeRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Service
-class AuthorizationCodeService(
+open class AuthorizationCodeService(
     private val authorizationCodeRepository: AuthorizationCodeRepository,
     private val redirectUriService: RedirectUriService,
     private val accessTokenRepository: AccessTokenRepository
 ) {
 
-    fun generateAuthorizationCode(clientId: String, redirectUri: String, scope: String, user: User): String {
+    open fun generateAuthorizationCode(clientId: String, redirectUri: String, scope: String, user: User): String {
         val authorizationCode =
             AuthorizationCode(clientId = clientId, redirectUri = redirectUri, scope = scope, user = user)
         authorizationCodeRepository.save(authorizationCode)
@@ -35,7 +38,9 @@ class AuthorizationCodeService(
     }
 
 
-    fun validateTokenRequest(app: App, tokenRequestDto: TokenRequestDto): AuthorizationCode {
+
+    @Transactional
+    open fun validateTokenRequest(app: App, tokenRequestDto: TokenRequestDto): AuthorizationCode {
 
 
         val redirectUris: List<RedirectUri> = redirectUriService.getAllByAppId(app.id!!)
@@ -51,13 +56,8 @@ class AuthorizationCodeService(
         demand(authorizationCode != null) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
 
         if (authorizationCode!!.used) {
-            val accessToken = accessTokenRepository.findByAuthorizationCode(authorizationCode)
-            accessToken?.let { it ->
-                it.revoked = true;
-                accessTokenRepository.save(it)
-            }
+            accessTokenRepository.revokeByAuthorizationCode(authorizationCode.codeVal)
             throw TokenEndpointException(TokenErrorCode.INVALID_GRANT)
-
         }
 
         demand(authorizationCode.expiresAt > LocalDateTime.now()) { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }

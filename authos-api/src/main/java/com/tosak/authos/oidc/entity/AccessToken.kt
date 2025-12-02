@@ -27,4 +27,7 @@ class AccessToken (
     ){
 
 
+    override fun toString(): String {
+        return "AccessToken(tokenHash='$tokenHash', clientId='$clientId', scope='$scope', authorizationCode=${authorizationCode?.codeVal}, createdAt=$createdAt, expiresAt=$expiresAt, revoked=$revoked)"
+    }
 }

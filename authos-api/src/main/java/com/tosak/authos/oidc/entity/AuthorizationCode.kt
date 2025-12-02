@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 class AuthorizationCode (
     @Id
     @Column(name = "code_hash")
-    var codeVal : String =  hex(getSecureRandomValue(32)),
+    var codeVal : String = hex(getSecureRandomValue(32)),
     @Column(name = "client_id")
     val clientId : String = "",
     @Column(name = "redirect_uri")

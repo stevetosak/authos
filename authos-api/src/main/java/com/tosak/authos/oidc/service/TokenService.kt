@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
 import java.security.InvalidParameterException
 import java.time.LocalDateTime
+import kotlin.math.atan
 
 // val atHash = b64UrlSafe(tokenHash.take(tokenHash.size / 2).toByteArray())
 
@@ -149,6 +150,8 @@ open class TokenService(
         val tokenVal = String(b64UrlSafeDecoder(token), StandardCharsets.US_ASCII)
         val tokenHash = b64UrlSafeEncoder(getHash(tokenVal))
         val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(tokenHash);
+
+        println("AT REVOKED: ${accessToken?.revoked}")
 
         demand(accessToken != null)
         { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
