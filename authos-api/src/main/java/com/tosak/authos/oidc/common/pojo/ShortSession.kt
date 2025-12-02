@@ -6,7 +6,7 @@ data class ShortSession(
     val clientId: String = "",
     val redirectUri: String = "",
     val scope: String = "",
-    val state: String,
+    val state: String? = null,
     val responseType: String,
     val nonce: String? = null,
     val createdAt: String = LocalDateTime.now().toString(),

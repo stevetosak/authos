@@ -8,7 +8,6 @@ import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.exceptions.AuthorizationEndpointException
 import com.tosak.authos.oidc.exceptions.AuthorizationErrorCode
-import com.tosak.authos.oidc.exceptions.OidcErrorCode
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.service.AppService
@@ -56,7 +55,7 @@ class OAuthEndpoints(
      * @param prompt A string specifying whether the user should be prompted for re-authentication; defaults to "login".
      * @param idTokenHint An optional ID token previously issued by the authorization server to provide a hint about the user's session.
      * @param responseType The type of response expected, such as "code" for authorization code.
-     * @param request The HTTP servlet request object, providing client request information.
+     * @param httpServletRequest The HTTP servlet request object, providing client request information.
      * @param response The HTTP servlet response object for returning the result of the operation.
      * @return A ResponseEntity containing the HTTP response with status and headers for redirect or further handling.
      */
@@ -64,7 +63,7 @@ class OAuthEndpoints(
     fun authorize(
         @RequestParam("client_id") clientId: String,
         @RequestParam("redirect_uri") redirectUri: String,
-        @RequestParam("state") state: String,
+        @RequestParam("state", required = false) state: String?,
         @RequestParam("scope") scope: String,
         @RequestParam("prompt", defaultValue = "") prompt: String,
         @RequestParam(name = "id_token_hint", required = false) idTokenHint: String?,
@@ -72,18 +71,35 @@ class OAuthEndpoints(
         @RequestParam(name = "nonce", required = false) nonce: String?,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         @RequestParam(name = "max_age", required = false) maxAge: Int?,
-        request: HttpServletRequest,
+        @RequestParam(name = "request", required = false) request: String?,
+        httpServletRequest: HttpServletRequest,
         response: HttpServletResponse,
     ): ResponseEntity<Void> {
 
         demand(responseType != null) {
-            AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,redirectUri,state)
+            AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST, redirectUri, state)
+        }
+        demand(request == null) {
+            AuthorizationEndpointException(
+                AuthorizationErrorCode.REQUEST_NOT_SUPPORTED,
+                redirectUri
+            )
         }
 
         return authorizationHandler.handleRequest(
             prompt,
-            AuthorizeRequestParams(clientId, redirectUri, state, scope, idTokenHint, responseType!!, dusterSub, nonce,maxAge),
-            request,
+            AuthorizeRequestParams(
+                clientId,
+                redirectUri,
+                state,
+                scope,
+                idTokenHint,
+                responseType!!,
+                dusterSub,
+                nonce,
+                maxAge
+            ),
+            httpServletRequest,
         )
 
 
@@ -115,6 +131,14 @@ class OAuthEndpoints(
         }
 
         val app = appService.getAppByClientId(clientId);
+        demand(app.redirectUris.map { redirectUri -> redirectUri.id!!.redirectUri }.contains(redirectUri)) {
+            AuthorizationEndpointException(
+                AuthorizationErrorCode.INVALID_REQUEST,
+                "invalid redirect uri",
+                redirectUri,
+                state
+            )
+        }
 
 
 //        val userId = httpSession.getAttribute("user") as Int?
