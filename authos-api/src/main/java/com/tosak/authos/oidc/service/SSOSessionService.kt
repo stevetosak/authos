@@ -52,7 +52,6 @@ open class SSOSessionService(
         const val CODE_SESSION_PREFIX = "authos:sso:code:"
 
 
-
     }
 
     private val SESSION_DURATION = Duration.ofHours(1);
@@ -79,7 +78,8 @@ open class SSOSessionService(
     open fun initializeSSOSession(user: User, app: App, request: HttpServletRequest): String {
         val sessionId = UUID.randomUUID().toString()
 
-        val existingSessionId: String? = stringRedisTemplate.opsForValue().get("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}")
+        val existingSessionId: String? =
+            stringRedisTemplate.opsForValue().get("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}")
         val session: SSOSession? = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$existingSessionId")
 //        if(session != null) {
 //            return existingSessionId!!
@@ -87,20 +87,21 @@ open class SSOSessionService(
 
         ssoRedisTemplate.opsForValue().set(
             "$SSO_SESSION_ID_PREFIX$sessionId",
-            SSOSession.fromRequest(userId = user.id!!,app.id!!,app.group.id!!,request),
+            SSOSession.fromRequest(userId = user.id!!, app.id!!, app.group.id!!, request),
             SESSION_DURATION
         )
-        stringRedisTemplate.opsForValue().set("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}",sessionId,SESSION_DURATION)
-        stringRedisTemplate.opsForSet().add("$SESSIONS_USER_PREFIX${user.id}",sessionId)
-        stringRedisTemplate.opsForSet().add("$SESSIONS_GROUP_PREFIX${app.group.id}",sessionId)
+        stringRedisTemplate.opsForValue()
+            .set("$SSO_SESSION_UG_PREFIX${user.id}:${app.group.id}", sessionId, SESSION_DURATION)
+        stringRedisTemplate.opsForSet().add("$SESSIONS_USER_PREFIX${user.id}", sessionId)
+        stringRedisTemplate.opsForSet().add("$SESSIONS_GROUP_PREFIX${app.group.id}", sessionId)
 
         return sessionId;
 
     }
 
 
-
-    open fun getSessionById(sessionId: String): SSOSession? {
+    open fun getSessionById(sessionId: String?): SSOSession? {
+        if (sessionId == null) return null
         return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$sessionId")
     }
 
@@ -108,9 +109,9 @@ open class SSOSessionService(
         return ssoRedisTemplate.opsForValue().get("$SSO_SESSION_UG_PREFIX$userId:$groupId")
     }
 
-    open fun bindCodeToSSOSession(code: String,sessionId: String) {
+    open fun bindCodeToSSOSession(code: String, sessionId: String) {
         requireNotNull(getSessionById(sessionId));
-        stringRedisTemplate.opsForValue().set("$CODE_SESSION_PREFIX$code",sessionId, Duration.ofMinutes(5))
+        stringRedisTemplate.opsForValue().set("$CODE_SESSION_PREFIX$code", sessionId, Duration.ofMinutes(5))
     }
 
 
@@ -139,19 +140,20 @@ open class SSOSessionService(
     open fun hasActiveSessionById(sessionId: String): Boolean {
         return ssoRedisTemplate.hasKey("$SSO_SESSION_ID_PREFIX$sessionId")
     }
+
     open fun hasActiveSessionForGroup(userId: Int, groupId: Int): Boolean? {
         return ssoRedisTemplate.hasKey("$SSO_SESSION_UG_PREFIX$userId:$groupId")
     }
 
     @Transactional(rollbackFor = [Exception::class])
     open fun terminateSSOSession(sessionId: String?): Boolean {
-        if(sessionId == null) return false
+        if (sessionId == null) return false
 
         val session = ssoRedisTemplate.opsForValue().get("$SSO_SESSION_ID_PREFIX$sessionId")
-        if(session != null) {
+        if (session != null) {
             ssoRedisTemplate.delete("$SSO_SESSION_ID_PREFIX$sessionId")
-            stringRedisTemplate.opsForSet().remove("$SESSIONS_USER_PREFIX${session.userId}",sessionId)
-            stringRedisTemplate.opsForSet().remove("$SESSIONS_GROUP_PREFIX${session.groupId}",sessionId)
+            stringRedisTemplate.opsForSet().remove("$SESSIONS_USER_PREFIX${session.userId}", sessionId)
+            stringRedisTemplate.opsForSet().remove("$SESSIONS_GROUP_PREFIX${session.groupId}", sessionId)
             return true
         } else return false
     }

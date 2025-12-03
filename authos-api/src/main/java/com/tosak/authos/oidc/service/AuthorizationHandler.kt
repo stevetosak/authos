@@ -65,13 +65,27 @@ class AuthorizationHandler(
 
 
         demand(!authorizeRequestParams.scope.isEmpty() && authorizeRequestParams.scope.contains("openid"))
-        { AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,authorizeRequestParams.redirectUri,authorizeRequestParams.state) }
+        {
+            AuthorizationEndpointException(
+                AuthorizationErrorCode.INVALID_REQUEST,
+                authorizeRequestParams.redirectUri,
+                authorizeRequestParams.state
+            )
+        }
 
         demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
-        { AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,"request prompt must be 'consent' if scope contains the value 'offline_access'",authorizeRequestParams.redirectUri,authorizeRequestParams.state) }
+        {
+            AuthorizationEndpointException(
+                AuthorizationErrorCode.INVALID_REQUEST,
+                "request prompt must be 'consent' if scope contains the value 'offline_access'",
+                authorizeRequestParams.redirectUri,
+                authorizeRequestParams.state
+            )
+        }
 
         val app = appService.getAppByClientId(authorizeRequestParams.clientId);
-        demand(app.redirectUris.map { redirectUri -> redirectUri.id!!.redirectUri }.contains(authorizeRequestParams.redirectUri)) {
+        demand(app.redirectUris.map { redirectUri -> redirectUri.id!!.redirectUri }
+            .contains(authorizeRequestParams.redirectUri)) {
             AuthorizationEndpointException(
                 AuthorizationErrorCode.INVALID_REQUEST,
                 "invalid redirect uri",
@@ -84,24 +98,25 @@ class AuthorizationHandler(
         val authzId = shortSessionService.generateTempSession(authorizeRequestParams)
 
         if (promptType == PromptType.LOGIN) {
-            return redirectToLogin(authorizeRequestParams,authzId)
+            return redirectToLogin(authorizeRequestParams, authzId)
         }
 
         val sessionId = request.cookies?.find { it.name == "AUTHOS_SESSION" }?.value
-
-        if(sessionId == null){
-            return redirectToLogin(authorizeRequestParams,authzId)
-        }
-
         val session = ssoSessionService.getSessionById(sessionId)
 
-        if(session == null) {
-            return redirectToLogin(authorizeRequestParams,authzId)
+        if (session == null) {
+            if (promptType == PromptType.NONE) throw AuthorizationEndpointException(
+                AuthorizationErrorCode.LOGIN_REQUIRED,
+                "",
+                authorizeRequestParams.redirectUri,
+                authorizeRequestParams.state
+            )
+            return redirectToLogin(authorizeRequestParams, authzId)
         }
 
 
         return when (promptType) {
-            PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams,authzId, session)
+            PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams, authzId, session)
             PromptType.NONE -> redirectToApprove(authorizeRequestParams, authzId)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams, authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
@@ -130,7 +145,7 @@ class AuthorizationHandler(
                             "&redirect_uri=${authorizeRequestParams.redirectUri}" +
                             "&state=${authorizeRequestParams.state}" +
                             "&scope=${
-                                URLEncoder.encode(authorizeRequestParams.scope, "UTF-8") 
+                                URLEncoder.encode(authorizeRequestParams.scope, "UTF-8")
                             }&authz_id=$authzId"
                 )
             ).build();
@@ -197,9 +212,16 @@ class AuthorizationHandler(
     }
 
 
-    private fun handleNoPrompt(authorizeRequestParams: AuthorizeRequestParams,authzId: String,session:SSOSession) : ResponseEntity<Void> {
+    private fun handleNoPrompt(
+        authorizeRequestParams: AuthorizeRequestParams,
+        authzId: String,
+        session: SSOSession
+    ): ResponseEntity<Void> {
         authorizeRequestParams.maxAge?.let { maxAge ->
-            if(Instant.now().epochSecond - session.authTime > maxAge) return redirectToLogin(authorizeRequestParams,authzId)
+            if (Instant.now().epochSecond - session.authTime > maxAge) return redirectToLogin(
+                authorizeRequestParams,
+                authzId
+            )
         }
         return redirectToApprove(authorizeRequestParams, authzId)
     }
