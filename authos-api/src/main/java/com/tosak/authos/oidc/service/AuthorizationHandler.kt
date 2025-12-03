@@ -114,7 +114,7 @@ class AuthorizationHandler(
             return redirectToLogin(authorizeRequestParams, authzId)
         }
 
-        demand(authorizeRequestParams.request == null){ AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST_OBJECT,"request parameter not supported",authorizeRequestParams.redirectUri,authorizeRequestParams.state,authorizeRequestParams.nonce) }
+        demand(authorizeRequestParams.request == null){ AuthorizationEndpointException(AuthorizationErrorCode.REQUEST_NOT_SUPPORTED,"request parameter not supported",authorizeRequestParams.redirectUri,authorizeRequestParams.state,authorizeRequestParams.nonce) }
 
 
         return when (promptType) {
