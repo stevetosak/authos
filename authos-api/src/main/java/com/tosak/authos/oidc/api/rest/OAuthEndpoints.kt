@@ -61,7 +61,7 @@ class OAuthEndpoints(
      * @param response The HTTP servlet response object for returning the result of the operation.
      * @return A ResponseEntity containing the HTTP response with status and headers for redirect or further handling.
      */
-    @GetMapping("/authorize")
+    @RequestMapping("/authorize",method = [RequestMethod.POST, RequestMethod.GET])
     fun authorize(
         @RequestParam("client_id") clientId: String,
         @RequestParam("redirect_uri") redirectUri: String,
