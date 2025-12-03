@@ -21,7 +21,7 @@ open class AppGroupService(
     //    @Cacheable(value = ["userGroups"], key = "#userId")
     open fun getAllGroupsForUser(userId: Int): List<AppGroup> {
         return appGroupRepository.findByUserId(userId)
-            ?: throw AuthosException("Bad Request", AppGroupsNotFoundException())
+            ?: throw IllegalStateException("no groups found for user $userId")
     }
 
     @Transactional
@@ -45,7 +45,7 @@ open class AppGroupService(
 
     open fun findGroupByIdAndUser(id: Int, user: User): AppGroup {
         return appGroupRepository.findByIdAndUserId(id, user.id!!)
-            ?: throw AuthosException("Bad Request", AppGroupsNotFoundException())
+            ?: throw IllegalStateException("group_not_found")
     }
 
     open fun getDefaultGroupForUser(user: User): AppGroup {
@@ -67,7 +67,7 @@ open class AppGroupService(
 
     @Transactional
     open fun updateGroup(appGroupDto: AppGroupDTO,user: User): AppGroup {
-        val group = appGroupRepository.findGroupById(appGroupDto.id!!) ?: throw AuthosException("Bad Request", AppGroupsNotFoundException())
+        val group = appGroupRepository.findGroupById(appGroupDto.id!!) ?: throw AuthosException("Bad Request", "app group not found")
         if (appGroupDto.isDefault) {
             val defaultGroup = getDefaultGroupForUser(user);
             defaultGroup.isDefault = false;

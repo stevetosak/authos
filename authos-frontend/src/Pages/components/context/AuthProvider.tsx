@@ -41,7 +41,6 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
             setContext(respData)
             setIsAuthenticated(true);
         } catch (err) {
-            console.error(err);
             setUser(defaultUser);
             setIsAuthenticated(false);
         } finally {

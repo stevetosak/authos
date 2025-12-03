@@ -1,0 +1,13 @@
+{
+  "invalid_client": "Could not identify client",
+  "bad_token": "Invalid or missing JWT",
+  "bad_xsrf": "Invalid or missing XSRF token",
+  "bad_credentials": "Invalid user credentials",
+  "invalid_client_credentials": "Invalid client credentials",
+  "invalid_duster_client": "Invalid duster client credentials",
+  "invalid_subject": "Invalid ppid",
+  "invalid_token": "Invalid token",
+  "invalid user": "Can't find ppid",
+  "bad_otp": "OTP must be 6 digits",
+  "invalid_request" : ""
+}

@@ -132,13 +132,10 @@ open class TokenService(
     fun validateRefreshToken(token: String, clientId: String): RefreshTokenWrapper {
         val tokenHash = b64UrlSafeEncoder(getHash(token))
         val refreshToken = refreshTokenRepository.findRefreshTokenByTokenHash(tokenHash)
-            ?: throw AuthosException("invalid grant", InvalidRefreshTokenException())
+            ?: throw TokenEndpointException(TokenErrorCode.INVALID_GRANT, "invalid refresh token")
 
-        demand(
-            !refreshToken.revoked
-                    && refreshToken.expiresAt.isAfter(LocalDateTime.now())
-        )
-        { AuthosException("invalid_grant", InvalidRefreshTokenException()) }
+        demand(!refreshToken.revoked && refreshToken.expiresAt.isAfter(LocalDateTime.now()))
+        { TokenEndpointException(TokenErrorCode.INVALID_GRANT, "invalid refresh token") }
 
         refreshToken.lastUsedAt = LocalDateTime.now()
         refreshTokenRepository.save(refreshToken)
@@ -292,18 +289,18 @@ open class TokenService(
         val accessToken =
             accessTokenRepository.findByTokenHashAndRevokedFalse(hex(getHash(token))) ?: throw AuthosException(
                 "invalid_token",
-                InvalidAccessTokenException()
+                "invalid registration token"
             )
         demand(accessToken.scope == "registration:confirm" && accessToken.user!!.id == user.id) {
             AuthosException(
                 "invalid_token",
-                InvalidAccessTokenException()
+                "invalid registration token"
             )
         }
         demand(accessToken.expiresAt > LocalDateTime.now()) {
             AuthosException(
                 "invalid_token",
-                AccessTokenExpiredException()
+                "invalid registration token"
             )
         }
 

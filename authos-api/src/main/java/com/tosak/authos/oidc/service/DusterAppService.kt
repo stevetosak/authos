@@ -51,19 +51,19 @@ class DusterAppService(private val dusterAppRepository: DusterAppRepository, pri
 
     fun validateAppCredentials(clientId: String, clientSecret: String): DusterApp {
         val dusterApp = dusterAppRepository.findByClientId(clientId) ?: throw AuthosException(
-            "invalid client",
-            InvalidClientCredentialsException()
+            "invalid_duster_client",
+            "Could not validate duster app credentials"
         )
         val decryptedSecret = aesUtil.decryptBytes(b64UrlSafeDecoder(dusterApp.clientSecret))
         demand(decryptedSecret == clientSecret)
-        { AuthosException("bad client", InvalidClientCredentialsException()) }
+        { AuthosException("invalid_client_credentials", "Could not validate client credentials") }
         return dusterApp;
     }
 
     fun getAppByClientId(clientId: String): DusterApp {
         return dusterAppRepository.findByClientId(clientId) ?: throw AuthosException(
-            "invalid client",
-            InvalidClientCredentialsException()
+            "invalid_client",
+            "cant find client with specified id"
         )
     }
 }

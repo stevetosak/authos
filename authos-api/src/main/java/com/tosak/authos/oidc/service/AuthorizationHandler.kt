@@ -70,6 +70,16 @@ class AuthorizationHandler(
         demand(!(authorizeRequestParams.scope.contains("offline_access") && promptType != PromptType.CONSENT))
         { AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST,"request prompt must be 'consent' if scope contains the value 'offline_access'",authorizeRequestParams.redirectUri,authorizeRequestParams.state) }
 
+        val app = appService.getAppByClientId(authorizeRequestParams.clientId);
+        demand(app.redirectUris.map { redirectUri -> redirectUri.id!!.redirectUri }.contains(authorizeRequestParams.redirectUri)) {
+            AuthorizationEndpointException(
+                AuthorizationErrorCode.INVALID_REQUEST,
+                "invalid redirect uri",
+                null,
+                authorizeRequestParams.state
+            )
+        }
+
 
         val authzId = shortSessionService.generateTempSession(authorizeRequestParams)
 

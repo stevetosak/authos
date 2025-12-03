@@ -59,7 +59,6 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
             val authentication = UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
             SecurityContextHolder.getContext().authentication = authentication
-            println("VO RED E")
         } catch (ex: AuthosException) {
             SecurityContextHolder.clearContext()
             println(ex.message)
@@ -80,7 +79,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         println("xsrfHeader: $xsrfHeader")
 
         demand(xsrfCookie != null && xsrfHeader != null && xsrfHeader == xsrfCookie)
-        { AuthosException("bad xsrf", HttpForbiddenException()) }
+        { AuthosException("bad_xsrf") }
 
     }
 
@@ -89,6 +88,6 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         val bearerToken = request.getHeader("Authorization")
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7) }
-        throw AuthosException("bad token", HttpUnauthorizedException())
+        throw AuthosException("bad_token")
     }
 }

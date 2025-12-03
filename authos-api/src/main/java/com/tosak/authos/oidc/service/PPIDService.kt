@@ -41,7 +41,7 @@ open class PPIDService (
             val existingPpid = ppidOpt.get();
             return hex(getHash("${existingPpid.key.groupId}${existingPpid.key.userId}${existingPpid.salt}"))
         }
-        demand(create){ AuthosException("invalid user",PPIDNotFoundException()) }
+        demand(create){ AuthosException("invalid user","can't find ppid") }
         return createPPID(user,group);
 
     }
@@ -68,7 +68,7 @@ open class PPIDService (
 //    @Cacheable(value = ["ppidUsers"], key = "#hash")
     open fun getPPIDBySub(sub: String) : PPID {
         val ppid = ppidRepository.findByPpidHash(sub)
-            ?: throw AuthosException("invalid subject",InvalidPpidException())
+            ?: throw AuthosException("invalid subject","invalid ppid")
         return ppid
     }
 }

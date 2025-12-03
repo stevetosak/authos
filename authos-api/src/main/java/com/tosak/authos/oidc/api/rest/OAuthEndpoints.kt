@@ -8,6 +8,8 @@ import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.exceptions.AuthorizationEndpointException
 import com.tosak.authos.oidc.exceptions.AuthorizationErrorCode
+import com.tosak.authos.oidc.exceptions.TokenEndpointException
+import com.tosak.authos.oidc.exceptions.TokenErrorCode
 import com.tosak.authos.oidc.exceptions.base.AuthosException
 import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.service.AppService
@@ -79,12 +81,6 @@ class OAuthEndpoints(
         demand(responseType != null) {
             AuthorizationEndpointException(AuthorizationErrorCode.INVALID_REQUEST, redirectUri, state)
         }
-        demand(request == null) {
-            AuthorizationEndpointException(
-                AuthorizationErrorCode.REQUEST_NOT_SUPPORTED,
-                redirectUri
-            )
-        }
 
         return authorizationHandler.handleRequest(
             prompt,
@@ -97,7 +93,8 @@ class OAuthEndpoints(
                 responseType!!,
                 dusterSub,
                 nonce,
-                maxAge
+                maxAge,
+                request
             ),
             httpServletRequest,
         )
@@ -130,15 +127,7 @@ class OAuthEndpoints(
             println("authorizationSession not found")
         }
 
-        val app = appService.getAppByClientId(clientId);
-        demand(app.redirectUris.map { redirectUri -> redirectUri.id!!.redirectUri }.contains(redirectUri)) {
-            AuthorizationEndpointException(
-                AuthorizationErrorCode.INVALID_REQUEST,
-                "invalid redirect uri",
-                redirectUri,
-                state
-            )
-        }
+
 
 
 //        val userId = httpSession.getAttribute("user") as Int?
@@ -212,7 +201,7 @@ class OAuthEndpoints(
         val accessToken = if (authorization != null) {
             tokenService.validateAccessToken(authorization.substring(7))
         } else {
-            demand(token != null) { AuthosException("invalid_token", HttpBadRequestException()) }
+            demand(token != null) { TokenEndpointException(TokenErrorCode.INVALID_GRANT, "invalid grant") }
             tokenService.validateAccessToken(token!!)
         }
 

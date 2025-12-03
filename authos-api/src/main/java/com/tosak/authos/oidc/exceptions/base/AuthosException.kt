@@ -3,7 +3,8 @@ package com.tosak.authos.oidc.exceptions.base
 
 open class AuthosException (
     override val message: String,
-    override val cause: Throwable,
-    val state: String? = null,
-    val redirectUrl: String? = null) : RuntimeException(message,cause) {
+    val description: String = "",
+    override val cause: Throwable? = HttpBadRequestException(),
+    val redirect: Boolean = false,
+) : RuntimeException(message,cause) {
 }

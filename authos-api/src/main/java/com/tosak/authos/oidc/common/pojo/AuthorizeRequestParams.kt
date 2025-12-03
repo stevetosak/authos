@@ -10,4 +10,5 @@ data class AuthorizeRequestParams(
     val dusterSub:String?,
     val nonce:String?,
     val maxAge:Int?,
+    val request: String?
 )

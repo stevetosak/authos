@@ -40,15 +40,10 @@ open class AppService(
     ) {
     open fun getAppByClientIdAndRedirectUri(clientId: String, redirectUri: String): App {
         return appRepository.findAppByClientIdAndRedirectUri(clientId, redirectUri)
-            ?: throw AuthosException("", InvalidClientCredentialsException())
+            ?: throw AuthosException("invalid_client", "bad client_id or redirect_uri")
     }
 
 
-    open fun verifyClientIdAndRedirectUri(clientId: String, redirectUri: String) {
-        if (!appRepository.existsByClientIdAndRedirectUri(clientId, redirectUri)) {
-            throw AuthosException("", InvalidClientCredentialsException())
-        }
-    }
     open fun getAppByName(name: String): App {
         return appRepository.findByName(name) ?: throw InvalidParameterException("App name not found")
     }

@@ -28,7 +28,7 @@ class JwtService(
                     && jwt.jwtClaimsSet.issuer == apiHost
                     && jwt.jwtClaimsSet.expirationTime.after(Date())
                     && jwt.jwtClaimsSet.subject != null
-        ) { AuthosException("invalid token", InvalidIdTokenException()) }
+        ) { AuthosException("invalid_token", "invalid id token") }
         println("EXPIRATION TIME: ${jwt.jwtClaimsSet.expirationTime} NOW ${Date()}")
 
         return jwt

@@ -61,7 +61,7 @@ open class UserService @Autowired constructor(
         //todo proverka dali e active user acc
 
         demand(userOpt.isPresent && passwordEncoder.matches(password, userOpt.get().password))
-        { AuthosException("Bad credentials", InvalidUserCredentials()) }
+        { AuthosException("invalid_credentials", "Could not authenticate user") }
 
 
         return userOpt.get();
@@ -70,13 +70,13 @@ open class UserService @Autowired constructor(
 
     //    @Cacheable(value = ["users"], key = "#id")
     open fun getById(id: Int): User {
-        return userRepository.findUserById(id) ?: throw AuthosException("Bad credentials", InvalidUserCredentials())
+        return userRepository.findUserById(id) ?: throw AuthosException("invalid_user", "Could not identify user",HttpUnauthorizedException())
     }
 
     open fun getUserFromAuthentication(authentication: Authentication?): User {
 
         demand(authentication != null && authentication.principal != null && authentication.principal is User)
-        { AuthosException("Unauthorized", HttpUnauthorizedException()) }
+        { AuthosException("Unauthorized", " Authentication object invalid", HttpUnauthorizedException()) }
 
         return authentication!!.principal as User
     }
@@ -141,11 +141,11 @@ open class UserService @Autowired constructor(
 
         // todo ako mu e enabled mfa ne trebit nisto da vratit, samo error
         if (user.mfaEnabled) {
-            throw AuthosException("2FA already enabled", HttpBadRequestException())
+            throw IllegalStateException("mfa already enabled")
         }
 
         if (user.totpSecret.isNullOrBlank()) {
-            throw AuthosException("No totp secret present", HttpBadRequestException())
+            throw IllegalStateException("totp secret not set")
         }
 
         val secret = aesUtil.decryptBytes(b64UrlSafeDecoder(user.totpSecret!!))
@@ -170,12 +170,9 @@ open class UserService @Autowired constructor(
 
     open fun verifyTotp(user: User, otp: String): Boolean {
 
-        demand(otp.length == 6) { AuthosException("otp must be 6 digits", HttpBadRequestException()) }
+        demand(otp.length == 6) { AuthosException("bad_otp","otp must be exactly 6 digits") }
         demand(!user.totpSecret.isNullOrBlank()) {
-            AuthosException(
-                "totp secret not present",
-                HttpBadRequestException()
-            )
+            IllegalStateException("totp secret not present",)
         }
 
         val timeProvider = SystemTimeProvider()
