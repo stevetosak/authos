@@ -6,13 +6,22 @@ public class OAuth2Exception extends RuntimeException {
     public final String errorDescription;
     public final String redirectUri;
     public final String state;
+    public String nonce = null;
 
+    public OAuth2Exception(OidcErrorCode error, String errorDescription, String redirectUri, String state,String nonce) {
+        this.error = error;
+        this.errorDescription = errorDescription;
+        this.redirectUri = redirectUri;
+        this.state = state;
+        this.nonce = nonce;
+    }
     public OAuth2Exception(OidcErrorCode error, String errorDescription, String redirectUri, String state) {
         this.error = error;
         this.errorDescription = errorDescription;
         this.redirectUri = redirectUri;
         this.state = state;
     }
+
     public OAuth2Exception(OidcErrorCode error, String redirectUri, String state) {
         this.error = error;
         this.errorDescription = "";

@@ -1,6 +1,10 @@
 package com.tosak.authos.oidc.exceptions;
 
 public class AuthorizationEndpointException extends OAuth2Exception {
+
+    public AuthorizationEndpointException(OidcErrorCode error, String errorDescription, String redirectUri, String state,String nonce) {
+        super(error, errorDescription, redirectUri, state,nonce);
+    }
     public AuthorizationEndpointException(OidcErrorCode error, String errorDescription, String redirectUri, String state) {
         super(error, errorDescription, redirectUri, state);
     }
