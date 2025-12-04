@@ -172,7 +172,7 @@ class AuthorizationHandler(
         val url = StringBuilder(
             "${frontendHost}/oauth/user-consent?client_id=${authorizeRequestParams.clientId}" +
                     "&redirect_uri=${authorizeRequestParams.redirectUri}" +
-                    "authz_id=$authzId" +
+                    "&authz_id=$authzId" +
                     "&state=${authorizeRequestParams.state}&scope=${
                         URLEncoder.encode(
                             authorizeRequestParams.scope,
