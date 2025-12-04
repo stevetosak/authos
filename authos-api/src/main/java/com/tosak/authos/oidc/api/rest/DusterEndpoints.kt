@@ -67,13 +67,15 @@ class DusterEndpoints(
         if (clientId == null && clientName == null) {
             return ResponseEntity.status(400).build()
         }
-        val token = tokenService.validateAccessToken(authorizationHeader.substring(7))
-        if (!token.scope.contains("duster")) return ResponseEntity.status(401).build()
+
         val authosApp: App = if (clientId != null) {
             appService.getAppByClientId(clientId)
         } else {
             appService.getAppByName(clientName!!)
         }
+
+        val token = tokenService.validateAccessToken(authorizationHeader.substring(7))
+        if (!token.scope.contains("duster")) return ResponseEntity.status(401).build()
 
         val dusterRedirectUri =
             authosApp.redirectUris.find { uri -> uri.id!!.redirectUri.contains("/duster/api/v1/oauth/callback") }
@@ -95,6 +97,7 @@ class DusterEndpoints(
         )
     }
 
+    //TODO revisit this
     @GetMapping("/duster/validate-token")
     fun validateToken(@RequestHeader(name = "Authorization") authorizationHeader: String): ResponseEntity<Void> {
         tokenService.validateAccessToken(authorizationHeader.substring(7))

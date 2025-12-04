@@ -132,7 +132,7 @@ open class TokenService(
         val refreshToken = refreshTokenRepository.findRefreshTokenByTokenHash(tokenHash)
             ?: throw TokenEndpointException(TokenErrorCode.INVALID_GRANT, "invalid refresh token")
 
-        demand(!refreshToken.revoked && refreshToken.expiresAt.isAfter(LocalDateTime.now()))
+        demand(!refreshToken.revoked && refreshToken.expiresAt.isAfter(LocalDateTime.now()) && refreshToken.key!!.clientId == clientId)
         { TokenEndpointException(TokenErrorCode.INVALID_GRANT, "invalid refresh token") }
 
         refreshToken.lastUsedAt = LocalDateTime.now()
@@ -146,13 +146,12 @@ open class TokenService(
         val tokenHash = b64UrlSafeEncoder(getHash(tokenVal))
         val accessToken = accessTokenRepository.findByTokenHashAndRevokedFalse(tokenHash);
 
-        println("AT REVOKED: ${accessToken?.revoked}")
-
         demand(accessToken != null)
-        { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+        { TokenEndpointException(TokenErrorCode.INVALID_GRANT,"missing access token")}
 
+        //todo revoke/delete token if expired
         demand(accessToken!!.expiresAt.isAfter(LocalDateTime.now()))
-        { TokenEndpointException(TokenErrorCode.INVALID_GRANT) }
+        { TokenEndpointException(TokenErrorCode.INVALID_GRANT,"access token expired") }
 
         return accessToken;
     }
