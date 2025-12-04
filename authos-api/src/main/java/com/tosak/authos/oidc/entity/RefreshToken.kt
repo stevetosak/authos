@@ -15,7 +15,7 @@ class RefreshToken(
     val tokenHash: String = "",
     @Column(name = "issued_at")
     val issuedAt: LocalDateTime = LocalDateTime.now(),
-    val revoked: Boolean = false,
+    var revoked: Boolean = false,
     @Column(name = "expires_at")
     val expiresAt: LocalDateTime = LocalDateTime.now().plusDays(30),
     @Column(name = "last_used_at")

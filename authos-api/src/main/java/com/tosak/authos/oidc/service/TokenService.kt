@@ -14,10 +14,6 @@ import com.tosak.authos.oidc.entity.AuthorizationCode
 import com.tosak.authos.oidc.entity.RefreshToken
 import com.tosak.authos.oidc.entity.User
 import com.tosak.authos.oidc.entity.compositeKeys.RefreshTokenKey
-import com.tosak.authos.oidc.exceptions.unauthorized.AccessTokenExpiredException
-import com.tosak.authos.oidc.exceptions.unauthorized.InvalidAccessTokenException
-import com.tosak.authos.oidc.exceptions.unauthorized.AccessTokenRevokedException
-import com.tosak.authos.oidc.exceptions.badreq.InvalidRefreshTokenException
 import com.tosak.authos.oidc.repository.AccessTokenRepository
 import com.tosak.authos.oidc.repository.AuthorizationCodeRepository
 import com.tosak.authos.oidc.repository.RefreshTokenRepository
@@ -37,7 +33,6 @@ import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
 import java.security.InvalidParameterException
 import java.time.LocalDateTime
-import kotlin.math.atan
 
 // val atHash = b64UrlSafe(tokenHash.take(tokenHash.size / 2).toByteArray())
 
@@ -83,18 +78,20 @@ open class TokenService(
 
     @Transactional
     open fun getRefreshToken(app: App, authorizationCode: AuthorizationCode, idToken: String): RefreshTokenWrapper {
-        var token = refreshTokenRepository.findByKey(RefreshTokenKey(user = authorizationCode.user, app.clientId));
+        val existingRefreshToken = refreshTokenRepository.findByKey(RefreshTokenKey(user = authorizationCode.user, app.clientId));
 
-        token = token.takeIf { it != null && !app.refreshTokenRotationEnabled }
-            ?: generateRefreshToken(
-                user = authorizationCode.user,
-                clientId = app.clientId,
-                scope = authorizationCode.scope,
-                idToken = idToken
-            )
+        existingRefreshToken?.let { t ->
+            t.revoked = true
+        }
 
-        val refreshToken = refreshTokenRepository.save(token)
-        return RefreshTokenWrapper(aesUtil.decryptBytes(b64UrlSafeDecoder(refreshToken.tokenValue)), refreshToken)
+        val newRefreshToken = generateRefreshToken(
+            user = authorizationCode.user,
+            clientId = app.clientId,
+            scope = authorizationCode.scope,
+            idToken = idToken
+        )
+        refreshTokenRepository.saveAll(listOf(existingRefreshToken,newRefreshToken))
+        return RefreshTokenWrapper(aesUtil.decryptBytes(b64UrlSafeDecoder(newRefreshToken.tokenValue)), newRefreshToken)
     }
 
     @Transactional
