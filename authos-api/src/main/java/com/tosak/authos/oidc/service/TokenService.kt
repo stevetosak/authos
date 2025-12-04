@@ -82,6 +82,7 @@ open class TokenService(
 
         existingRefreshToken?.let { t ->
             t.revoked = true
+            refreshTokenRepository.save(t)
         }
 
         val newRefreshToken = generateRefreshToken(
@@ -90,7 +91,7 @@ open class TokenService(
             scope = authorizationCode.scope,
             idToken = idToken
         )
-        refreshTokenRepository.saveAll(listOf(existingRefreshToken,newRefreshToken))
+        refreshTokenRepository.save(newRefreshToken)
         return RefreshTokenWrapper(aesUtil.decryptBytes(b64UrlSafeDecoder(newRefreshToken.tokenValue)), newRefreshToken)
     }
 
