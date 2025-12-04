@@ -204,7 +204,10 @@ open class TokenService(
         }
 
 
-        val app = appService.validateAppCredentials(tokenRequestDto = dto, request)
+        val app: App = appService.validateAppCredentials(tokenRequestDto = dto, request)
+        // todo proverkata za redirect uri vo token ustvari ne e potrebna, bitno e da se sovpajgat parametrite kako redirect uri so prethodniot (/authorize) requrest
+        // todo proverkata sa pret vo /authorize
+        demand(app.containsRedirectUri(dto.redirectUri!!)){ TokenEndpointException(TokenErrorCode.INVALID_REQUEST,"invalid redirect uri") }
         val code: AuthorizationCode = authorizationCodeService.validateTokenRequest(app, dto)
         code.used = true;
         authorizationCodeRepository.save(code)

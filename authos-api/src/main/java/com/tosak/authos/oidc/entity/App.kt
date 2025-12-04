@@ -97,6 +97,10 @@ class App (
 
     }
 
+    fun containsRedirectUri(redirectUri: String): Boolean {
+        return redirectUris.map { redirectUri -> redirectUri.id!!.redirectUri}.contains(redirectUri)
+    }
+
     companion object{
         fun serializeTransientLists(collection: Collection<String>,delimiter: String): String{
             val sb : StringBuilder = StringBuilder()

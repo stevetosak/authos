@@ -65,7 +65,7 @@ open class AppService(
     }
 
     open fun validateAppCredentials(tokenRequestDto: TokenRequestDto, request: HttpServletRequest): App {
-        val authHeader = request?.getHeader("Authorization")
+        val authHeader = request.getHeader("Authorization")
         if (authHeader != null) {
             val (clientId,clientSecret) = decodeBasicAuth(authHeader)
             tokenRequestDto.clientId = clientId
@@ -76,7 +76,7 @@ open class AppService(
         }
 
 
-        val app = getAppByClientIdAndRedirectUri(tokenRequestDto.clientId!!, tokenRequestDto.redirectUri!!)
+        val app = getAppByClientId(tokenRequestDto.clientId!!)
         val secretDecrypted = aesUtil.decryptBytes(b64UrlSafeDecoder(app.clientSecret))
         demand(secretDecrypted == tokenRequestDto.clientSecret){ TokenEndpointException(TokenErrorCode.UNAUTHORIZED_CLIENT) }
         return app;
