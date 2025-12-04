@@ -1,0 +1,1 @@
+ALTER TABLE access_token ALTER COLUMN authorization_code TYPE varchar(2048)
