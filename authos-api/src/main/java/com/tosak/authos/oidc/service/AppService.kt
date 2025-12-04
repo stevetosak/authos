@@ -64,7 +64,7 @@ open class AppService(
         return appRepository.findByClientId(clientId) ?: throw Exception("bad client id")
     }
 
-    open fun validateAppCredentials(tokenRequestDto: TokenRequestDto, request: HttpServletRequest? = null): App {
+    open fun validateAppCredentials(tokenRequestDto: TokenRequestDto, request: HttpServletRequest): App {
         val authHeader = request?.getHeader("Authorization")
         if (authHeader != null) {
             val (clientId,clientSecret) = decodeBasicAuth(authHeader)

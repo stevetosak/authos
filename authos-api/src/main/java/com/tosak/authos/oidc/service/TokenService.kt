@@ -176,7 +176,7 @@ open class TokenService(
 
         return when (parseGrantType(tokenRequestDto.grantType)) {
             GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request)
-            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto)
+            GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto,request)
             GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
             GrantType.PKCE -> TODO()
             GrantType.DEVICE_CODE -> TODO()
@@ -241,9 +241,9 @@ open class TokenService(
     }
 
     @Transactional
-    open fun handleRefreshTokenRequest(request: TokenRequestDto): TokenWrapper {
-        val app = appService.validateAppCredentials(tokenRequestDto = request)
-        val refreshTokenWrapper = validateRefreshToken(request.refreshToken!!, clientId = app.clientId)
+    open fun handleRefreshTokenRequest(tokenRequestDto: TokenRequestDto,request: HttpServletRequest): TokenWrapper {
+        val app = appService.validateAppCredentials(tokenRequestDto,request)
+        val refreshTokenWrapper = validateRefreshToken(tokenRequestDto.refreshToken!!, clientId = app.clientId)
         val accessTokenWrapper = generateAccessToken(
             clientId = app.clientId,
             refreshToken = refreshTokenWrapper.refreshToken,
