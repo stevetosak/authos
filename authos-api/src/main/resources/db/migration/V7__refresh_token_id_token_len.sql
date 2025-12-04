@@ -1,0 +1,1 @@
+ALTER TABLE refresh_token alter column id_token TYPE TEXT
