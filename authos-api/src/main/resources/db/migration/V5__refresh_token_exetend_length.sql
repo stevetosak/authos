@@ -1,0 +1,1 @@
+ALTER TABLE refresh_token ALTER COLUMN token_val TYPE varchar(2048);
