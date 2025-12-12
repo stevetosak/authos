@@ -40,3 +40,9 @@ client-config.*
 Authos ds ideas
 
 *.todo
+secrets.auto.tfvars
+*.tfvars
+.envrc
+.terraform
+*.tfstate
+*.tfstate*.backup
