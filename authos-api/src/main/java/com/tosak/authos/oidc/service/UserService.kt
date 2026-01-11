@@ -120,8 +120,9 @@ open class UserService @Autowired constructor(
             )
         )
         appGroupRepository.save(AppGroup(name = "Default Group", user = user, isDefault = true))
-        val token = tokenService.generateRegistrationConfirmationToken(user)
-        mailService.sendRegistrationConfirmationEmail(user, token)
+        // todo in access token entity: authorization_code property is set by AuthorizationCode default constructor, which means that every access token has a code, which is wrong
+//        val token = tokenService.generateRegistrationConfirmationToken(user)
+//        mailService.sendRegistrationConfirmationEmail(user, token)
         return user
 
     }

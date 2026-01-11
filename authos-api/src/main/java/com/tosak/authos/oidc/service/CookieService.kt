@@ -10,8 +10,8 @@ import java.time.Duration
 @Service
 class CookieService {
 
-    @Value("\${authos.cookie.domain}")
-    lateinit var cookieDomain: String
+//    @Value("\${authos.cookie.domain}")
+//    lateinit var cookieDomain: String
     @Value("\${authos.api.cookie.domain}")
     lateinit var apiCookieDomain: String
 
@@ -22,7 +22,7 @@ class CookieService {
             .httpOnly(true)
             .secure(true)
             .path("/")
-            .domain(cookieDomain)
+//            .domain(cookieDomain)
             .sameSite("Lax")
             .maxAge(maxAge)
             .build()
@@ -34,7 +34,7 @@ class CookieService {
             .httpOnly(false)
             .secure(true)
             .path("/")
-            .domain(cookieDomain)
+//            .domain(cookieDomain)
             .sameSite("None")
             .maxAge(maxAge)
             .build()

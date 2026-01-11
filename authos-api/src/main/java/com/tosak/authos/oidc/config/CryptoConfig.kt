@@ -18,6 +18,7 @@ import javax.crypto.SecretKey
 @Configuration
 open class CryptoConfig {
 
+    @Value("\${authos.keystore.pass}")
     private lateinit var keystorePass: String
     private lateinit var keyStore: KeyStore
 
@@ -27,8 +28,6 @@ open class CryptoConfig {
 
     @PostConstruct
     fun init() {
-        keystorePass =
-            DotEnvConfig.dotenv["KEYSTORE_PASS"] ?: throw IllegalStateException("Keystore password not loaded")
         val ks: KeyStore = KeyStore.getInstance("PKCS12")
         val fis = FileInputStream(keystorePath)
         ks.load(fis, keystorePass.toCharArray())

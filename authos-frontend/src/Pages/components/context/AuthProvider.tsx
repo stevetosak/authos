@@ -3,6 +3,7 @@ import {App, AppGroup, defaultApp, defaultUser, UserInfoResponse, User} from "@/
 import axios, {AxiosResponse} from "axios";
 import {AuthContext} from "@/Pages/components/context/AuthContext.tsx";
 import {apiGetAuthenticated} from "@/services/netconfig.ts";
+import {UserInfoResponseSchema} from "@/lib/schema.ts";
 
 type AuthProviderProps = {
     children: React.ReactNode
@@ -31,6 +32,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
 
     const verifyToken = async (): Promise<UserInfoResponse> => {
         const response = await apiGetAuthenticated<UserInfoResponse>("/verify")
+        UserInfoResponseSchema.parse(response.data)
         return response.data;
     };
 
@@ -38,9 +40,11 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
         setAuthLoading(true);
         try {
             const respData = await verifyToken();
+            console.log(respData)
             setContext(respData)
             setIsAuthenticated(true);
         } catch (err) {
+            console.log(err)
             setUser(defaultUser);
             setIsAuthenticated(false);
         } finally {
@@ -49,11 +53,8 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
     };
 
 
-
-
-
     useEffect(() => {
-       console.log("context load")
+        console.log("context load")
         refreshAuth()
 
         const interval = setInterval(() => {

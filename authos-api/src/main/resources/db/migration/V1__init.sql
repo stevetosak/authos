@@ -30,8 +30,6 @@ create table public.users
     name                  varchar(256)
 );
 
-alter table public.users
-    owner to stevetosak;
 
 create table public.role
 (
@@ -41,8 +39,6 @@ create table public.role
         unique
 );
 
-alter table public.role
-    owner to stevetosak;
 
 create table public.users_roles
 (
@@ -55,8 +51,6 @@ create table public.users_roles
     primary key (user_id, role_id)
 );
 
-alter table public.users_roles
-    owner to stevetosak;
 
 create table public.app_group
 (
@@ -76,9 +70,6 @@ create table public.app_group
             check ((mfa_policy)::text = ANY
                    (ARRAY [('Email'::character varying)::text, ('Phone'::character varying)::text, ('Disabled'::character varying)::text]))
 );
-
-alter table public.app_group
-    owner to stevetosak;
 
 create table public.app
 (
@@ -110,8 +101,6 @@ create table public.app
     duster_callback_uri            text
 );
 
-alter table public.app
-    owner to stevetosak;
 
 create table public.app_credentials
 (
@@ -120,8 +109,6 @@ create table public.app_credentials
     type   varchar(32) default 'client_secret'::character varying not null
 );
 
-alter table public.app_credentials
-    owner to stevetosak;
 
 create table public.redirect_uris
 (
@@ -132,8 +119,6 @@ create table public.redirect_uris
     primary key (app_id, redirect_uri)
 );
 
-alter table public.redirect_uris
-    owner to stevetosak;
 
 create table public.ppid
 (
@@ -149,8 +134,6 @@ create table public.ppid
     primary key (user_id, group_id)
 );
 
-alter table public.ppid
-    owner to stevetosak;
 
 create table public.mfa_token
 (
@@ -165,8 +148,6 @@ create table public.mfa_token
     type        varchar(32)
 );
 
-alter table public.mfa_token
-    owner to stevetosak;
 
 create table public.authorization_code
 (
@@ -183,8 +164,6 @@ create table public.authorization_code
         references public.users
 );
 
-alter table public.authorization_code
-    owner to stevetosak;
 
 create table public.access_token
 (
@@ -199,8 +178,6 @@ create table public.access_token
     scope      varchar(128)
 );
 
-alter table public.access_token
-    owner to stevetosak;
 
 create table public.issued_id_tokens
 (
@@ -218,8 +195,6 @@ create table public.issued_id_tokens
     ip_hash           varchar(64)
 );
 
-alter table public.issued_id_tokens
-    owner to stevetosak;
 
 create table public.refresh_token
 (
@@ -236,8 +211,6 @@ create table public.refresh_token
     primary key (client_id, user_id)
 );
 
-alter table public.refresh_token
-    owner to stevetosak;
 
 create index token_hash_idx
     on public.refresh_token using hash (token_hash);
@@ -258,6 +231,4 @@ create table public.duster_app
                    ((ARRAY ['auto'::character varying, 'fresh'::character varying])::text[]))
 );
 
-alter table public.duster_app
-    owner to stevetosak;
 

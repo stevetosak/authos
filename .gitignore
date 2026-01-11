@@ -46,3 +46,6 @@ secrets.auto.tfvars
 .terraform
 *.tfstate
 *.tfstate*.backup
+scripts/
+k8s/scripts
+secrets/
