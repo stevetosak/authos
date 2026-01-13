@@ -1,0 +1,84 @@
+name: Build And Deploy Authos Frontend + Backend API
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  frontend-build_server-deploy:
+    needs: backend-build-deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build React frontend
+        working-directory: ./authos-frontend
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_API_BASE_URL: ${{vars.API_HOST}}
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      - name: Test SSH connection
+        run: ssh -v ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'"
+
+
+      - name: Copy frontend build to server
+        run: |
+          scp -r ./authos-frontend/dist ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{vars.SERVER_DEPLOYMENT_DIR}}
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Trigger Deployment Script
+        run: ssh ${{secrets.SERVER_USER}}@${{secrets.SERVER_HOST}} 'sudo ${{vars.SERVER_DEPLOYMENT_SCRIPT}}'
+
+  backend-build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Spring Boot App
+        working-directory: ./authos-api
+        run: mvn clean package -DskipTests
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./authos-api
+          push: true
+          tags: |
+            stevetosak/authos-api:0.0.1-alpha
+            stevetosak/authos-api:latest
+
