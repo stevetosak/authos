@@ -38,7 +38,7 @@ jobs:
     needs: detect-changes
     runs-on: ubuntu-latest
     steps:
-    - name: Debug backend evaluation
+    - name: Job outputs
       run: |
         echo "Commit message: ${{ github.event.head_commit.message }}"
         echo "Backend output: ${{ needs.detect-changes.outputs.backend }}"
