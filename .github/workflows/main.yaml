@@ -20,8 +20,20 @@ jobs:
           fetch-depth: 0
       - id: check
         run: |
-          echo "backend=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-api/' || true)" >> $GITHUB_OUTPUT
-          echo "frontend=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-frontend/' || true)" >> $GITHUB_OUTPUT
+          # Count changed files
+          backend_changed=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-api/' || true)
+          frontend_changed=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-frontend/' || true)
+
+          force_backend=$(git log -1 --pretty=%B | grep -ci '\[force-backend\]' || true)
+          force_frontend=$(git log -1 --pretty=%B | grep -ci '\[force-frontend\]' || true)
+
+          backend=$(( backend_changed > 0 || force_backend > 0 ? 1 : 0 ))
+          frontend=$(( frontend_changed > 0 || force_frontend > 0 ? 1 : 0 ))
+
+          # Export combined outputs
+          echo "backend=$backend" >> $GITHUB_OUTPUT
+          echo "frontend=$frontend" >> $GITHUB_OUTPUT
+
 
       - name: Debug detect-changes outputs
         run: |
@@ -40,13 +52,13 @@ jobs:
         echo "Backend output: ${{ needs.detect-changes.outputs.backend }}"
         echo "Frontend output: ${{ needs.detect-changes.outputs.frontend }}"
 
-        if [[ "${{ needs.detect-changes.outputs.backend }}" != "0" || "${{ github.event.head_commit.message }}" == *"[force-backend]"* ]]; then
+        if [[ "${{ needs.detect-changes.outputs.backend }}" != "0" ]]; then
           echo "Backend job WOULD run"
         else
           echo "Backend job WOULD SKIP"
         fi
 
-        if [[ "${{ needs.detect-changes.outputs.frontend }}" != "0" || "${{ github.event.head_commit.message }}" == *"[force-frontend]"* ]]; then
+        if [[ "${{ needs.detect-changes.outputs.frontend }}" != "0" ]]; then
           echo "Frontend job WOULD run"
         else
           echo "Frontend job WOULD SKIP"
@@ -66,7 +78,7 @@ jobs:
           echo "Commit message: ${{ github.event.head_commit.message }}"
           echo "Backend output: ${{ needs.detect-changes.outputs.backend }}"
 
-          if [[ "${{ needs.detect-changes.outputs.backend }}" == "0" && "${{ github.event.head_commit.message }}" != *"[force-backend]"* ]]; then
+          if [[ "${{ needs.detect-changes.outputs.backend }}" == "0" ]]; then
             echo "Skipping backend build"
             exit 78   # special code to skip remaining steps without failing the job
           fi
