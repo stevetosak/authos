@@ -16,7 +16,8 @@ jobs:
       frontend: ${{ steps.check.outputs.frontend }}
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
       - id: check
         run: |
           echo "backend=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-api/' || true)" >> $GITHUB_OUTPUT
