@@ -19,8 +19,8 @@ jobs:
         with:
           fetch-depth: 0
       - id: check
+        name: "Compute changes"
         run: |
-          # Count changed files
           backend_changed=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-api/' || true)
           frontend_changed=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-frontend/' || true)
 
@@ -30,7 +30,6 @@ jobs:
           backend=$(( backend_changed > 0 || force_backend > 0 ? 1 : 0 ))
           frontend=$(( frontend_changed > 0 || force_frontend > 0 ? 1 : 0 ))
 
-          # Export combined outputs
           echo "backend=$backend" >> $GITHUB_OUTPUT
           echo "frontend=$frontend" >> $GITHUB_OUTPUT
 
