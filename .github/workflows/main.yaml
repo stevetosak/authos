@@ -57,12 +57,20 @@ jobs:
   backend-build-deploy:
     needs: detect-changes
     runs-on: ubuntu-latest
-    if: |
-      contains(github.event.head_commit.message, '[force-backend]') ||
-      needs.detect-changes.outputs.backend != '0'
+#    if: |
+#      contains(github.event.head_commit.message, '[force-backend]') ||
+#      needs.detect-changes.outputs.backend != '0'
     steps:
-      - uses: actions/checkout@v4
+      - name: Check if backend should run
+        run: |
+          echo "Commit message: ${{ github.event.head_commit.message }}"
+          echo "Backend output: ${{ needs.detect-changes.outputs.backend }}"
 
+          if [[ "${{ needs.detect-changes.outputs.backend }}" == "0" && "${{ github.event.head_commit.message }}" != *"[force-backend]"* ]]; then
+            echo "Skipping backend build"
+            exit 78   # special code to skip remaining steps without failing the job
+          fi
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
