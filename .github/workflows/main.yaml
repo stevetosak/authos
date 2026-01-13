@@ -23,6 +23,37 @@ jobs:
           echo "backend=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-api/' || true)" >> $GITHUB_OUTPUT
           echo "frontend=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-frontend/' || true)" >> $GITHUB_OUTPUT
 
+      - name: Debug detect-changes outputs
+        run: |
+          echo "=== DETECT CHANGES OUTPUTS ==="
+          echo "Backend files changed: ${{ steps.check.outputs.backend }}"
+          echo "Frontend files changed: ${{ steps.check.outputs.frontend }}"
+          
+
+  debug-conditionals:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    steps:
+    - name: Debug backend evaluation
+      run: |
+        echo "Commit message: ${{ github.event.head_commit.message }}"
+        echo "Backend output: ${{ needs.detect-changes.outputs.backend }}"
+        echo "Frontend output: ${{ needs.detect-changes.outputs.frontend }}"
+
+        if [[ "${{ needs.detect-changes.outputs.backend }}" != "0" || "${{ github.event.head_commit.message }}" == *"[force-backend]"* ]]; then
+          echo "Backend job WOULD run"
+        else
+          echo "Backend job WOULD SKIP"
+        fi
+
+        if [[ "${{ needs.detect-changes.outputs.frontend }}" != "0" || "${{ github.event.head_commit.message }}" == *"[force-frontend]"* ]]; then
+          echo "Frontend job WOULD run"
+        else
+          echo "Frontend job WOULD SKIP"
+        fi
+
+
+
   backend-build-deploy:
     needs: detect-changes
     runs-on: ubuntu-latest
