@@ -57,7 +57,7 @@ open class WebSecurityConfig(
     open fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
         configuration.allowedOrigins =
-            listOf("http://localhost:5173", "https://authos.imaps.mk", "https://www.authos.imaps.mk","https://www.certification.openid.net")
+            listOf("http://localhost:8080", "http://localhost:5173","https://authos.tosak.net","http://localhost:10000","http://localhost:9000")
         configuration.allowedMethods = listOf("GET", "POST", "OPTIONS")
         configuration.addAllowedHeader("*")
         configuration.exposedHeaders = listOf("Location")

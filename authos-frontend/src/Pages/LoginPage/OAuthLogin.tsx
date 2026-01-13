@@ -5,6 +5,7 @@ import {api} from "@/services/netconfig.ts";
 import {UserInfoResponse} from "@/services/types.ts";
 import {validateResponse} from "@/services/jwtService.ts";
 import {warn} from "recharts/types/util/LogUtils";
+import {envConfig} from "@/lib/env.ts";
 
 export const OAuthLogin: React.FC = () => {
 
@@ -61,9 +62,8 @@ export const OAuthLogin: React.FC = () => {
             const valid = await validateResponse(resp.data.signature)
             console.warn("VALID:",valid)
             if(!valid) console.error("Could not verify response signature")
-            const baseUrl = import.meta.env.VITE_BASE_URL
             //ovaj redirect uri tuka e /user-consent, ova mozit da sa podobrit poso mislam sekogas morat da e toj uri
-            window.location.href = valid ? resp.data.redirectUri : `${baseUrl}/error`
+            window.location.href = valid ? resp.data.redirectUri : `${envConfig.BASE_URL}/error`
         } catch (err){
             console.error("ERROR oauth login: " + err)
             nav("/error")

@@ -1,6 +1,7 @@
 import {api} from "@/services/netconfig.ts";
 import {JwkKey, JwksResponse} from "@/services/types.ts";
 import {importJWK, jwtVerify} from 'jose';
+import {envConfig} from "@/lib/env.ts";
 
 const getJWKPubKey = async (): Promise<JwkKey> => {
     const resp = await api.get<JwksResponse>("/.well-known/jwks.json");
@@ -19,7 +20,8 @@ export const validateResponse = async (token: string,requiredClaims: string[] = 
     const pubkey = await importJWK(jwk, 'RS256')
     try {
         await jwtVerify(token, pubkey, {
-            issuer: import.meta.env.API_BASE_URL,
+            //todo this should be the domain, not the api url
+            issuer: envConfig.API_URL,
             requiredClaims: requiredClaims
         })
         console.log("verified")

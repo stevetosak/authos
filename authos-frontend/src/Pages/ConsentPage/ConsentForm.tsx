@@ -4,6 +4,7 @@ import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components
 import { Info, ShieldQuestion, Check, Key, User, Mail} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import { motion } from "framer-motion";
+import {envConfig} from "@/lib/env.ts";
 
 const ConsentForm: React.FC = () => {
     const navigate = useNavigate();
@@ -55,8 +56,7 @@ const ConsentForm: React.FC = () => {
 
     const handleApprove = async () => {
         const query = checkQuery();
-        const apiUrl  = import.meta.env.VITE_API_BASE_URL
-        window.location.href = `${apiUrl}/oauth/approve?client_id=${query.clientId}&redirect_uri=${query.redirectUri}&state=${query.state}&scope=${query.scope}&authz_id=${query.authzId}`
+        window.location.href = `${ envConfig.API_URL }/oauth/approve?client_id=${query.clientId}&redirect_uri=${query.redirectUri}&state=${query.state}&scope=${query.scope}&authz_id=${query.authzId}`
 
     }
 
