@@ -24,9 +24,9 @@ jobs:
       - id: detect_changes
         name: "Compute changes"
         run: |
-          backend_diff=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-api/' || true)
-          frontend_diff=$(git diff --name-only HEAD~1 HEAD | grep -c '^authos-frontend/' || true)
-          
+          backend_diff=$(git diff --name-only $GITHUB_EVENT_BEFORE $GITHUB_SHA | grep -c '^authos-api/' || true)
+          frontend_diff=$(git diff --name-only $GITHUB_EVENT_BEFORE $GITHUB_SHA | grep -c '^authos-frontend/' || true)
+  
           force_backend=$(git log -1 --pretty=%B | grep -ci '\[force-backend\]' || true)
           force_frontend=$(git log -1 --pretty=%B | grep -ci '\[force-frontend\]' || true)
 
