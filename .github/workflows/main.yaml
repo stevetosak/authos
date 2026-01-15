@@ -97,7 +97,7 @@ jobs:
       - name: Set API image tags
         id: backend_image_tags
         run: |
-          IMAGE_LATEST="${{ env.DOCKERHUB_NAMESPACE }}}/authos-api:latest"
+          IMAGE_LATEST="${{ env.DOCKERHUB_NAMESPACE }}/authos-api:latest"
           IMAGE_VERSION="${{ env.DOCKERHUB_NAMESPACE }}/authos-api:${{ env.IMAGE_VERSION_PATTERN }}"
           echo "IMAGE_LATEST=$IMAGE_LATEST" >> $GITHUB_OUTPUT
           echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_OUTPUT
@@ -178,6 +178,7 @@ jobs:
         with:
           repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
           token: '${{secrets.INFRA_REPO_TOKEN}}'
+          path: '${{vars.INFRA_REPO_NAME}}'
       - name: Update Overlay
         run: |
           cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_API_OVERLAY_DIR}}
@@ -204,6 +205,7 @@ jobs:
         with:
           repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
           token: '${{secrets.INFRA_REPO_TOKEN}}'
+          path: '${{vars.INFRA_REPO_NAME}}'
       - name: Update Overlay
         run: |
           cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_FRONTEND_OVERLAY_DIR}}
