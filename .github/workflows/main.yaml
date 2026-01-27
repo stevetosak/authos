@@ -1,221 +1,221 @@
-name: Build & Push Authos Images
-
-on:
-  push:
-    branches: [ "master" ]
-    paths:
-      - "authos-api/**"
-      - "authos-frontend/**"
-      - ".github/workflows/**"
-env:
-  IMAGE_VERSION_PATTERN: "1.0.${{ github.run_number }}-alpha"
-  DOCKERHUB_NAMESPACE: "stevetosak"
-
-jobs:
-  detect-changes:
-    runs-on: ubuntu-22.04
-    outputs:
-      should_update_backend: ${{ steps.detect_changes.outputs.should_update_backend }}
-      should_update_frontend: ${{ steps.detect_changes.outputs.should_update_frontend }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: detect_changes
-        name: "Compute changes"
-        run: |
-          backend_diff=$(git diff --name-only $GITHUB_EVENT_BEFORE $GITHUB_SHA | grep -c '^authos-api/' || true)
-          frontend_diff=$(git diff --name-only $GITHUB_EVENT_BEFORE $GITHUB_SHA | grep -c '^authos-frontend/' || true)
-  
-          force_backend=$(git log -1 --pretty=%B | grep -ci '\[force-backend\]' || true)
-          force_frontend=$(git log -1 --pretty=%B | grep -ci '\[force-frontend\]' || true)
-
-          should_update_backend=$(( backend_diff > 0 || force_backend > 0 ? 1 : 0 ))
-          should_update_frontend=$(( frontend_diff > 0 || force_frontend > 0 ? 1 : 0 ))
-
-          echo "should_update_backend=$should_update_backend" >> $GITHUB_OUTPUT
-          echo "should_update_frontend=$should_update_frontend" >> $GITHUB_OUTPUT
-  
-
-  job-plan:
-    needs: detect-changes
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Job outputs
-        run: |
-          echo "Commit message: ${{ github.event.head_commit.message }}"
-          echo "Backend output: ${{ needs.detect-changes.outputs.should_update_backend }}"
-          echo "Frontend output: ${{ needs.detect-changes.outputs.should_update_frontend }}"
-          
-          if [[ "${{ needs.detect-changes.outputs.should_update_backend }}" != "0" ]]; then
-            echo "Backend jobs WOULD run"
-          else
-            echo "Backend jobs WOULD SKIP"
-          fi
-          
-          if [[ "${{ needs.detect-changes.outputs.should_update_frontend }}" != "0" ]]; then
-            echo "Frontend jobs WOULD run"
-          else
-            echo "Frontend jobs WOULD SKIP"
-          fi
-
-
-
-  backend-build-push:
-    needs: detect-changes
-    runs-on: ubuntu-22.04
-    outputs:
-      IMAGE_LATEST: ${{ steps.backend_image_tags.outputs.IMAGE_LATEST }}
-      IMAGE_VERSION: ${{ steps.backend_image_tags.outputs.IMAGE_VERSION }}
-    if: |
-      needs.detect-changes.outputs.should_update_backend != '0'
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('authos-api/**/pom.xml') }}
-
-      - name: Build Spring Boot App
-        working-directory: ./authos-api
-        run: mvn -q clean package -DskipTests
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Set API image tags
-        id: backend_image_tags
-        run: |
-          IMAGE_LATEST="${{ env.DOCKERHUB_NAMESPACE }}/authos-api:latest"
-          IMAGE_VERSION="${{ env.DOCKERHUB_NAMESPACE }}/authos-api:${{ env.IMAGE_VERSION_PATTERN }}"
-          echo "IMAGE_LATEST=$IMAGE_LATEST" >> $GITHUB_OUTPUT
-          echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build & push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./authos-api
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ${{steps.backend_image_tags.outputs.IMAGE_LATEST}}
-            ${{steps.backend_image_tags.outputs.IMAGE_VERSION}}
-
-  frontend-build-push:
-    needs: detect-changes
-    runs-on: ubuntu-22.04
-    outputs:
-      IMAGE_LATEST: ${{ steps.frontend_image_tags.outputs.IMAGE_LATEST }}
-      IMAGE_VERSION: ${{ steps.frontend_image_tags.outputs.IMAGE_VERSION }}
-    if: |
-      needs.detect-changes.outputs.should_update_frontend != '0'
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('authos-frontend/**/package-lock.json') }}
-
-      - name: Build React frontend
-        working-directory: ./authos-frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Set Frontend image tags
-        id: frontend_image_tags
-        run: |
-          IMAGE_LATEST="${{ env.DOCKERHUB_NAMESPACE }}/authos-ui:latest"
-          IMAGE_VERSION="${{ env.DOCKERHUB_NAMESPACE }}/authos-ui:${{ env.IMAGE_VERSION_PATTERN }}"
-          echo "IMAGE_LATEST=$IMAGE_LATEST" >> $GITHUB_OUTPUT
-          echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build & push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./authos-frontend
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ${{steps.frontend_image_tags.outputs.IMAGE_LATEST}}
-            ${{steps.frontend_image_tags.outputs.IMAGE_VERSION}}
-
-  deploy-backend:
-    runs-on: ubuntu-22.04
-    needs: [ detect-changes, backend-build-push ]
-    if: |
-      needs.detect-changes.outputs.should_update_backend != '0'
-    steps:
-      - name: Setup Kustomize
-        uses: imranismail/setup-kustomize@v2.1.0
-
-      - name: Checkout infra repo
-        uses: actions/checkout@v4
-        with:
-          repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
-          token: '${{secrets.INFRA_REPO_TOKEN}}'
-          path: '${{vars.INFRA_REPO_NAME}}'
-      - name: Update Overlay
-        run: |
-          cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_API_OVERLAY_DIR}}
-          kustomize edit set image ${{needs.backend-build-push.outputs.IMAGE_VERSION}}
-      - name: Commit and Push Changes
-        run: |
-          cd ${{vars.INFRA_REPO_NAME}}
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --cached --quiet || git commit -m "Update API image to ${{ needs.backend-build-push.outputs.IMAGE_VERSION }}"
-          git push origin HEAD
-
-  deploy-frontend:
-    runs-on: ubuntu-22.04
-    needs: [detect-changes,frontend-build-push]
-    if: |
-      needs.detect-changes.outputs.should_update_frontend != '0'
-    steps:
-      - name: Setup Kustomize
-        uses: imranismail/setup-kustomize@v2.1.0
-
-      - name: Checkout infra repo
-        uses: actions/checkout@v4
-        with:
-          repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
-          token: '${{secrets.INFRA_REPO_TOKEN}}'
-          path: '${{vars.INFRA_REPO_NAME}}'
-      - name: Update Overlay
-        run: |
-          cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_FRONTEND_OVERLAY_DIR}}
-          kustomize edit set image ${{needs.frontend-build-push.outputs.IMAGE_VERSION}}
-      - name: Commit and Push Changes
-        run: |
-          cd ${{vars.INFRA_REPO_NAME}}
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --cached --quiet || git commit -m "Update Frontend image to ${{ needs.frontend-build-push.outputs.IMAGE_VERSION }}"
-          git push origin HEAD
+#name: Build & Push Authos Images
+#
+#on:
+#  push:
+#    branches: [ "master" ]
+#    paths:
+#      - "authos-api/**"
+#      - "authos-frontend/**"
+#      - ".github/workflows/**"
+#env:
+#  IMAGE_VERSION_PATTERN: "1.0.${{ github.run_number }}-alpha"
+#  DOCKERHUB_NAMESPACE: "stevetosak"
+#
+#jobs:
+#  detect-changes:
+#    runs-on: ubuntu-22.04
+#    outputs:
+#      should_update_backend: ${{ steps.detect_changes.outputs.should_update_backend }}
+#      should_update_frontend: ${{ steps.detect_changes.outputs.should_update_frontend }}
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - id: detect_changes
+#        name: "Compute changes"
+#        run: |
+#          backend_diff=$(git diff --name-only $GITHUB_EVENT_BEFORE $GITHUB_SHA | grep -c '^authos-api/' || true)
+#          frontend_diff=$(git diff --name-only $GITHUB_EVENT_BEFORE $GITHUB_SHA | grep -c '^authos-frontend/' || true)
+#
+#          force_backend=$(git log -1 --pretty=%B | grep -ci '\[force-backend\]' || true)
+#          force_frontend=$(git log -1 --pretty=%B | grep -ci '\[force-frontend\]' || true)
+#
+#          should_update_backend=$(( backend_diff > 0 || force_backend > 0 ? 1 : 0 ))
+#          should_update_frontend=$(( frontend_diff > 0 || force_frontend > 0 ? 1 : 0 ))
+#
+#          echo "should_update_backend=$should_update_backend" >> $GITHUB_OUTPUT
+#          echo "should_update_frontend=$should_update_frontend" >> $GITHUB_OUTPUT
+#
+#
+#  job-plan:
+#    needs: detect-changes
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Job outputs
+#        run: |
+#          echo "Commit message: ${{ github.event.head_commit.message }}"
+#          echo "Backend output: ${{ needs.detect-changes.outputs.should_update_backend }}"
+#          echo "Frontend output: ${{ needs.detect-changes.outputs.should_update_frontend }}"
+#
+#          if [[ "${{ needs.detect-changes.outputs.should_update_backend }}" != "0" ]]; then
+#            echo "Backend jobs WOULD run"
+#          else
+#            echo "Backend jobs WOULD SKIP"
+#          fi
+#
+#          if [[ "${{ needs.detect-changes.outputs.should_update_frontend }}" != "0" ]]; then
+#            echo "Frontend jobs WOULD run"
+#          else
+#            echo "Frontend jobs WOULD SKIP"
+#          fi
+#
+#
+#
+#  backend-build-push:
+#    needs: detect-changes
+#    runs-on: ubuntu-22.04
+#    outputs:
+#      IMAGE_LATEST: ${{ steps.backend_image_tags.outputs.IMAGE_LATEST }}
+#      IMAGE_VERSION: ${{ steps.backend_image_tags.outputs.IMAGE_VERSION }}
+#    if: |
+#      needs.detect-changes.outputs.should_update_backend != '0'
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - uses: actions/setup-java@v4
+#        with:
+#          distribution: 'temurin'
+#          java-version: '17'
+#
+#      - uses: actions/cache@v4
+#        with:
+#          path: ~/.m2/repository
+#          key: ${{ runner.os }}-m2-${{ hashFiles('authos-api/**/pom.xml') }}
+#
+#      - name: Build Spring Boot App
+#        working-directory: ./authos-api
+#        run: mvn -q clean package -DskipTests
+#
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v3
+#        with:
+#          username: ${{ vars.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#
+#      - uses: docker/setup-buildx-action@v3
+#
+#      - name: Set API image tags
+#        id: backend_image_tags
+#        run: |
+#          IMAGE_LATEST="${{ env.DOCKERHUB_NAMESPACE }}/authos-api:latest"
+#          IMAGE_VERSION="${{ env.DOCKERHUB_NAMESPACE }}/authos-api:${{ env.IMAGE_VERSION_PATTERN }}"
+#          echo "IMAGE_LATEST=$IMAGE_LATEST" >> $GITHUB_OUTPUT
+#          echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_OUTPUT
+#
+#      - name: Build & push Docker image
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: ./authos-api
+#          platforms: linux/amd64
+#          push: true
+#          tags: |
+#            ${{steps.backend_image_tags.outputs.IMAGE_LATEST}}
+#            ${{steps.backend_image_tags.outputs.IMAGE_VERSION}}
+#
+#  frontend-build-push:
+#    needs: detect-changes
+#    runs-on: ubuntu-22.04
+#    outputs:
+#      IMAGE_LATEST: ${{ steps.frontend_image_tags.outputs.IMAGE_LATEST }}
+#      IMAGE_VERSION: ${{ steps.frontend_image_tags.outputs.IMAGE_VERSION }}
+#    if: |
+#      needs.detect-changes.outputs.should_update_frontend != '0'
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - uses: actions/setup-node@v4
+#        with:
+#          node-version: 20
+#
+#      - uses: actions/cache@v4
+#        with:
+#          path: ~/.npm
+#          key: ${{ runner.os }}-npm-${{ hashFiles('authos-frontend/**/package-lock.json') }}
+#
+#      - name: Build React frontend
+#        working-directory: ./authos-frontend
+#        run: |
+#          npm ci
+#          npm run build
+#
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v3
+#        with:
+#          username: ${{ vars.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#
+#      - uses: docker/setup-buildx-action@v3
+#
+#      - name: Set Frontend image tags
+#        id: frontend_image_tags
+#        run: |
+#          IMAGE_LATEST="${{ env.DOCKERHUB_NAMESPACE }}/authos-ui:latest"
+#          IMAGE_VERSION="${{ env.DOCKERHUB_NAMESPACE }}/authos-ui:${{ env.IMAGE_VERSION_PATTERN }}"
+#          echo "IMAGE_LATEST=$IMAGE_LATEST" >> $GITHUB_OUTPUT
+#          echo "IMAGE_VERSION=$IMAGE_VERSION" >> $GITHUB_OUTPUT
+#
+#      - name: Build & push Docker image
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: ./authos-frontend
+#          platforms: linux/amd64
+#          push: true
+#          tags: |
+#            ${{steps.frontend_image_tags.outputs.IMAGE_LATEST}}
+#            ${{steps.frontend_image_tags.outputs.IMAGE_VERSION}}
+#
+#  deploy-backend:
+#    runs-on: ubuntu-22.04
+#    needs: [ detect-changes, backend-build-push ]
+#    if: |
+#      needs.detect-changes.outputs.should_update_backend != '0'
+#    steps:
+#      - name: Setup Kustomize
+#        uses: imranismail/setup-kustomize@v2.1.0
+#
+#      - name: Checkout infra repo
+#        uses: actions/checkout@v4
+#        with:
+#          repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
+#          token: '${{secrets.INFRA_REPO_TOKEN}}'
+#          path: '${{vars.INFRA_REPO_NAME}}'
+#      - name: Update Overlay
+#        run: |
+#          cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_API_OVERLAY_DIR}}
+#          kustomize edit set image ${{needs.backend-build-push.outputs.IMAGE_VERSION}}
+#      - name: Commit and Push Changes
+#        run: |
+#          cd ${{vars.INFRA_REPO_NAME}}
+#          git config user.name "github-actions[bot]"
+#          git config user.email "github-actions[bot]@users.noreply.github.com"
+#          git add .
+#          git diff --cached --quiet || git commit -m "Update API image to ${{ needs.backend-build-push.outputs.IMAGE_VERSION }}"
+#          git push origin HEAD
+#
+#  deploy-frontend:
+#    runs-on: ubuntu-22.04
+#    needs: [detect-changes,frontend-build-push]
+#    if: |
+#      needs.detect-changes.outputs.should_update_frontend != '0'
+#    steps:
+#      - name: Setup Kustomize
+#        uses: imranismail/setup-kustomize@v2.1.0
+#
+#      - name: Checkout infra repo
+#        uses: actions/checkout@v4
+#        with:
+#          repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
+#          token: '${{secrets.INFRA_REPO_TOKEN}}'
+#          path: '${{vars.INFRA_REPO_NAME}}'
+#      - name: Update Overlay
+#        run: |
+#          cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_FRONTEND_OVERLAY_DIR}}
+#          kustomize edit set image ${{needs.frontend-build-push.outputs.IMAGE_VERSION}}
+#      - name: Commit and Push Changes
+#        run: |
+#          cd ${{vars.INFRA_REPO_NAME}}
+#          git config user.name "github-actions[bot]"
+#          git config user.email "github-actions[bot]@users.noreply.github.com"
+#          git add .
+#          git diff --cached --quiet || git commit -m "Update Frontend image to ${{ needs.frontend-build-push.outputs.IMAGE_VERSION }}"
+#          git push origin HEAD
