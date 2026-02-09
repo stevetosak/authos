@@ -19,7 +19,6 @@ const HomePage: React.FC = () => {
 
     return (
             <div className="min-h-screen w-full text-white space-y-2">
-                <h1>HELLO CICD</h1>
                 <section className="relative py-24 px-4 sm:px-6 lg:px-8">
                     <div className="max-w-7xl mx-auto text-center">
                         <motion.div
