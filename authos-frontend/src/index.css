@@ -8,6 +8,7 @@
 :root {
     /* Base colors */
     --background: #111827; /* dark gray background */
+    --test: #5522ff22;
     --foreground: #1f2937; /* slightly lighter gray foreground */
     --text-primary: #ffffff; /* main text color */
     --text-secondary: #d1d5db; /* muted text */
