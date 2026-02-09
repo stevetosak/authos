@@ -8,7 +8,7 @@ on:
       - ".github/workflows/frontend.yaml"
 
 env:
-  IMAGE_VERSION_PATTERN: "1.0.${{ github.run_number }}-alpha"
+  IMAGE_VERSION_PATTERN: "alpha-${{ github.sha }}"
   DOCKERHUB_NAMESPACE: "stevetosak"
 
 jobs:
