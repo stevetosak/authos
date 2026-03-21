@@ -15,7 +15,7 @@ export const AppsList = () => {
 
     const nav = useNavigate()
 
-    const handleAppClick = (appId:number) => {
+    const handleAppClick = (appId: number) => {
         nav(`/dashboard/${appId}`)
     }
 
@@ -34,7 +34,7 @@ export const AppsList = () => {
                         whileHover={{y: -3}}
                     >
                         <Card
-                            className="bg-gray-900/80 h-full border border-gray-700/50 hover:border-teal-300/30 transition-colors group overflow-hidden">
+                            className="bg-gray-900/80 h-full  ring-1 ring-gray-700/50 hover:ring-cyan-500/50 transition-colors group overflow-hidden">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div>

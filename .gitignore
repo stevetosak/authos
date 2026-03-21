@@ -49,3 +49,4 @@ secrets.auto.tfvars
 scripts/
 k8s/scripts
 secrets/
+CLAUDE.md
