@@ -210,7 +210,7 @@ export default function AppDetails() {
                     </CardContent>
 
                     <CardFooter
-                        className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-gray-700 bg-gray-800/50">
+                        className="flex flex-col sm:flex-row justify-end gap-3 p-6">
                         {isEditing ? (
                             <>
                                 <Button
