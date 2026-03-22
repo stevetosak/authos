@@ -1,10 +1,7 @@
 import {App} from "@/services/types.ts";
 import {JSX} from "react";
 import {TitleDescState, TitleDescWrapper} from "@/Pages/components/wrappers/TitleDescWrapper.tsx";
-import {RedirectUriWrapper} from "@/Pages/components/wrappers/RedirectUriWrapper.tsx";
-import {ScopeWrapper} from "@/Pages/components/wrappers/ScopeWrapper.tsx";
-import {GrantTypeWrapper} from "@/Pages/components/wrappers/GrantTypesWrapper.tsx";
-import {ResponseTypesWrapper} from "@/Pages/components/wrappers/ResponseTypesWrapper.tsx";
+import {ArrayTagWrapper} from "@/Pages/components/wrappers/ArrayTagWrapper.tsx";
 import {
     DusterCallbackUriState,
     DusterCallbackUriWrapper
@@ -42,10 +39,10 @@ const WRAPPER_COMPONENT_MAP: {
     [K in WrapperKey]: (state: WRAPPER_STATE_MAP[K]) => JSX.Element;
 } = {
     titleDesc: TitleDescWrapper,
-    redirectUri: RedirectUriWrapper,
-    scope: ScopeWrapper,
-    grantType: GrantTypeWrapper,
-    responseType: ResponseTypesWrapper,
+    redirectUri: (state) => ArrayTagWrapper({...state, field: "redirectUris", placeholder: "Add new redirect URI"}),
+    scope: (state) => ArrayTagWrapper({...state, field: "scopes", placeholder: "Add new scope"}),
+    grantType: (state) => ArrayTagWrapper({...state, field: "grantTypes", placeholder: "Add new grant type"}),
+    responseType: (state) => ArrayTagWrapper({...state, field: "responseTypes", placeholder: "Add new response type"}),
     dusterCallback: DusterCallbackUriWrapper
 };
 

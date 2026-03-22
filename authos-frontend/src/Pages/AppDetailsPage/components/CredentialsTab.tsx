@@ -46,8 +46,6 @@ export const CredentialsTab = ({value = "credentials", app, isEditing, regenerat
                 icon={<LockIcon className="w-4 h-4"/>}
                 label="Client Secret"
                 value={showSecret ? app.clientSecret : '•'.repeat(app.clientSecret.length)}
-                containerClassName="bg-gray-700/30 border-gray-600"
-                valueClassName="bg-gray-800"
                 actions={
                     <>
                         <Tooltip>

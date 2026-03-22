@@ -17,7 +17,7 @@ export const CredentialCard = ({
     value,
     actions,
     containerClassName = "bg-gray-700/20 border-gray-700",
-    valueClassName = "bg-gray-800/80",
+    valueClassName = "bg-gray-800/50",
     footer,
 }: CredentialCardProps) => {
     return (
