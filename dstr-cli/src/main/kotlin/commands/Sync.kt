@@ -20,12 +20,12 @@ class Sync() : SuspendingCliktCommand(name = "sync") {
     private val lookup by requireObject<AppLookup>()
 
     suspend fun sendPullRequest(param: String, value: String) {
-        val requestUrl = URLBuilder("http://localhost:9000/duster/pull").apply {
+        val requestUrl = URLBuilder("http://localhost:8080/duster/pull").apply {
             parameters.append(param, value)
         }.buildString()
         println("Request URL: $requestUrl")
 
-        val token = client.get("http://localhost:8785/duster/api/v1/internal/credentials/token").body<String>()
+            val token = client.get("http://localhost:8785/duster/api/v1/internal/credentials/token").body<String>()
 
         val dusterAppDto: DusterAppDto = client.post(requestUrl) {
             header("Authorization", "Bearer $token")
