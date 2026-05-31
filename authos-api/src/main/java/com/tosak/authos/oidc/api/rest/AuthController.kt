@@ -6,6 +6,7 @@ import com.tosak.authos.oidc.common.dto.LoginResponse
 import com.tosak.authos.oidc.common.dto.QrCodeDTO
 import com.tosak.authos.oidc.common.enums.LoginResponseStatus
 import com.tosak.authos.oidc.common.pojo.strategy.LoginTokenStrategy
+import io.swagger.v3.oas.annotations.Hidden
 
 import com.tosak.authos.oidc.common.pojo.strategy.RedirectResponseTokenStrategy
 import com.tosak.authos.oidc.common.utils.JwtTokenFactory
@@ -36,6 +37,7 @@ import java.time.LocalDateTime
  * This controller provides REST endpoints for OAuth-based login, native login, user
  * registration, session clearing, and authentication verification.
  */
+@Hidden
 @RestController
 open class AuthController(
     private val userService: UserService,

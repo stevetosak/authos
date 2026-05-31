@@ -8,6 +8,7 @@ import com.tosak.authos.oidc.entity.AppGroup
 import com.tosak.authos.oidc.service.AppGroupService
 import com.tosak.authos.oidc.service.AppService
 import com.tosak.authos.oidc.service.UserService
+import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController
  * Provides endpoints for registering applications, updating them, regenerating secrets,
  * and adding application groups. Interacts with application services to process requests.
  */
+@Hidden
 @RestController
 class ApplicationController(
     private val appService: AppService,

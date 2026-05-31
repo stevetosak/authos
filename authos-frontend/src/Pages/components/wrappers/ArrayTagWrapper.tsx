@@ -1,7 +1,7 @@
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
-import {TrashIcon} from "lucide-react";
+import {PencilIcon, TrashIcon} from "lucide-react";
 import {WrapperState} from "@/Pages/components/wrappers/DataWrapper.tsx";
 import {App} from "@/services/types.ts";
 
@@ -34,15 +34,11 @@ export const ArrayTagWrapper = ({
                     placeholder={placeholder}
                     className="bg-gray-700 border-gray-600 flex-1"
                 />
-                <Button
-                    onClick={() => addElement(field)}
-                    variant="outline"
-                    className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10"
-                >
+                <Button onClick={() => addElement(field)}>
                     Add
                 </Button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
                 {editItems.map((item) => (
                     <Badge
                         key={item}
@@ -51,8 +47,14 @@ export const ArrayTagWrapper = ({
                     >
                         {item}
                         <button
+                            onClick={() => { handleInputChange(fieldKey, item); removeElement(field, item); }}
+                            className="ml-2 text-gray-400 hover:text-teal-400 p-1 rounded-full"
+                        >
+                            <PencilIcon className="w-3 h-3"/>
+                        </button>
+                        <button
                             onClick={() => removeElement(field, item)}
-                            className="ml-2 text-gray-400 hover:text-red-400 p-1 rounded-full"
+                            className="text-gray-400 hover:text-red-400 p-1 rounded-full"
                         >
                             <TrashIcon className="w-3 h-3"/>
                         </button>

@@ -22,6 +22,7 @@ import com.tosak.authos.oidc.service.PPIDService
 import com.tosak.authos.oidc.service.SSOSessionService
 import com.tosak.authos.oidc.service.TokenService
 import com.tosak.authos.oidc.service.UserService
+import io.swagger.v3.oas.annotations.Hidden
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.*
@@ -108,6 +109,7 @@ class OAuthEndpoints(
     // direktno ako go pristapis ova mozda e slabost
 
     // todo ovaj metod samo od authos frontend app da e dostapen
+    @Hidden
     @GetMapping("/approve")
     fun approve(
         @RequestParam("client_id") clientId: String,

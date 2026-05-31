@@ -14,11 +14,11 @@ export const SettingsTab = ({value = "settings", baseState, app, handleChange}: 
     return (
         <TabsContent value={value} className="p-6 space-y-8">
             <div className="space-y-6">
-                <SettingsSectionCard icon={<GlobeIcon className="w-4 h-4"/>} title="Redirect URIs">
+                <SettingsSectionCard icon={<GlobeIcon className="w-4 h-4"/>} title="Redirect URIs" description="Allowed callback URLs after authentication">
                     <DataWrapper state={{...baseState}} wrapper={"redirectUri"}/>
                 </SettingsSectionCard>
 
-                <SettingsSectionCard icon={<ShieldIcon className="w-4 h-4"/>} title="Permissions">
+                <SettingsSectionCard icon={<ShieldIcon className="w-4 h-4"/>} title="Permissions" description="Scopes and grant types this application can request">
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-4">
                             <h4 className="font-medium text-gray-300">Scopes</h4>
@@ -31,7 +31,7 @@ export const SettingsTab = ({value = "settings", baseState, app, handleChange}: 
                     </div>
                 </SettingsSectionCard>
 
-                <SettingsSectionCard icon={<CodeIcon className="w-4 h-4"/>} title="Response Configuration">
+                <SettingsSectionCard icon={<CodeIcon className="w-4 h-4"/>} title="Response Configuration" description="Token and response format settings">
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-4">
                             <Label className="flex items-center gap-2">
@@ -70,7 +70,7 @@ export const SettingsTab = ({value = "settings", baseState, app, handleChange}: 
                     </div>
                 </SettingsSectionCard>
 
-                <SettingsSectionCard icon={<CodeIcon className="w-4 h-4"/>} title="Duster" className="bg-gray-700/50">
+                <SettingsSectionCard icon={<CodeIcon className="w-4 h-4"/>} title="Duster" description="Webhook callback for the Duster integration" className="bg-gray-700/50">
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-4">
                             <h4 className="font-medium text-gray-300">Callback URL</h4>
