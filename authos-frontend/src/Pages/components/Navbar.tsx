@@ -104,7 +104,7 @@ const Navbar = () => {
 
 
                                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                                        <Avatar className="h-8 w-8 border border-gray-600 hover:border-green-600">
+                                        <Avatar className="h-8 w-8 border border-gray-600 hover:border-primary">
                                             <AvatarImage src={user?.email}/>
                                             <AvatarFallback className="bg-gray-700">
                                                 {user ? user.firstName.charAt(0) : "U"}
@@ -185,7 +185,7 @@ const Navbar = () => {
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="text-gray-400 hover:text-green-400"
+                                className="text-gray-400 hover:text-primary"
                             >
                                 <Plus className="w-5 h-5"/>
                             </Button>
@@ -224,7 +224,7 @@ const MobileNavLink = ({to, isActive, icon}: {to: string, isActive: boolean, ico
         to={to}
         className={`flex-1 flex justify-center py-2 px-1 rounded-md transition-colors ${
             isActive
-                ? 'text-green-400'
+                ? 'text-primary'
                 : 'text-gray-400 hover:text-white'
         }`}
     >

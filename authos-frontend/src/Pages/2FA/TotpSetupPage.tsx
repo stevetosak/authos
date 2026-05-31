@@ -55,7 +55,7 @@ export const TotpSetupPage = () => {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-emerald-400"/>
+                        <Shield className="w-5 h-5 text-primary"/>
                         Set Up Multi-Factor Authentication
                     </CardTitle>
                 </CardHeader>

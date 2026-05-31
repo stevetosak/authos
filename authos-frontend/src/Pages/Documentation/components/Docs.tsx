@@ -26,8 +26,8 @@ export const DocSection = ({title, level = 2, children}: DocSectionProps) => {
                     level === 3 ? "text-xl font-semibold mt-6" :
                         "text-lg font-medium mt-4"
             }`}>
-                {level === 2 && <FileText className="w-5 h-5 text-emerald-400"/>}
-                {level > 2 && <ArrowRight className="w-4 h-4 text-emerald-400"/>}
+                {level === 2 && <FileText className="w-5 h-5 text-primary"/>}
+                {level > 2 && <ArrowRight className="w-4 h-4 text-primary"/>}
                 {title}
             </HeadingTag>
             <div className="prose prose-invert max-w-none text-gray-300">
@@ -117,7 +117,7 @@ export const DocCollapse = ({title, children}: DocCollapseProps) => {
             >
                 <div className="flex items-center gap-2">
                     <ChevronDown
-                        className={`w-4 h-4 text-emerald-400 transition-transform ${isOpen ? "" : "-rotate-90"}`}/>
+                        className={`w-4 h-4 text-primary transition-transform ${isOpen ? "" : "-rotate-90"}`}/>
                     <span className="font-medium text-white">{title}</span>
                 </div>
             </button>
@@ -137,7 +137,7 @@ export const DocumentationPage = ({title, children}: DocumentationPageProps) => 
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{title}</h1>
-                    <div className="h-1 w-20 bg-emerald-400 rounded-full"></div>
+                    <div className="h-1 w-20 bg-primary rounded-full"></div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">

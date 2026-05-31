@@ -136,7 +136,7 @@ export const DusterClientPage = () => {
                                         <Button
                                             variant={"outline"}
                                             onClick={createDusterClient}
-                                            className="flex items-center gap-2 justify-start bg-gray-800/50 border-emerald-400/30 hover:bg-emerald-400/10 text-xl w-1/2 text-emerald-500"
+                                            className="flex items-center gap-2 justify-start bg-gray-800/50 border-primary/30 hover:bg-primary/10 text-xl w-1/2 text-primary"
                                         >
                                             <Wrench className={"w-10 h-10"}></Wrench>
                                             <span className={"flex-1"}>
@@ -158,7 +158,7 @@ export const DusterClientPage = () => {
                                 {/*    <DialogContent className="bg-gray-800 border border-gray-700 max-w-md">*/}
                                 {/*        <DialogHeader>*/}
                                 {/*            <DialogTitle className="flex items-center gap-2">*/}
-                                {/*                <Key className="w-5 h-5 text-emerald-400"/>*/}
+                                {/*                <Key className="w-5 h-5 text-primary"/>*/}
                                 {/*                Register New Client*/}
                                 {/*            </DialogTitle>*/}
                                 {/*        </DialogHeader>*/}
@@ -172,13 +172,13 @@ export const DusterClientPage = () => {
                 {isConfigured && (<>
                     <div className="flex justify-between items-center mb-8">
                         <h1 className="text-3xl font-bold flex items-center gap-3">
-                            <Settings2 className="w-6 h-6 text-emerald-400"/>
+                            <Settings2 className="w-6 h-6 text-primary"/>
                             Duster Client
                         </h1>
                         <Button
                             asChild
                             variant="outline"
-                            className="border-emerald-400 text-emerald-400 hover:bg-emerald-400/10"
+                            className="border-primary text-primary hover:bg-primary/10"
                         >
                             <a href="https://docs.authos.com/duster-setup" target="_blank" rel="noopener noreferrer">
                                 <BookOpen className="w-4 h-4 mr-2"/>
@@ -191,7 +191,7 @@ export const DusterClientPage = () => {
                         <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm lg:col-span-2">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Link className="w-5 h-5 text-emerald-400"/>
+                                    <Link className="w-5 h-5 text-primary"/>
                                     Client Connection
                                 </CardTitle>
                             </CardHeader>
@@ -212,7 +212,6 @@ export const DusterClientPage = () => {
                                         <Button
                                             onClick={checkHealth}
                                             disabled={!clientUrl || healthStatus === "checking"}
-                                            className="bg-emerald-600 hover:bg-emerald-500"
                                         >
                                             {healthStatus === "checking" ? (
                                                 <RefreshCw className="w-4 h-4 mr-2 animate-spin"/>
@@ -224,7 +223,7 @@ export const DusterClientPage = () => {
 
                                         <div className="flex items-center gap-2">
                                             <div className={`w-3 h-3 rounded-full ${
-                                                healthStatus === "healthy" ? "bg-emerald-400" :
+                                                healthStatus === "healthy" ? "bg-primary" :
                                                     healthStatus === "unhealthy" ? "bg-red-400" :
                                                         healthStatus === "checking" ? "bg-yellow-400" : "bg-gray-400"
                                             }`}/>
@@ -242,18 +241,18 @@ export const DusterClientPage = () => {
                         <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Shield className="w-5 h-5 text-emerald-400"/>
+                                    <Shield className="w-5 h-5 text-primary"/>
                                     Connection Status
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-col items-center justify-center h-full">
                                     <div className={`p-4 rounded-full mb-3 ${
-                                        healthStatus === "healthy" ? "bg-emerald-500/10" :
+                                        healthStatus === "healthy" ? "bg-primary/10" :
                                             healthStatus === "unhealthy" ? "bg-red-500/10" : "bg-gray-500/10"
                                     }`}>
                                         {healthStatus === "healthy" ? (
-                                            <Check className="w-8 h-8 text-emerald-400"/>
+                                            <Check className="w-8 h-8 text-primary"/>
                                         ) : healthStatus === "unhealthy" ? (
                                             <X className="w-8 h-8 text-red-400"/>
                                         ) : (
@@ -273,7 +272,7 @@ export const DusterClientPage = () => {
                     <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm mb-8">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Settings className="w-5 h-5 text-emerald-400"/>
+                                <Settings className="w-5 h-5 text-primary"/>
                                 Client Settings
                             </CardTitle>
                         </CardHeader>
@@ -291,7 +290,7 @@ export const DusterClientPage = () => {
                                                         ...settings,
                                                         mode: checked ? "auto" : "fresh"
                                                     })}
-                                                    className="data-[state=checked]:bg-emerald-500"
+                                                    className="data-[state=checked]:bg-primary"
                                                 />
                                                 <span className="text-sm">
                                                 {settings.mode === "auto" ? "Auto (refresh tokens)" : "Fresh (re-auth each time)"}
@@ -373,7 +372,6 @@ export const DusterClientPage = () => {
 
                             {isEditing && (<Button
                                 onClick={saveSettings}
-                                className="bg-emerald-600 hover:bg-emerald-500"
                             >
                                 Save Settings
                             </Button>)}
@@ -391,7 +389,7 @@ export const DusterClientPage = () => {
                                 <Button
                                     variant="outline"
                                     onClick={() => handleEdit()}
-                                    className="border-emerald-500 text-emerald-500 hover:bg-emerald-500/10 w-full sm:w-auto"
+                                    className="w-full sm:w-auto"
                                 >
                                     Edit
                                 </Button>
@@ -402,7 +400,7 @@ export const DusterClientPage = () => {
                     <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Link className="w-5 h-5 text-emerald-400"/>
+                                <Link className="w-5 h-5 text-primary"/>
                                 Linked Applications
                             </CardTitle>
                         </CardHeader>
@@ -416,7 +414,7 @@ export const DusterClientPage = () => {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className={`w-3 h-3 rounded-full ${
-                                                    app.status === "active" ? "bg-emerald-400" : "bg-gray-400"
+                                                    app.status === "active" ? "bg-primary" : "bg-gray-400"
                                                 }`}/>
                                                 <div>
                                                     <p className="font-medium">{app.name}</p>
@@ -443,7 +441,7 @@ export const DusterClientPage = () => {
                             ) : (
                                 <div className="text-center py-8">
                                     <p className="text-gray-400 mb-4">No applications linked to Duster yet</p>
-                                    <Button variant="outline" className="border-emerald-400 text-emerald-400">
+                                    <Button variant="outline" className="border-primary text-primary">
                                         Link Application
                                     </Button>
                                 </div>

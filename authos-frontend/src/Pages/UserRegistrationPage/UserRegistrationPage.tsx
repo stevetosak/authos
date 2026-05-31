@@ -68,7 +68,7 @@ export default function UserRegistration() {
                                                 value={formData.name}
                                                 onChange={handleChange}
                                                 type="text"
-                                                className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                                className="bg-gray-700 border-gray-600 text-white w-full"
                                                 required
                                                 placeholder="John"
                                             />
@@ -85,7 +85,7 @@ export default function UserRegistration() {
                                                 value={formData.surname}
                                                 onChange={handleChange}
                                                 type="text"
-                                                className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                                className="bg-gray-700 border-gray-600 text-white w-full "
                                                 required
                                                 placeholder="Doe"
                                             />
@@ -104,7 +104,7 @@ export default function UserRegistration() {
                                             value={formData.email}
                                             onChange={handleChange}
                                             type="email"
-                                            className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                            className="bg-gray-700 border-gray-600 text-white w-full "
                                             required
                                             placeholder="your@email.com"
                                         />
@@ -123,7 +123,7 @@ export default function UserRegistration() {
                                                 value={formData.password}
                                                 onChange={handleChange}
                                                 type="password"
-                                                className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                                className="bg-gray-700 border-gray-600 text-white w-full "
                                                 required
                                                 placeholder="••••••••"
                                             />
@@ -141,7 +141,7 @@ export default function UserRegistration() {
                                                 value={formData.confirmPassword}
                                                 onChange={handleChange}
                                                 type="password"
-                                                className="bg-gray-700 border-gray-600 text-white w-full focus:ring-emerald-500 focus:border-emerald-500"
+                                                className="bg-gray-700 border-gray-600 text-white w-full "
                                                 required
                                                 placeholder="••••••••"
                                             />

@@ -44,7 +44,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                     type="email"
                                     placeholder="your@email.com"
                                     required
-                                    className="bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 h-12"
+                                    className="bg-gray-700 border-gray-600 text-white h-12"
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
@@ -66,7 +66,7 @@ export function LoginForm({className,handleSubmit,setEmail,setPassword} : LoginF
                                     id="password"
                                     type="password"
                                     required
-                                    className="bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 h-12"
+                                    className="bg-gray-700 border-gray-600 text-white h-12"
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>

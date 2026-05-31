@@ -16,7 +16,7 @@ export const AccountTab = ({active,user} : ProfileTabProps & AccountTabProps) =>
                 <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                     <CardHeader className="border-b border-gray-700/50">
                         <CardTitle className="flex items-center gap-2">
-                            <UserIcon className="w-5 h-5 text-emerald-400"/>
+                            <UserIcon className="w-5 h-5 text-primary"/>
                             Account Information
                         </CardTitle>
                     </CardHeader>
@@ -42,7 +42,7 @@ export const AccountTab = ({active,user} : ProfileTabProps & AccountTabProps) =>
 
                         </div>
                         <div className="flex justify-end">
-                            <Button className="bg-emerald-600 hover:bg-emerald-500">
+                            <Button>
                                 Update Profile
                             </Button>
                         </div>

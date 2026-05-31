@@ -55,7 +55,7 @@ const HomePage: React.FC = () => {
                 <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center mb-16">
-                            <Badge className="bg-emerald-500/10 text-emerald-400 px-4 py-1.5 text-sm font-medium mb-4">
+                            <Badge className="bg-primary/10 text-primary px-4 py-1.5 text-sm font-medium mb-4">
                                 ENTERPRISE FEATURES
                             </Badge>
                             <h2 className="text-3xl md:text-4xl font-bold text-white">
@@ -70,8 +70,8 @@ const HomePage: React.FC = () => {
                             >
                                 <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm h-full">
                                     <CardContent className="p-8">
-                                        <div className="bg-emerald-500/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-6">
-                                            <ShieldCheck className="text-emerald-400 w-6 h-6" />
+                                        <div className="bg-primary/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-6">
+                                            <ShieldCheck className="text-primary w-6 h-6" />
                                         </div>
                                         <h3 className="text-xl font-semibold mb-3">Single Sign-On</h3>
                                         <p className="text-gray-300">
@@ -79,15 +79,15 @@ const HomePage: React.FC = () => {
                                         </p>
                                         <ul className="mt-4 space-y-2 text-gray-400 text-sm">
                                             <li className="flex items-center">
-                                                <CheckCircle className="w-4 h-4 text-emerald-400 mr-2" />
+                                                <CheckCircle className="w-4 h-4 text-primary mr-2" />
                                                 Centralized identity management
                                             </li>
                                             <li className="flex items-center">
-                                                <CheckCircle className="w-4 h-4 text-emerald-400 mr-2" />
+                                                <CheckCircle className="w-4 h-4 text-primary mr-2" />
                                                 Analytics
                                             </li>
                                             <li className="flex items-center">
-                                                <CheckCircle className="w-4 h-4 text-emerald-400 mr-2" />
+                                                <CheckCircle className="w-4 h-4 text-primary mr-2" />
                                                 Session management
                                             </li>
                                         </ul>
@@ -176,8 +176,8 @@ const HomePage: React.FC = () => {
                                 <div className="space-y-8">
                                     <div className="flex">
                                         <div className="flex-shrink-0">
-                                            <div className="bg-emerald-500/10 p-2 rounded-lg">
-                                                <Shield className="w-6 h-6 text-emerald-400" />
+                                            <div className="bg-primary/10 p-2 rounded-lg">
+                                                <Shield className="w-6 h-6 text-primary" />
                                             </div>
                                         </div>
                                         <div className="ml-4">
@@ -220,14 +220,14 @@ const HomePage: React.FC = () => {
 
                             <div className="relative">
                                 <div className="relative bg-gray-800/50 border border-gray-700/50 rounded-xl p-8 backdrop-blur-sm">
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl opacity-20 blur"></div>
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/60 to-blue-500 rounded-xl opacity-20 blur"></div>
                                     <div className="relative">
                                         <h3 className="text-xl font-semibold text-white mb-4">Get Started in Minutes</h3>
                                         <p className="text-gray-300 mb-6">
                                             Integrate with our API or use our pre-built components to add authentication to your apps.
                                         </p>
                                         <Button
-                                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 text-lg"
+                                            className="w-full py-3 text-lg"
                                             onClick={() => navigate("/register")}
                                         >
                                             <UserPlus className="w-5 h-5 mr-2" />
@@ -244,7 +244,7 @@ const HomePage: React.FC = () => {
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col md:flex-row justify-between items-center">
                             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-                                <Key className="w-8 h-8 text-emerald-400" />
+                                <Key className="w-8 h-8 text-primary" />
                                 <span className="text-xl font-bold text-white">Authos</span>
                             </div>
                             <div className="flex space-x-6">

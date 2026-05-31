@@ -41,7 +41,7 @@ export const GroupHeader = () => {
                     <div className="md:col-span-2 space-y-2">
                         <div className="flex items-center gap-3">
                             <div
-                                className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"/>
+                                className="w-3 h-3 rounded-full bg-primary flex-shrink-0"/>
                             {!isEditingGroup ? (
                                 <CardTitle className="text-xl text-white">
                                     {selectedGroup.name}
@@ -93,7 +93,7 @@ export const GroupHeader = () => {
                             <Button
                                 variant={"default"}
                                 onClick={handleGroupSave}
-                                className="border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300 w-full sm:w-auto"
+                                className="w-full sm:w-auto"
                             >
                                 <CheckIcon className="w-4 h-4 mr-2"/>
                                 Save Changes
@@ -143,7 +143,7 @@ export const GroupHeader = () => {
 
                 </> : <div className="md:col-span-2 space-y-2">
                     <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"/>
+                        <div className="w-3 h-3 rounded-full bg-primary flex-shrink-0"/>
                         <CardTitle className="text-xl text-white">
                             All Apps
                         </CardTitle>

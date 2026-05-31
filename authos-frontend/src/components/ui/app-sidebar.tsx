@@ -111,7 +111,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="hover:bg-gray-700/50 transition-colors"
               >
                 <a href="/docs" className="flex items-center gap-3">
-                  <div className="bg-emerald-500/10 text-emerald-400 flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <div className="bg-primary/10 text-primary flex aspect-square size-8 items-center justify-center rounded-lg">
                     <GalleryVerticalEnd className="size-4" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
@@ -160,10 +160,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   <SidebarMenuSubItem key={subItem.title}>
                                     <SidebarMenuSubButton
                                         asChild
-                                        className="text-gray-400 hover:text-emerald-400 hover:bg-gray-700/30"
+                                        className="text-gray-400 hover:text-primary hover:bg-gray-700/30"
                                     >
                                       <a href={subItem.url} className="flex items-center gap-2">
-                                        <ChevronRight className="size-3 text-emerald-400/50" />
+                                        <ChevronRight className="size-3 text-primary/50" />
                                         {subItem.title}
                                       </a>
                                     </SidebarMenuSubButton>

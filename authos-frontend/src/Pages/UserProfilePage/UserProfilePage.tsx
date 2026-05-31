@@ -44,11 +44,11 @@ export const ProfilePage = () => {
                     <div className="flex-shrink-0">
                         <div className="relative">
                             <div
-                                className="w-24 h-24 rounded-full bg-gray-800 border-2 border-emerald-400/30 flex items-center justify-center">
+                                className="w-24 h-24 rounded-full bg-gray-800 border-2 border-primary/30 flex items-center justify-center">
                                 <User className="w-12 h-12 text-gray-400"/>
                             </div>
                             <div
-                                className="absolute bottom-0 right-0 bg-emerald-500 rounded-full p-1.5 border-2 border-gray-900">
+                                className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 border-2 border-gray-900">
                                 <Edit className="w-4 h-4 text-white"/>
                             </div>
                         </div>
@@ -80,7 +80,7 @@ export const ProfilePage = () => {
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-md text-left transition-colors ${
                                                 activeTab === tab.id
-                                                    ? 'bg-gray-700/50 text-emerald-400'
+                                                    ? 'bg-gray-700/50 text-primary'
                                                     : 'text-gray-300 hover:bg-gray-700/30'
                                             }`}
                                         >
@@ -102,7 +102,7 @@ export const ProfilePage = () => {
                             <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                 <CardHeader className="border-b border-gray-700/50">
                                     <CardTitle className="flex items-center gap-2">
-                                        <Shield className="w-5 h-5 text-emerald-400"/>
+                                        <Shield className="w-5 h-5 text-primary"/>
                                         Active Sessions
                                     </CardTitle>
                                 </CardHeader>
@@ -116,7 +116,7 @@ export const ProfilePage = () => {
                                                         <p className="font-medium">Chrome on Windows</p>
                                                         {session === 1 && (
                                                             <Badge
-                                                                className="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 text-xs">
+                                                                className="bg-primary/10 text-primary px-2 py-0.5 text-xs">
                                                                 Current
                                                             </Badge>
                                                         )}
@@ -149,7 +149,7 @@ export const ProfilePage = () => {
                             <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                                 <CardHeader className="border-b border-gray-700/50">
                                     <CardTitle className="flex items-center gap-2">
-                                        <Key className="w-5 h-5 text-emerald-400"/>
+                                        <Key className="w-5 h-5 text-primary"/>
                                         Authorized Applications
                                     </CardTitle>
                                 </CardHeader>

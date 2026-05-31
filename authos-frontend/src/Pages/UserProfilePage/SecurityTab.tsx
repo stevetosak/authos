@@ -45,7 +45,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                         <Card className="bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm">
                             <CardHeader className="border-b border-gray-700/50">
                                 <CardTitle className="flex items-center gap-2">
-                                    <Lock className="w-5 h-5 text-emerald-400"/>
+                                    <Lock className="w-5 h-5 text-primary"/>
                                     Password
                                 </CardTitle>
                             </CardHeader>
@@ -72,7 +72,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                                     />
                                 </div>
                                 <div className="flex justify-end">
-                                    <Button className="bg-emerald-600 hover:bg-emerald-500">
+                                    <Button className="">
                                         Change Password
                                     </Button>
                                 </div>
@@ -83,7 +83,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                             <CardHeader className="border-b border-gray-700/50">
                                 <div className="flex justify-between items-center">
                                     <CardTitle className="flex items-center gap-2">
-                                        <Shield className="w-5 h-5 text-emerald-400"/>
+                                        <Shield className="w-5 h-5 text-primary"/>
                                         Multi-Factor Authentication
                                     </CardTitle>
                                 </div>
@@ -93,7 +93,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                                 {isMfaEnabled ? (
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600/50">
-                                            <Smartphone className="w-10 h-10 text-emerald-400"/>
+                                            <Smartphone className="w-10 h-10 text-primary"/>
                                             <div className={"w-full"}>
                                                 <p className="font-medium">Time-based One Time Password </p>
                                                 <p className="text-sm text-gray-400">Authenticator App</p>
@@ -146,7 +146,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                                         ) : (
                                             <Button
                                                 onClick={generateRecoveryCodes}
-                                                className="bg-emerald-600 hover:bg-emerald-500"
+                                                className=""
                                             >
                                                 Generate Recovery Codes
                                             </Button>
@@ -161,7 +161,7 @@ export const SecurityTab = ({active, user}: ProfileTabProps & SecurityTabProps) 
                                         </p>
                                         <Button
                                             onClick={enableMfa}
-                                            className="bg-emerald-600 hover:bg-emerald-500"
+                                            className=""
                                         >
                                             Enable MFA
                                         </Button>
