@@ -7,6 +7,8 @@ VERSION="0.1.0-alpha"
 INSTALL_ROOT="$HOME/.local"
 BIN_DIR="$INSTALL_ROOT/bin"
 APP_DIR="$INSTALL_ROOT/dstr-$VERSION"
+CONFIG_DIR="$HOME/.dstr"
+CONFIG_FILE="$CONFIG_DIR/dstr.config"
 
 echo "Release version: $VERSION"
 echo "Fetching release zip..."
@@ -38,5 +40,28 @@ else
   echo "✅ $BIN_DIR is already in your PATH"
 fi
 
+# Server configuration
+echo ""
+echo "Configure Duster server (press Enter to keep defaults):"
+read -r -p "  Duster base URL [http://localhost:8785]: " INPUT_DUSTER_URL
+read -r -p "  Authos base URL [http://localhost:8080]: " INPUT_AUTHOS_URL
+
+mkdir -p "$CONFIG_DIR"
+cat > "$CONFIG_FILE" <<EOF
+# dstr configuration
+# Edit this file to point dstr at your Duster and Authos instances.
+# These values can also be overridden at runtime via:
+#   Environment variables: DUSTER_BASE_URL, AUTHOS_BASE_URL
+#   CLI flags:             --host, --authos-host
+
+# Base URL of your Duster instance
+duster_base_url=${INPUT_DUSTER_URL:-http://localhost:8785}
+
+# Base URL of your Authos IDP (used by the sync command)
+authos_base_url=${INPUT_AUTHOS_URL:-http://localhost:8080}
+EOF
+echo "Config written to $CONFIG_FILE"
+
+echo ""
 echo "✅ Installation complete!"
 echo "Run: dstr --help"

@@ -1,5 +1,9 @@
 version: '3.8'
 
+# Local development compose — bundles Redis alongside Duster.
+# For external Redis, use:  docker compose -f docker-compose.yml -f docker-compose.external-redis.yml up
+# For production,           use docker-compose.prod.yml instead.
+
 services:
   duster-client:
     image: "stevetosak/authos-duster-client:1.0"
@@ -8,10 +12,12 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      HOST_IP: 192.168.209.7
+      AUTHOS_BASE_URL: ${AUTHOS_BASE_URL:-http://localhost:8080}
+      HOST_IP: ${HOST_IP:-}
     depends_on:
       redis:
         condition: service_healthy
+    restart: unless-stopped
     networks:
       - duster-net
 
@@ -23,13 +29,15 @@ services:
       - redis-data:/data
     networks:
       - duster-net
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-
+volumes:
+  redis-data:
 
 networks:
   duster-net:

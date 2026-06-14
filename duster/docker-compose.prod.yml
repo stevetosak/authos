@@ -1,0 +1,42 @@
+version: '3.8'
+
+# Production-ready compose file.
+# Expects all configuration via environment variables or a .env file.
+#
+# Required:
+#   AUTHOS_BASE_URL   - base URL of your Authos IDP  (e.g. https://auth.example.com)
+#   REDIS_HOST        - hostname of your Redis instance
+#   REDIS_PORT        - Redis port (default 6379)
+#
+# Optional:
+#   REDIS_PASSWORD    - Redis auth password
+#   REDIS_USESSL      - true/false for TLS Redis connections
+#   REDIS_TIMEOUT     - connection timeout in seconds (default 60)
+#   HOST_IP           - set if any registered app callback URIs use "localhost" and need rewriting
+
+services:
+  duster-client:
+    image: "stevetosak/authos-duster-client:latest"
+    ports:
+      - "8785:8785"
+    environment:
+      AUTHOS_BASE_URL: ${AUTHOS_BASE_URL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_USESSL: ${REDIS_USESSL:-false}
+      REDIS_TIMEOUT: ${REDIS_TIMEOUT:-60}
+      HOST_IP: ${HOST_IP:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8785/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - duster-net
+
+networks:
+  duster-net:
+    driver: bridge
