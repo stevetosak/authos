@@ -2,6 +2,7 @@ package com.authos
 
 import com.authos.routes.appRoutes
 import com.authos.routes.credentialsRoutes
+import com.authos.routes.healthRoutes
 import com.authos.routes.oAuthRoutes
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -17,6 +18,7 @@ fun Application.configureRouting() {
     }
 
     routing {
+        healthRoutes()
         oAuthRoutes()
         appRoutes()
         credentialsRoutes()

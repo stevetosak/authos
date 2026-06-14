@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: duster-config
+  namespace: default
+data:
+  AUTHOS_BASE_URL: "https://auth.example.com"
+  REDIS_HOST: "redis.example.com"
+  REDIS_PORT: "6379"
+  REDIS_USESSL: "false"
+  REDIS_TIMEOUT: "60"
+  # HOST_IP: "" # Uncomment and set if app callback URIs use "localhost" and need rewriting

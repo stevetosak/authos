@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: duster-client
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: duster.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: duster-client
+                port:
+                  number: 8785
+  # Uncomment for TLS:
+  # tls:
+  #   - hosts:
+  #       - duster.example.com
+  #     secretName: duster-tls

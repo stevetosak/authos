@@ -7,6 +7,8 @@ VERSION="0.1.0-alpha"
 INSTALL_ROOT="$HOME/.local"
 BIN_DIR="$INSTALL_ROOT/bin"
 APP_DIR="$INSTALL_ROOT/dstr-$VERSION"
+CONFIG_DIR="$HOME/.config/dstr"
+CONFIG_FILE="$CONFIG_DIR/config"
 
 echo "Release version: $VERSION"
 echo "Fetching release zip..."
@@ -38,5 +40,23 @@ else
   echo "✅ $BIN_DIR is already in your PATH"
 fi
 
+# Optional server configuration
+echo ""
+echo "Configure Duster server (press Enter to skip and use defaults):"
+read -r -p "  Duster base URL [http://localhost:8785]: " INPUT_DUSTER_URL
+read -r -p "  Authos base URL [http://localhost:8080]: " INPUT_AUTHOS_URL
+
+if [[ -n "$INPUT_DUSTER_URL" || -n "$INPUT_AUTHOS_URL" ]]; then
+  mkdir -p "$CONFIG_DIR"
+  {
+    echo "duster_base_url=${INPUT_DUSTER_URL:-http://localhost:8785}"
+    echo "authos_base_url=${INPUT_AUTHOS_URL:-http://localhost:8080}"
+  } > "$CONFIG_FILE"
+  echo "✅ Config written to $CONFIG_FILE"
+else
+  echo "ℹ️  Using defaults (localhost). You can configure later in $CONFIG_FILE"
+fi
+
+echo ""
 echo "✅ Installation complete!"
 echo "Run: dstr --help"

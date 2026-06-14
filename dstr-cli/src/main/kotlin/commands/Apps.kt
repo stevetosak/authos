@@ -5,6 +5,7 @@ import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.obj
 import com.github.ajalt.clikt.parameters.options.option
 import com.tosak.authos.duster.DusterAppDto
+import com.tosak.authos.duster.DusterConfig
 import com.tosak.authos.duster.client
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -36,7 +37,7 @@ class Apps : SuspendingCliktCommand(name = "apps") {
             if((!clientId.isNullOrBlank() && !name.isNullOrBlank())){
                 throw IllegalArgumentException("Either clientId or name must be present.")
             }
-            val resp = client.get("http://localhost:8785/duster/api/v1/internal/apps") {
+            val resp = client.get("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/apps") {
                 parameter("client_id", clientId)
                 parameter("client_name", name)
                 header(HttpHeaders.ContentType, ContentType.Application.Json)

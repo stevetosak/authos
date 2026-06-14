@@ -5,7 +5,7 @@ import com.authos.model.TokenType
 import com.authos.model.DusterApp
 import com.authos.model.UserInfo
 import com.authos.repository.TokenRepository
-import com.authos.config.AUTHOS_AUTHORIZE_URL
+import com.authos.config.getAuthosAuthorizeUrl
 import com.authos.service.DusterRequestService.ResponseResult.*
 import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
@@ -34,7 +34,7 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
      * @return A `UserInfoResult` which can either be `Success` containing the pruned user information
      *         or `Failure` in case of an error.
      */
-    private suspend fun  userInfoResult(accessToken: String): UserInfoResult {
+    private suspend fun userInfoResult(accessToken: String): UserInfoResult {
         return try {
             val resp = client.fetchUserInfo(accessToken)
             UserInfoResult.Success(UserInfo.getPrunedObject(resp.body()))
@@ -59,8 +59,13 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
         return try {
             val resp = client.refreshTokenRequest(refreshToken)
             val tokenResponse: AuthTokenResponse = resp.body()
-            tokenRepository.save(TokenType.ACCESS_TOKEN, sub, tokenResponse.accessToken, tokenResponse.expiresIn.toLong())
-            if(tokenResponse.refreshToken != null) {
+            tokenRepository.save(
+                TokenType.ACCESS_TOKEN,
+                sub,
+                tokenResponse.accessToken,
+                tokenResponse.expiresIn.toLong()
+            )
+            if (tokenResponse.refreshToken != null) {
                 tokenRepository.save(TokenType.REFRESH_TOKEN, sub, tokenResponse.refreshToken)
             } else {
                 // najverojatno gresen scope imat pa ne mu davat refresh token
@@ -82,29 +87,29 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
      * @param state A unique string to maintain state between the request and callback. It is also used for CSRF protection.
      * @return The complete authorization URL as a string.
      */
-    suspend fun generateAuthorizeUrl(app: DusterApp, sub:String? = null, state:String): String {
+    suspend fun generateAuthorizeUrl(app: DusterApp, sub: String? = null, state: String): String {
 
         var sc = app.scope
-            if(client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS){
-                if(!app.scope.contains("offline_access")){
-                    sc = "${app.scope} offline_access"
-                }
+        if (client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS) {
+            if (!app.scope.contains("offline_access")) {
+                sc = "${app.scope} offline_access"
             }
+        }
 
-        val url = "$AUTHOS_AUTHORIZE_URL?client_id=${client.dusterApp.clientId}" +
+        val url = "${getAuthosAuthorizeUrl()}?client_id=${client.dusterApp.clientId}" +
                 "&redirect_uri=${Url(app.redirectUri)}&state=$state" +
                 "&scope=${URLEncoder.encode(sc, "UTF-8")}" +
                 "&response_type=code"
 
 
 
-        if(sub == null || client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS){
+        if (sub == null || client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS) {
             client.nextRequestType = NextAuthorizeRequestType.AUTO
             return "$url&prompt=consent"
         };
         val idToken = tokenRepository.getToken(sub, TokenType.ID_TOKEN)
 
-        if(idToken == null) return "$url&prompt=consent"
+        if (idToken == null) return "$url&prompt=consent"
 
         return "$url&id_token_hint=$idToken&prompt=none"
 
@@ -119,17 +124,18 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
      * @return A [ResponseResult] which is either [ResponseResult.Success] containing the retrieved user information
      * or [ResponseResult.Failure] in case of any errors during the token exchange process.
      */
-    suspend fun tryAccessTokenExchange(sub: String): ResponseResult {
+    suspend fun tryAccessTokenExchange(sub: String, tryRefreshOnFail: Boolean = true): ResponseResult {
         val accessToken = tokenRepository.getToken(sub, TokenType.ACCESS_TOKEN)
-        if (accessToken == null){
+        if (accessToken == null) {
             println("Access token not present. Trying refresh token exchange.")
-            return tryRefreshTokenExchange(sub)
+
+            return refreshOrFail(tryRefreshOnFail,sub,"Access token not present.")
         }
         println("Fetched access token.")
-
+        println("Fetching user info...")
         return when (val result = userInfoResult(accessToken)) {
             is UserInfoResult.Success -> Success(result.data)
-            is UserInfoResult.Failure -> tryRefreshTokenExchange(sub)
+            is UserInfoResult.Failure -> refreshOrFail(tryRefreshOnFail,sub,"Could not fetch user info.")
         }
     }
 
@@ -159,8 +165,9 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
             // ako e sporo vaka, direk ke go pustam novoiot access token
             is RefreshResult.Success -> {
                 println("Successfully obtained new access token. Trying access token exchange.")
-                tryAccessTokenExchange(sub)
+                tryAccessTokenExchange(sub,tryRefreshOnFail = false) // false tuka za da nemat moznost za infinite loop
             }
+
             is RefreshResult.Failure -> {
                 client.nextRequestType = NextAuthorizeRequestType.OFFLINE_ACCESS
                 Failure(HttpStatusCode.BadRequest, "Could not refresh token")
@@ -184,7 +191,8 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
          *
          * @property data Represents the result of a successful operation.
          */
-        data class Success(val data: HashMap<String,String>) : ResponseResult()
+        data class Success(val data: HashMap<String, String>) : ResponseResult()
+
         /**
          * Represents an operation failure result with a status and a message.
          *
@@ -214,7 +222,8 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
          *
          * @property data The user information or data associated with the successful result.
          */
-        data class Success(val data: HashMap<String,String>) : UserInfoResult()
+        data class Success(val data: HashMap<String, String>) : UserInfoResult()
+
         /**
          * Represents a failure outcome in the process of obtaining user information.
          *
@@ -236,6 +245,7 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
          * Used to indicate that a new access token was successfully obtained and stored.
          */
         object Success : RefreshResult()
+
         /**
          * Represents a failure result in the refresh token exchange process.
          *
@@ -248,5 +258,13 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
          * higher-level business logic to recognize and respond to the failure state appropriately.
          */
         object Failure : RefreshResult()
+    }
+
+    private suspend fun refreshOrFail(tryRefreshOnFail: Boolean,sub: String,errMessage:String) : ResponseResult{
+        return if (tryRefreshOnFail) tryRefreshTokenExchange(sub)
+        else Failure(
+            HttpStatusCode.BadRequest,
+            "Access token not present."
+        )
     }
 }

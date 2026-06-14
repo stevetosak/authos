@@ -1,6 +1,7 @@
 package com.authos.service
 
 import com.authos.data.AuthTokenResponse
+import com.authos.getAuthosBaseUrl
 import com.authos.getHostIp
 import com.authos.model.DusterApp
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -101,15 +102,9 @@ class DusterOAuthClient(val dusterApp: DusterApp) {
 
 }
 
-fun getAuthosTokenUrl(): String {
-    val hostIP = getHostIp()
-    return "http://$hostIP:8080/oauth/token"
-}
+fun getAuthosTokenUrl() = "${getAuthosBaseUrl()}/oauth/token"
 
-fun getAuthosUserinfoUrl(): String {
-    val hostIP = getHostIp();
-    return "http://$hostIP:8080/oauth/userinfo"
-}
+fun getAuthosUserinfoUrl() = "${getAuthosBaseUrl()}/oauth/userinfo"
 
 
 suspend fun sendClientCredentialsTokenRequest(clientId: String, clientSecret: String): String {

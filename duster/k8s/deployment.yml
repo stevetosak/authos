@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: duster-client
+  namespace: default
+  labels:
+    app: duster-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: duster-client
+  template:
+    metadata:
+      labels:
+        app: duster-client
+    spec:
+      containers:
+        - name: duster-client
+          image: stevetosak/authos-duster-client:latest
+          ports:
+            - containerPort: 8785
+          envFrom:
+            - configMapRef:
+                name: duster-config
+            - secretRef:
+                name: duster-secrets
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8785
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8785
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
