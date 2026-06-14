@@ -2,7 +2,7 @@ import { SidebarProvider} from "@/components/ui/sidebar.tsx"
 import { AppSidebar } from "@/components/ui/app-sidebar.tsx"
 import React, {useEffect} from "react";
 import Navbar from "@/Pages/components/Navbar.tsx";
-import {SidebarTriggerWrapper} from "@/Pages/components/wrappers/SidebarTriggerWrapper.tsx";
+import {SidebarTriggerWrapper} from "@/Pages/components/SidebarTriggerWrapper.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
 import {Outlet, useNavigation} from "react-router-dom";
 import {useAuth} from "@/services/useAuth.ts";

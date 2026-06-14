@@ -13,8 +13,8 @@ const ConsentForm: React.FC = () => {
     const userEmail = "stefantoska@authos.com"
 
     const scopeIcons : Record<string, ReactElement>= {
-        'profile': <User className="w-4 h-4 text-emerald-400" />,
-        'email': <Mail className="w-4 h-4 text-emerald-400" />,
+        'profile': <User className="w-4 h-4 text-primary" />,
+        'email': <Mail className="w-4 h-4 text-primary" />,
     };
 
     const scopeLabels: Record<string, string> = {
@@ -76,11 +76,11 @@ const ConsentForm: React.FC = () => {
                 <Card className="bg-gray-800/70 backdrop-blur-sm border border-gray-700/50 shadow-xl overflow-hidden">
                     <CardHeader className="border-b border-gray-700/50 p-6">
                         <div className="flex flex-col items-center">
-                            <div className="bg-emerald-500/10 p-3 rounded-full mb-4">
-                                <ShieldQuestion className="w-8 h-8 text-emerald-400"/>
+                            <div className="bg-primary/10 p-3 rounded-full mb-4">
+                                <ShieldQuestion className="w-8 h-8 text-primary"/>
                             </div>
                             <CardTitle
-                                className="text-2xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-green-300">
+                                className="text-2xl font-bold text-center">
                                 Authorization Request
                             </CardTitle>
                         </div>
@@ -101,8 +101,8 @@ const ConsentForm: React.FC = () => {
                             {scopes.map((scope) => (
                                 <div key={scope}
                                      className="flex items-start bg-gray-700/50 p-3 rounded-lg border border-gray-600/50">
-                                    <div className="bg-emerald-500/10 p-1.5 rounded-full mr-3 mt-0.5">
-                                        {scopeIcons[scope] || <Key className="w-4 h-4 text-emerald-400"/>}
+                                    <div className="bg-primary/10 p-1.5 rounded-full mr-3 mt-0.5">
+                                        {scopeIcons[scope] || <Key className="w-4 h-4 text-primary"/>}
                                     </div>
                                     <div>
                                         <p className="text-gray-100 font-medium">{scopeLabels[scope] || scope}</p>
@@ -117,7 +117,7 @@ const ConsentForm: React.FC = () => {
                                 <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5 mr-2"/>
                                 <p className="text-sm text-gray-300">
                                     You're signing in as <span className="font-medium text-white">{userEmail}</span>.
-                                    Not you? <a href="/logout" className="text-emerald-400 hover:underline">Switch
+                                    Not you? <a href="/logout" className="text-primary hover:underline">Switch
                                     accounts</a>.
                                 </p>
                             </div>
@@ -132,7 +132,7 @@ const ConsentForm: React.FC = () => {
                                 Cancel
                             </Button>
                             <Button
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white h-12 font-medium"
+                                className="h-12 font-medium"
                                 onClick={handleApprove}
                             >
                                 <Check className="w-5 h-5 mr-2"/>
@@ -144,8 +144,8 @@ const ConsentForm: React.FC = () => {
                     <CardFooter className="border-t border-gray-700/50 p-4 bg-gray-800/50">
                         <p className="text-xs text-gray-500 text-center w-full">
                             By approving, you agree to {clientName}'s{' '}
-                            <a href="#" className="text-emerald-400 hover:underline">Terms of Service</a> and{' '}
-                            <a href="#" className="text-emerald-400 hover:underline">Privacy Policy</a>.
+                            <a href="#" className="text-primary hover:underline">Terms of Service</a> and{' '}
+                            <a href="#" className="text-primary hover:underline">Privacy Policy</a>.
                         </p>
                     </CardFooter>
                 </Card>

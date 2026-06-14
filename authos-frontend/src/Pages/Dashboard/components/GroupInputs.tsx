@@ -23,7 +23,7 @@ export const GroupInputs = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-1">
                     <Label className="text-gray-400 text-sm flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4 text-emerald-400"/>
+                        <CheckCircle className="w-4 h-4 text-primary"/>
                         Default Group
                     </Label>
                     {isEditingGroup ? (

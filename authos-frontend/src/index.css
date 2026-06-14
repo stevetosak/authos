@@ -7,12 +7,9 @@
 
 :root {
     /* Base colors */
-    --background: #111827; /* dark gray background */
-    --test: #5522ff22;
-    --foreground: #1f2937; /* slightly lighter gray foreground */
-    --text-primary: #ffffff; /* main text color */
-    --text-secondary: #d1d5db; /* muted text */
-    --accent-1: #10b981; /* emerald green accent */
+    --background: #111827;
+    --foreground: #1f2937;
+    --text-primary: #ffffff;
     --accent-2: #16D39AFF;
     font-family: Ubuntu, sans-serif;
 
@@ -183,7 +180,7 @@ body {
     }
 
     .btn-primary {
-        @apply hover:translate-y-[1px] font-semibold border-b-gray-700 border-1 text-gray-300 hover:bg-emerald-600
+        @apply hover:translate-y-[1px] font-semibold border-b-gray-700 border-1 text-gray-300 hover:bg-primary
     }
 
     .bg-secondary {

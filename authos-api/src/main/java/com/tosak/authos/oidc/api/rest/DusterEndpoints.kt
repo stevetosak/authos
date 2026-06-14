@@ -4,9 +4,12 @@ import com.tosak.authos.oidc.common.utils.AESUtil
 import com.tosak.authos.oidc.common.utils.b64UrlSafeDecoder
 import com.tosak.authos.oidc.common.dto.DusterAppDto
 import com.tosak.authos.oidc.common.dto.AuthosAppSyncDto
+import com.tosak.authos.oidc.common.pojo.strategy.LoginTokenStrategy
+import com.tosak.authos.oidc.common.utils.JwtTokenFactory
 import com.tosak.authos.oidc.entity.App
 import com.tosak.authos.oidc.service.AppGroupService
 import com.tosak.authos.oidc.service.AppService
+import com.tosak.authos.oidc.service.CookieService
 import com.tosak.authos.oidc.service.DusterAppService
 import com.tosak.authos.oidc.service.PPIDService
 import com.tosak.authos.oidc.service.TokenService
@@ -28,6 +31,8 @@ import javax.management.InvalidApplicationException
 @RestController
 class DusterEndpoints(
     private val userService: UserService,
+    private val jwtTokenFactory: JwtTokenFactory,
+    private val cookieService: CookieService,
     private val dusterAppService: DusterAppService,
     private val tokenService: TokenService,
     private val appService: AppService,
@@ -38,22 +43,23 @@ class DusterEndpoints(
 
     @Value("\${authos.frontend.host}")
     private lateinit var frontendHost: String
+    @Value("\${authos.api.host}")
+    private lateinit var apiHost: String
+
     // TODO cleanup na logika vo ovaj controller
     // TODO da vidime kako ke funckionirat ova so noviot session handling i AUTHOS_SESSION cookie
-//    @PostMapping("/test/callback")
-//    fun testDusterCallback(
-//        @RequestBody userinfo: Map<String, String>,
-//        httpServletRequest: HttpServletRequest
-//    ): ResponseEntity<Void> {
-//        println("DUSTER TEST.")
-//        print("RECIEVED USERINFO: $userinfo")
-//        val sub: String = userinfo["sub"] ?: throw InvalidParameterException("sub parameter not present")
-//        val ppid = pPIDService.getPPIDBySub(sub)
-//        val user = userService.getById(ppid.key.userId!!)
-//        val group = appGroupService.findGroupByIdAndUser(ppid.key.groupId!!, user)
-//        val headers = userService.getLoginCookieHeaders(user, httpServletRequest)
-//        return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
-//    }
+    @PostMapping("/test/callback")
+    fun testDusterCallback(
+        @RequestBody userinfo: Map<String, String>,
+        httpServletRequest: HttpServletRequest
+    ): ResponseEntity<Void> {
+        println("DUSTER TEST.")
+        print("RECIEVED USERINFO: $userinfo")
+        val sub: String = userinfo["sub"] ?: throw InvalidParameterException("sub parameter not present")
+        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,httpServletRequest))
+        val headers = cookieService.getLoginCookieHeaders(token)
+        return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
+    }
 
     //todo client id = na aplikacijata, accesstoken= na duster
     // vo access token tabelata userid da mozit da e nullable za da rabotat i so Client Credentials Flow

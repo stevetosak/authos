@@ -1,7 +1,6 @@
 package com.authos.service
 
 import com.authos.data.AuthTokenResponse
-import com.authos.data.TokenRequestDto
 import com.authos.getHostIp
 import com.authos.model.DusterApp
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -10,11 +9,13 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
@@ -38,16 +39,14 @@ class DusterOAuthClient(val dusterApp: DusterApp) {
 
     @Throws(JsonProcessingException::class)
     suspend fun codeExchange(code: String): AuthTokenResponse {
-        val tokenRequest = TokenRequestDto(
-            code = code,
-            redirectUri = dusterApp.redirectUri,
-            grantType = dusterApp.grantType,
-            clientId = dusterApp.clientId,
-            clientSecret = dusterApp.clientSecret
-        )
         val resp: AuthTokenResponse = client.post(getAuthosTokenUrl()) {
-            contentType(ContentType.Application.Json)
-            setBody(tokenRequest)
+            setBody(FormDataContent(Parameters.build {
+                append("code", code)
+                append("redirect_uri", dusterApp.redirectUri)
+                append("grant_type", dusterApp.grantType)
+                append("client_id", dusterApp.clientId)
+                append("client_secret", dusterApp.clientSecret)
+            }))
         }.body()
 
         println("Response body: $resp")
@@ -67,20 +66,17 @@ class DusterOAuthClient(val dusterApp: DusterApp) {
 
 
     suspend fun refreshTokenRequest(refreshToken: String): HttpResponse {
-        val tokenRequest = TokenRequestDto(
-            clientId = dusterApp.clientId,
-            clientSecret = dusterApp.clientSecret,
-            grantType = "refresh_token",
-            refreshToken = refreshToken,
-            redirectUri = dusterApp.redirectUri
-        )
-
         val resp = client.post(getAuthosTokenUrl()) {
-            contentType(ContentType.Application.Json)
-            setBody(tokenRequest)
+            setBody(FormDataContent(Parameters.build {
+                append("client_id", dusterApp.clientId)
+                append("client_secret", dusterApp.clientSecret)
+                append("grant_type", "refresh_token")
+                append("refresh_token", refreshToken)
+                append("redirect_uri", dusterApp.redirectUri)
+            }))
         }
         require(resp.status.isSuccess()) { "Failed to refresh token" }
-        return resp;
+        return resp
     }
 
     suspend fun sendToCallback(prunedData: HashMap<String, String>): HttpResponse {
@@ -107,20 +103,22 @@ class DusterOAuthClient(val dusterApp: DusterApp) {
 
 fun getAuthosTokenUrl(): String {
     val hostIP = getHostIp()
-    return "http://$hostIP:9000/oauth/token"
+    return "http://$hostIP:8080/oauth/token"
 }
 
 fun getAuthosUserinfoUrl(): String {
     val hostIP = getHostIp();
-    return "http://$hostIP:9000/oauth/userinfo"
+    return "http://$hostIP:8080/oauth/userinfo"
 }
 
 
 suspend fun sendClientCredentialsTokenRequest(clientId: String, clientSecret: String): String {
-    val body = mapOf("client_id" to clientId, "client_secret" to clientSecret, "grant_type" to "client_credentials")
     val resp: AuthTokenResponse = client.post(getAuthosTokenUrl()) {
-        setBody(body)
-        contentType(ContentType.Application.Json)
+        setBody(FormDataContent(Parameters.build {
+            append("client_id", clientId)
+            append("client_secret", clientSecret)
+            append("grant_type", "client_credentials")
+        }))
     }.body()
     return resp.accessToken
 }

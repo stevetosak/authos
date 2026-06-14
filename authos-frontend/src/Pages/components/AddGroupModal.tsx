@@ -75,15 +75,15 @@ export function AddGroupModal() {
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 border-gray-600 bg-transparent hover:border-green-500 hover:bg-gray-700/50 hover:scale-105 transition-all duration-200 group"
+                    className="h-8 w-8 border-gray-600 bg-transparent hover:border-primary hover:bg-gray-700/50 hover:scale-105 transition-all duration-200 group"
                 >
-                    <Plus className="w-4 h-4 text-gray-400 group-hover:text-green-400 transition-colors"/>
+                    <Plus className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors"/>
                 </Button>
             </DialogTrigger>
             <DialogContent className="bg-gray-800/90 backdrop-blur-sm border border-gray-700/50 rounded-lg max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-lg text-white">
-                        <Users className="w-5 h-5 text-green-400"/>
+                        <Users className="w-5 h-5 text-primary"/>
                         Create New Group
                     </DialogTitle>
                 </DialogHeader>
@@ -102,7 +102,7 @@ export function AddGroupModal() {
                             type="text"
                             value={groupName}
                             onChange={(e) => setGroupName(e.target.value)}
-                            className="bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="bg-gray-700 border-gray-600 text-white"
                             required
                             placeholder="e.g., Production Apps"
                         />
@@ -191,7 +191,7 @@ export function AddGroupModal() {
                                 id="default-group"
                                 checked={isDefault}
                                 onCheckedChange={(checked) => setIsDefault(checked as boolean)}
-                                className="border-gray-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                                className="border-gray-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                             />
                             <div className="flex items-center gap-2">
                                 <Label htmlFor="default-group" className="text-gray-300">
@@ -214,7 +214,7 @@ export function AddGroupModal() {
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                            className=""
                         >
                             Create Group
                         </Button>

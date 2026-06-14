@@ -33,8 +33,6 @@ open class ShortSessionService(
         return redisTemplate.opsForValue().get("shortsession:authz:$authzId")
     }
 
-
-
     @Transactional
     open fun bindCodeToShortSession(authzId: String, code: String) {
         val session = getSessionByAuthzId(authzId);

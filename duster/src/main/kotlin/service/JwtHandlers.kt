@@ -11,12 +11,12 @@ import java.util.Date
 fun verifyIdToken(jwtString: String?): Pair<SignedJWT, String> {
     require(jwtString != null){"Id token not present"}
     val jwt = SignedJWT.parse(jwtString)
-    val jwks = JWKSet.load(URI("http://${getHostIp()}:9000/.well-known/jwks.json").toURL())
+    val jwks = JWKSet.load(URI("http://${getHostIp()}:8080/.well-known/jwks.json").toURL())
     val jwk = jwks.getKeyByKeyId("authos-jwt-sign")
 
     val verifier: JWSVerifier = RSASSAVerifier(jwk.toRSAKey().toRSAPublicKey())
     require(jwt.verify(verifier)) { "JWT signature verification failed" }
-    require(jwt.jwtClaimsSet.issuer == "http://localhost:9000") { "JWT issuer could not be verified" }
+    require(jwt.jwtClaimsSet.issuer == "http://localhost:8080") { "JWT issuer could not be verified" }
 
     println("EXPIRATION TIME: ${jwt.jwtClaimsSet.expirationTime} NOW ${Date()}")
     require(jwt.jwtClaimsSet.expirationTime.after(Date()))

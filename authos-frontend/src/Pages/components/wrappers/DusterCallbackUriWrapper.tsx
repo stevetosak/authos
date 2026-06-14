@@ -14,7 +14,7 @@ export const DusterCallbackUriWrapper = ({
                                       onChange
                                   }: DusterCallbackUriState) => {
     return (editing ? (
-            <div className="space-y-2 bg-gray-700 border-gray-600">
+            <div className="space-y-2">
                 <Input
                     name="dusterCallbackUri"
                     value={editedApp?.dusterCallbackUri}

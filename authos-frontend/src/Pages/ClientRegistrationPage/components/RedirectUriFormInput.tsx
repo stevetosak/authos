@@ -62,7 +62,7 @@ export default function RedirectUriFormInput({redirectUris,setRedirectUris,class
                     className={`bg-gray-700 border-gray-600 text-white w-full ${error ? "border-red-500" : ""}`}
                     placeholder="Type a URI and press Enter..."
                 />
-                <Button onClick={addRedirectUri} className="bg-green-600 hover:bg-green-700 border-b-black text-white">
+                <Button onClick={addRedirectUri}>
                     Add
                 </Button>
             </div>

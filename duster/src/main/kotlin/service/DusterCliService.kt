@@ -13,7 +13,7 @@ class DusterCliService (private val credentialsRepository: CredentialsRepository
         var token = credentials.token
         try{
             println("Checking token validity...")
-            client.get("http://localhost:9000/duster/validate-token") {
+            client.get("http://localhost:8080/duster/validate-token") {
                 headers.append("Authorization", "Bearer $token")
             }
             println("Success! Token is valid")

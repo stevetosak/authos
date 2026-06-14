@@ -11,8 +11,8 @@ export const AccountConfirmationPage: React.FC = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-gray-800/50 border border-gray-700/50 rounded-xl p-8 backdrop-blur-sm shadow-lg">
                 <div className="flex flex-col items-center text-center">
-                    <div className="bg-emerald-500/10 p-4 rounded-full mb-6">
-                        <Mail className="w-10 h-10 text-emerald-400" strokeWidth={1.5} />
+                    <div className="bg-primary/10 p-4 rounded-full mb-6">
+                        <Mail className="w-10 h-10 text-primary" strokeWidth={1.5} />
                     </div>
 
 
@@ -44,7 +44,7 @@ export const AccountConfirmationPage: React.FC = () => {
                         Didn't receive the email? Check your spam folder or
                         <button
                             onClick={handleResendEmail}
-                            className="text-emerald-400 hover:underline ml-1"
+                            className="text-primary hover:underline ml-1"
                         >
                             resend it
                         </button>.

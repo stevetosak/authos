@@ -48,7 +48,7 @@ export const AppsList = () => {
                                     </div>
                                     <Avatar className="h-10 w-10 border border-gray-600">
                                         <AvatarFallback
-                                            className="bg-gray-700/50 group-hover:bg-green-400/10 transition-colors">
+                                            className="bg-gray-700/50 group-hover:bg-primary/10 transition-colors">
                                             {app.name.charAt(0)}
                                         </AvatarFallback>
                                     </Avatar>

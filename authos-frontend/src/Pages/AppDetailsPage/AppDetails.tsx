@@ -29,7 +29,7 @@ import {DataWrapper, WrapperState} from "@/Pages/components/wrappers/DataWrapper
 import {useAppEditor} from "@/Pages/components/hooks/use-app-editor.ts";
 import {Badge} from "@/components/ui/badge.tsx";
 import {apiPostAuthenticated} from "@/services/netconfig.ts";
-import {useNavigate} from "react-router-dom";
+import {useBlocker, useNavigate} from "react-router-dom";
 import {CredentialsTab} from "@/Pages/AppDetailsPage/components/CredentialsTab.tsx";
 import {SettingsTab} from "@/Pages/AppDetailsPage/components/SettingsTab.tsx";
 
@@ -52,6 +52,24 @@ export default function AppDetails() {
         addToArrayField,
         removeFromArrayField
     } = useAppEditor(app);
+
+    const hasUnsavedChanges = isEditing && JSON.stringify(editedApp) !== JSON.stringify(app);
+
+    const blocker = useBlocker(hasUnsavedChanges);
+
+    useEffect(() => {
+        if (blocker.state !== "blocked") return;
+        toast.warning("You have unsaved changes", {
+            action: {
+                label: "Discard & leave",
+                onClick: () => { setIsEditing(false); blocker.proceed(); }
+            },
+            cancel: {
+                label: "Stay",
+                onClick: () => blocker.reset(),
+            },
+        });
+    }, [blocker]);
 
     const [isRegeneratingSecret, setIsRegeneratingSecret] = useState(false);
     const regenerateSecret = () => {
@@ -113,6 +131,13 @@ export default function AppDetails() {
 
 
     const handleCancel = () => {
+        if (hasUnsavedChanges) {
+            toast.warning("You have unsaved changes", {
+                action: { label: "Discard", onClick: () => setIsEditing(false) },
+                cancel: { label: "Keep editing", onClick: () => {} },
+            });
+            return;
+        }
         setIsEditing(false);
     };
 
@@ -174,7 +199,7 @@ export default function AppDetails() {
                                 <div className="flex items-center gap-2">
                                     <span className="font-medium text-gray-300 min-w-[60px]">Created:</span>
                                     <span className="bg-gray-700 px-2 py-1 rounded">
-                {currentApp.createdAt}
+                {new Date(currentApp.createdAt).toLocaleDateString()}
               </span>
                                 </div>
                             </div>
@@ -210,7 +235,7 @@ export default function AppDetails() {
                     </CardContent>
 
                     <CardFooter
-                        className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-gray-700 bg-gray-800/50">
+                        className="flex flex-col sm:flex-row justify-end gap-3 p-6">
                         {isEditing ? (
                             <>
                                 <Button
