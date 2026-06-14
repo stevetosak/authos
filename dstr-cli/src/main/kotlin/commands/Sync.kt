@@ -1,7 +1,6 @@
 package com.tosak.authos.duster.commands
 
 import com.github.ajalt.clikt.command.SuspendingCliktCommand
-import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.tosak.authos.duster.DusterAppDto
 import com.tosak.authos.duster.DusterConfig
@@ -16,11 +15,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 
-class Sync() : SuspendingCliktCommand(name = "sync") {
+class Sync : SuspendingCliktCommand(name = "sync") {
 
-    private val lookup by requireObject<AppLookup>()
+    val clientId by option("-cid", "--clientid", help = "Client ID of the app to sync")
+    val name by option("-n", "--name", help = "Name of the app to sync")
 
-    suspend fun sendPullRequest(param: String, value: String) {
+    private suspend fun sendPullRequest(param: String, value: String) {
         val requestUrl = URLBuilder("${DusterConfig.authosBaseUrl}/duster/pull").apply {
             parameters.append(param, value)
         }.buildString()
@@ -36,24 +36,25 @@ class Sync() : SuspendingCliktCommand(name = "sync") {
             setBody(dusterAppDto)
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
-        if(saveReq.status != HttpStatusCode.OK) {
-            println("Could not save Duster App ")
+        if (saveReq.status != HttpStatusCode.OK) {
+            println("Could not save Duster App")
             println(saveReq.body<String>())
         } else {
             println("Duster App Synced")
         }
     }
 
-
     override suspend fun run() {
-        if((!lookup.clientId.isNullOrBlank() && !lookup.name.isNullOrBlank()) || (lookup.clientId.isNullOrBlank() && lookup.name.isNullOrBlank())){
-            throw IllegalArgumentException("Either clientid or name must be present.")
+        if (!clientId.isNullOrBlank() && !name.isNullOrBlank()) {
+            throw IllegalArgumentException("Provide either -cid or -n, not both.")
         }
-        if(!lookup.clientId.isNullOrBlank()){
-            sendPullRequest("client_id",lookup.clientId!!)
+        if (clientId.isNullOrBlank() && name.isNullOrBlank()) {
+            throw IllegalArgumentException("Either -cid or -n must be provided.")
+        }
+        if (!clientId.isNullOrBlank()) {
+            sendPullRequest("client_id", clientId!!)
         } else {
-            sendPullRequest("client_name",lookup.name!!)
+            sendPullRequest("client_name", name!!)
         }
     }
-
 }

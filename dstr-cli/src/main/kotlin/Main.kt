@@ -10,6 +10,7 @@ import com.tosak.authos.duster.commands.SaveCredentials
 
 suspend fun main(args: Array<String>) =
     DusterCli().subcommands(
-        Apps().subcommands(Sync()),
+        Apps(),
+        Sync(),
         Credentials().subcommands(SaveCredentials())
-).main(args)
+    ).main(args)
