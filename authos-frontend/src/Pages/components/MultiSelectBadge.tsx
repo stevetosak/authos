@@ -18,7 +18,7 @@ interface MultiSelectBadgeProps {
     options: string[];
     placeholder?: string;
     disabledItems?: string[];
-    className: string
+    className?: string
 }
 
 export default function MultiSelectBadge({
