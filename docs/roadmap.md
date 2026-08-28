@@ -157,6 +157,9 @@ with no browser cookie.
 
 ## The doc set
 
+`docs/README.md` has the full table (what each file is, who edits it and how) plus
+the size guardrail and the archiving procedure. In short:
+
 | file | what | who edits it |
 |---|---|---|
 | `roadmap.md` (this) | the plan: phases, tier→capability spine | only when re-planning |

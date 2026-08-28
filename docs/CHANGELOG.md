@@ -9,6 +9,9 @@ only as long as nobody edits existing lines.
 
 Format: `- YYYY-MM-DD — <area>: <what changed> (PR #N)`
 
+When this file passes ~500 lines, `.github/scripts/archive-changelog.sh` rolls the oldest entries
+into `archive/CHANGELOG-archive.md`. See `README.md` § Archiving.
+
 ---
 
 - 2026-06-14 — docs: Duster v1 design decision log finalized (#1–20)
@@ -21,3 +24,4 @@ Format: `- YYYY-MM-DD — <area>: <what changed> (PR #N)`
 - 2026-08-28 — e2e-tests: new Gradle module — docker-compose stack (Postgres + Redis + authos-api + duster) + HTTP-level suite + `e2e.yaml` workflow (PR #25)
 - 2026-08-29 — authos: `/oauth/token` reports the access token's real `expires_in`; new `authos.oidc.access-token-ttl-seconds` (default 3600); access-token lifetime 24h → 1h (PR #26)
 - 2026-08-29 — authos: OIDC discovery doc at `GET /.well-known/openid-configuration` — `issuer` byte-matches the ID token `iss`, capability lists match the implementation (PR #27)
+- 2026-08-29 — docs: split tracking into plan (`roadmap.md`) / checklist (`duster-v1-tasks.md`) / append-only `CHANGELOG.md`; added `docs/README.md`, a `.github/scripts/doc-size.sh` line-limit gate (CI: `docs.yaml`), and `.github/scripts/archive-changelog.sh`

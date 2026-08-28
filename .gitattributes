@@ -1,4 +1,5 @@
-# Append-only history file: on a merge, keep both sides' new lines instead of
-# raising a conflict. Safe ONLY because every change to this file is a new line
+# Append-only history files: on a merge, keep both sides' new lines instead of
+# raising a conflict. Safe ONLY because every change to these files is a new line
 # appended at the end — never a reword, reorder, or deletion of an existing line.
 docs/CHANGELOG.md merge=union
+docs/archive/CHANGELOG-archive.md merge=union

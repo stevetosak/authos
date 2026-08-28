@@ -2,7 +2,7 @@
 
 The plan (phases, tier→capability spine) is `roadmap.md`. The rationale is `duster-v1-design.md`
 (bracketed `#N` below point at its numbered decisions). The dated history of what landed is
-`CHANGELOG.md`.
+`CHANGELOG.md`. How the doc set fits together, plus the size guardrail, is `README.md`.
 
 **Editing rule for feature branches:** flip `[ ]` → `[x]` in place. Do not move, reword, reorder,
 or regroup lines. An optional ` — PR #N` suffix is fine. Anything else — new items, restructuring,
