@@ -16,8 +16,10 @@ class AccessToken (
     @ManyToOne
     @JoinColumn(name = "authorization_code", referencedColumnName = "code_hash")
     var authorizationCode: AuthorizationCode? = AuthorizationCode(),
+    // Fallback only; the real lifetime is set by TokenService.generateAccessToken
+    // from authos.oidc.access-token-ttl-seconds.
     @Column(name = "expires_at")
-    val expiresAt : LocalDateTime = LocalDateTime.now().plusHours(24),
+    val expiresAt : LocalDateTime = LocalDateTime.now().plusHours(1),
     @Column(name = "created_at")
     val createdAt : LocalDateTime = LocalDateTime.now(),
     var revoked : Boolean = false,
