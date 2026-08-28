@@ -50,6 +50,10 @@ lead their phase.
       `duster_session` cookie via Duster's `GET /session`, mints Authos's own login cookie
 - [x] `POST /test/callback` webhook now actually returns decision #3's `200 {}` contract (was
       still returning a stale `302`, so Duster's `isSuccess()` check silently failed every time)
+- [x] `GET /.well-known/openid-configuration` — OIDC discovery doc. Endpoint URLs from `API_HOST`,
+      `issuer` == ID token `iss`, capability lists match the implementation (S256-only PKCE, no
+      Duster-only `client_credentials`, resolvable claims only). `e2e-tests/DiscoveryTest`.
+      (roadmap Phase 0)
 
 ---
 
