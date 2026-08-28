@@ -122,58 +122,70 @@ class OAuthEndpoints(
     }
 
 
-    // TODO proble
-
-    // direktno ako go pristapis ova mozda e slabost
-
-    // todo ovaj metod samo od authos frontend app da e dostapen
+    /**
+     * Final consent step: mints the authorization code. The browser carried `client_id`,
+     * `redirect_uri`, `scope` and `state` through the login/consent pages, so those query
+     * params are attacker-influenced — the code is generated **only** from the server-side
+     * [ShortSession] keyed by `authz_id` (the copy validated at `/authorize`). The supplied
+     * `client_id` / `redirect_uri` are cross-checked against it; a mismatch is treated as a
+     * tampered request. `scope` / `state` are ignored (taken from the session).
+     */
     @Hidden
     @GetMapping("/approve")
     fun approve(
         @RequestParam("client_id") clientId: String,
         @RequestParam("redirect_uri") redirectUri: String,
-        @RequestParam("state") state: String,
-        @RequestParam("scope") scope: String,
         @RequestParam("authz_id") authzId: String,
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
-        httpServletRequest: HttpServletRequest,
         authentication: Authentication?,
         @CookieValue(name = "AUTHOS_SESSION") sessionId: String
     ): ResponseEntity<Void?> {
 
         val user = userService.getUserFromAuthentication(authentication)
-        val authorizationSession = shortSessionService.getSessionByAuthzId(authzId);
-        if (authorizationSession == null) {
-            println("authorizationSession not found")
+
+        val authorizationSession = shortSessionService.getSessionByAuthzId(authzId)
+            ?: throw AuthorizationEndpointException(
+                AuthorizationErrorCode.INVALID_REQUEST,
+                "authorization request not found or expired",
+                null,
+                null,
+            )
+
+        demand(clientId == authorizationSession.clientId && redirectUri == authorizationSession.redirectUri) {
+            AuthorizationEndpointException(
+                AuthorizationErrorCode.INVALID_REQUEST,
+                "request parameters do not match the authorization request",
+                null,
+                authorizationSession.state,
+            )
         }
-
-
-
-
-//        val userId = httpSession.getAttribute("user") as Int?
-//        val appId = httpSession.getAttribute("app") as Int?
-//        val paramHashFromSession = httpSession.getAttribute("param_hash") as String?
-//        val paramHashFromRequest = getRequestParamHash(httpServletRequest)
-//
-//        println("user: $userId, app: $appId, param_hash: $paramHashFromSession")
-
-//        demand(userId != null && paramHashFromSession != null && appId != null){ AuthosException("invalid request",
-//            MissingSessionAttributesException()) }
-
-
-        // todo tuka mozam verify da napram na parametrive
-        // todo zemam app preku client id i provervam vo sso sesija.
-
 
         if (!dusterSub.isNullOrBlank()) {
-            check(ppidService.getPPIDBySub(dusterSub).key.userId == user.id) { "Invalid Duster client request" }
+            demand(ppidService.getPPIDBySub(dusterSub).key.userId == user.id) {
+                AuthorizationEndpointException(
+                    AuthorizationErrorCode.ACCESS_DENIED,
+                    "invalid duster subject",
+                    null,
+                    authorizationSession.state,
+                )
+            }
         }
-        val code = authorizationCodeService.generateAuthorizationCode(clientId, redirectUri, scope, user)
+
+        val code = authorizationCodeService.generateAuthorizationCode(
+            authorizationSession.clientId,
+            authorizationSession.redirectUri,
+            authorizationSession.scope,
+            user,
+        )
 
         shortSessionService.bindCodeToShortSession(authzId, code)
         ssoSessionService.bindCodeToSSOSession(code, sessionId)
 
-        return ResponseEntity.status(302).location(URI("$redirectUri?code=$code&state=$state")).build()
+        val location = buildString {
+            append(authorizationSession.redirectUri).append("?code=").append(code)
+            authorizationSession.state?.let { append("&state=").append(it) }
+        }
+        return ResponseEntity.status(302).location(URI(location)).build()
     }
 
 

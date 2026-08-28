@@ -45,15 +45,26 @@ revocation, introspection, device flow) now lead their phase.
 - **Real `expires_in`.** `/oauth/token` returns a hardcoded `3600`. Duster stores the token in Redis
   with exactly this value (`TokenRepository.saveAll`), so a wrong number means premature or stale
   silent refresh.
-- **Consistent OAuth errors** — RFC 6749 §5.2 JSON on `/token`, redirect-with-`error` on
-  `/authorize`. Some paths currently fall through `ExceptionHandler` to a raw 500, which Duster #28
-  can't turn into a clean user-facing error.
-- **Re-enable the `/approve` request-integrity check.** The parameter-hash comparison in
-  `OAuthEndpoints.approve` is commented out (`"direktno ako go pristapis ova mozda e slabost"`).
-  Tampering with params between `/authorize` and `/approve` is unchecked today.
+- **Consistent OAuth errors** ✅ **Done.** `ErrorResponse` is now RFC 6749 §5.2 shape
+  (`error` / `error_description`, snake_case); `invalid_client` answers 401 + `WWW-Authenticate`.
+  A path-aware catch-all in `ExceptionHandler` guarantees `/oauth/token` errors are always JSON and
+  `/oauth/authorize` + `/oauth/approve` errors always redirect — no route falls through to a raw
+  500 / whitelabel page. Source fixes so the expected conditions carry the right code
+  (`unsupported_grant_type`, `invalid_request`, `invalid_client`, `invalid_grant` instead of raw
+  `TODO()` / `Exception` / `requireNotNull`). `e2e-tests/OAuthErrorTest`.
+- **Re-enable the `/approve` request-integrity check.** ✅ **Done.** `/oauth/approve` now mints the
+  code **only** from the server-side `ShortSession` (the copy validated at `/authorize`), never from
+  the browser-carried query params. The supplied `client_id` / `redirect_uri` are cross-checked
+  against the session and a mismatch is rejected; an expired / unknown `authz_id` is rejected
+  instead of silently continuing. `scope` / `state` are taken from the session (no escalation, no
+  redirect-swap). Dead `getRequestParamHash` removed. `e2e-tests/OAuthErrorTest`.
 
 **Exit criteria:** OIDC smoke suite passes (authorize → PKCE token → userinfo, `prompt=none`, error
 cases); discovery doc validates; the existing Duster flow works unchanged against the hardened core.
+
+**Phase 0 status:** all 5 items done (PKCE, discovery, `expires_in`, error consistency, `/approve`
+integrity), each on its own branch off `master`. The `e2e-tests/` suite covers the flow end to end
+plus PKCE negatives, error shapes, and the discovery `issuer`↔`iss` invariant.
 
 ---
 
