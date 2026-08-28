@@ -33,6 +33,14 @@ data class CallbackResponse(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+data class DusterAppConfigUpdateDto(
+    @JsonProperty("success_url") val successUrl: String? = null,
+    @JsonProperty("logout_redirect_url") val logoutRedirectUrl: String? = null,
+    @JsonProperty("webhook_secret") val webhookSecret: String? = null,
+    @JsonProperty("session_ttl") val sessionTtl: Long? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class DusterAppRegisterDto(
     @JsonProperty("client_id") val clientId: String,
     @JsonProperty("client_secret") val clientSecret: String,

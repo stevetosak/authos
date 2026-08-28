@@ -7,13 +7,13 @@ version: '3.8'
 #   AUTHOS_BASE_URL   - base URL of your Authos IDP  (e.g. https://auth.example.com)
 #   REDIS_HOST        - hostname of your Redis instance
 #   REDIS_PORT        - Redis port (default 6379)
+#   DUSTER_ADMIN_TOKEN - shared secret guarding /duster/api/v1/internal/* (generate with e.g. `openssl rand -hex 32`)
 #
 # Optional:
 #   REDIS_PASSWORD    - Redis auth password
 #   REDIS_USESSL      - true/false for TLS Redis connections
 #   REDIS_TIMEOUT     - connection timeout in seconds (default 60)
 #   HOST_IP           - set if any registered app callback URIs use "localhost" and need rewriting
-
 services:
   duster-client:
     image: "stevetosak/authos-duster-client:latest"
@@ -27,6 +27,7 @@ services:
       REDIS_USESSL: ${REDIS_USESSL:-false}
       REDIS_TIMEOUT: ${REDIS_TIMEOUT:-60}
       HOST_IP: ${HOST_IP:-}
+      DUSTER_ADMIN_TOKEN: ${DUSTER_ADMIN_TOKEN}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8785/health"]

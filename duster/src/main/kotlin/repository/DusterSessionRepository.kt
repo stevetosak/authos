@@ -9,6 +9,7 @@ interface DusterSessionRepository {
     suspend fun save(session: DusterSession, ttlSeconds: Long)
     suspend fun get(sessionId: String, clientId: String): DusterSession?
     suspend fun delete(sessionId: String, clientId: String)
+    suspend fun refreshTtl(sessionId: String, clientId: String, ttlSeconds: Long)
 }
 
 class DusterSessionRepositoryImpl(private val redisManager: RedisManager) : DusterSessionRepository {
@@ -36,6 +37,12 @@ class DusterSessionRepositoryImpl(private val redisManager: RedisManager) : Dust
     override suspend fun delete(sessionId: String, clientId: String) {
         redisManager.withCommands { cmd ->
             cmd.del(key(clientId, sessionId)).await()
+        }
+    }
+
+    override suspend fun refreshTtl(sessionId: String, clientId: String, ttlSeconds: Long) {
+        redisManager.withCommands { cmd ->
+            cmd.expire(key(clientId, sessionId), ttlSeconds).await()
         }
     }
 }

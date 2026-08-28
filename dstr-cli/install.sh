@@ -45,20 +45,25 @@ echo ""
 echo "Configure Duster server (press Enter to keep defaults):"
 read -r -p "  Duster base URL [http://localhost:8785]: " INPUT_DUSTER_URL
 read -r -p "  Authos base URL [http://localhost:8080]: " INPUT_AUTHOS_URL
+read -r -p "  Duster admin token (matches the server's DUSTER_ADMIN_TOKEN): " INPUT_ADMIN_TOKEN
 
 mkdir -p "$CONFIG_DIR"
 cat > "$CONFIG_FILE" <<EOF
 # dstr configuration
 # Edit this file to point dstr at your Duster and Authos instances.
 # These values can also be overridden at runtime via:
-#   Environment variables: DUSTER_BASE_URL, AUTHOS_BASE_URL
-#   CLI flags:             --host, --authos-host
+#   Environment variables: DUSTER_BASE_URL, AUTHOS_BASE_URL, DUSTER_ADMIN_TOKEN
+#   CLI flags:             --host, --authos-host, --admin-token
 
 # Base URL of your Duster instance
 duster_base_url=${INPUT_DUSTER_URL:-http://localhost:8785}
 
 # Base URL of your Authos IDP (used by the sync command)
 authos_base_url=${INPUT_AUTHOS_URL:-http://localhost:8080}
+
+# Admin token required by Duster's internal management API (apps, credentials).
+# Must match the DUSTER_ADMIN_TOKEN env var configured on the Duster server.
+duster_admin_token=${INPUT_ADMIN_TOKEN}
 EOF
 echo "Config written to $CONFIG_FILE"
 

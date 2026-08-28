@@ -14,6 +14,7 @@ services:
       REDIS_PORT: 6379
       AUTHOS_BASE_URL: ${AUTHOS_BASE_URL:-http://localhost:8080}
       HOST_IP: ${HOST_IP:-}
+      DUSTER_ADMIN_TOKEN: ${DUSTER_ADMIN_TOKEN:-dev-admin-token}
     depends_on:
       redis:
         condition: service_healthy

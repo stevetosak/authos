@@ -26,6 +26,7 @@ private fun maskSecret(secret: String): String {
 }
 
 class Apps : SuspendingCliktCommand(name = "apps") {
+    override val invokeWithoutSubcommand = true
     val clientId by option("-cid", "--clientid", help = "Client ID of the application.")
     val name by option("-n", "--name", help = "Name of the application")
     val showSecret by option("-s", "--show-secret", help = "Show client secret in full (default: masked)").flag()
@@ -37,6 +38,7 @@ class Apps : SuspendingCliktCommand(name = "apps") {
         val resp = client.get("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/apps") {
             parameter("client_id", clientId)
             parameter("client_name", name)
+            header(HttpHeaders.Authorization, "Bearer ${DusterConfig.adminToken}")
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
         val t = terminal

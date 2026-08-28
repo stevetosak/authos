@@ -1,5 +1,6 @@
 package com.authos.routes
 
+import com.authos.data.CallbackResponse
 import com.authos.model.DusterSession
 import com.authos.model.UserInfo
 import com.authos.repository.DusterAppRepository
@@ -12,6 +13,7 @@ import com.authos.service.verifyIdToken
 import io.ktor.client.call.body
 import io.ktor.http.Cookie
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
@@ -88,7 +90,16 @@ fun Route.oAuthRoutes() {
                 if (app.callbackUri.isNotBlank()) {
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            client.sendToCallback(prunedInfo)
+                            val webhookResp = client.sendToCallback(prunedInfo)
+                            if (webhookResp.status.isSuccess()) {
+                                try {
+                                    webhookResp.body<CallbackResponse>()
+                                } catch (e: Exception) {
+                                    println("Callback webhook returned a malformed body (ignored): ${e.message}")
+                                }
+                            } else {
+                                println("Callback webhook returned non-success status: ${webhookResp.status}")
+                            }
                         } catch (e: Exception) {
                             println("Webhook failed (non-blocking): ${e.message}")
                         }
@@ -107,7 +118,8 @@ fun Route.oAuthRoutes() {
                     httpOnly = true,
                     secure = true,
                     path = "/",
-                    maxAge = app.sessionTtl.toInt()
+                    maxAge = app.sessionTtl.toInt(),
+                    extensions = mapOf("SameSite" to "Strict")
                 )
                 call.response.cookies.append(cookie)
                 call.respondRedirect(app.successUrl.ifBlank { "/" })
