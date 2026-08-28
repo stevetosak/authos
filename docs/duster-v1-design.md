@@ -252,6 +252,33 @@ had `user = null` unconditionally.
 check, any developer holding valid Duster CLI credentials could pull — and thus impersonate — any
 other tenant's app by guessing/enumerating its `client_id`, regardless of who registered it.
 
+
+---
+
+### 20. `success_url` Lands On The Developer's Backend, Not Duster Or A Config-Only URL
+**Decision:** `success_url` must point at a real route on the developer's own backend that
+implements decision #4's contract (read the `duster_session` cookie, call
+`GET /duster/api/v1/session?client_id=<id>` server-to-server, establish the developer's own login
+state). It is never the bare default (`"/"`, which resolves against Duster's own origin and 404s -
+Duster has no UI) and never `callbackUri` (decision #2 requires that stay internal-only; it's also
+`POST`-only and shaped for the webhook body, not a browser `GET`).
+
+For `dusterTestApp` (Authos acting as its own "developer app" for testing), this reference
+implementation lives at `GET /test/callback` in `DusterEndpoints.kt` - a new handler alongside the
+existing `POST /test/callback` webhook, both on the same path, split by verb. The `POST` handler
+was also fixed to actually return decision #3's `200 {}` contract; it had still been returning a
+stale `302 Location` from before that decision, so `isSuccess()` was silently false on every login.
+
+Also matters that this route is genuinely browser-facing, unlike the `POST` webhook: a missing or
+expired `duster_session` cookie, or a failed Duster session lookup, must not surface as a raw 500.
+Both map to a `302` to `$frontendHost/error`, reusing `ExceptionHandler.kt`'s existing fallback
+convention (`redirectUri ?: "$frontendHost/error"`) rather than throwing.
+
+**Rationale:** Found by walking through what "the success url should point at the backend" would
+actually require end-to-end (2026-08-28) rather than picking an arbitrary URL. `success_url`'s
+whole job per decision #4 is landing the browser somewhere that can exchange the now-set cookie for
+identity - that only works if something is listening that implements that exchange.
+
 ---
 
 ## Status

@@ -61,17 +61,22 @@ class Apps : SuspendingCliktCommand(name = "apps") {
         } else {
             val app = resp.body<DusterAppDto>()
             val secret = if (showSecret) app.clientSecret else maskSecret(app.clientSecret)
+            val webhookSecret = if (showSecret) app.webhookSecret else maskSecret(app.webhookSecret)
             t.println(
                 Panel(
                     content = definitionList {
                         inline = true
                         descriptionSpacing = 2
-                        entry("ID",       app.clientId)
-                        entry("Secret",   secret)
-                        entry("Scope",    app.scope)
-                        entry("Grant",    app.grantType)
-                        entry("Redirect", app.redirectUri)
-                        entry("Callback", app.callbackUri)
+                        entry("ID",         app.clientId)
+                        entry("Secret",     secret)
+                        entry("Scope",      app.scope)
+                        entry("Grant",      app.grantType)
+                        entry("Redirect",   app.redirectUri)
+                        entry("Callback",   app.callbackUri)
+                        entry("Success URL",app.successUrl)
+                        entry("Logout URL", app.logoutRedirectUrl)
+                        entry("Session TTL",app.sessionTtl.toString())
+                        entry("Webhook Secret", webhookSecret)
                     },
                     title = Text(TextStyles.bold(app.name)),
                     borderType = BorderType.ROUNDED

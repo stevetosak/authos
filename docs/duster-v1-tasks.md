@@ -24,13 +24,17 @@ done, what's next. Update it whenever that changes — don't let it drift.
 - [x] `SameSite=Strict` on the `duster_session` cookie
 - [x] `k8s/ingress.yml` moved to `k8s/optional/` (opt-in, not applied by default)
 - [x] `/authorize` request always sends `prompt=consent` when scope requires it (was the reported
-      "duster requests offline_access without prompt=consent" bug — fix already in the tree,
+      "duster requests offline_access without prompt=consent" bug - fix already in the tree,
       confirmed working end-to-end via live browser + curl reproduction, 2026-08-28)
+- [x] Fixed `success_url` default (`"/"`) 404ing against Duster's own origin - not a Duster bug,
+      but every existing test app had it unconfigured; documented as decision #20
 
 ### dstr-cli
 - [x] `dstr apps configure` (success/logout url, webhook secret, session ttl)
 - [x] Admin token plumbing: `--admin-token` / `DUSTER_ADMIN_TOKEN` / `~/.dstr/dstr.config`
 - [x] Fixed `dstr credentials save` hitting the wrong URL (swapped path segments, always 404'd)
+- [x] `dstr apps` (list + single) now shows `successUrl`/`logoutRedirectUrl`/`sessionTtl`/
+      `webhookSecret` - `DusterAppDto` was missing all four fields entirely
 
 ### Authos
 - [x] Consent screen (`ConsentForm.tsx`) renders the real client name, real requested scopes
@@ -39,6 +43,10 @@ done, what's next. Update it whenever that changes — don't let it drift.
       placeholder data (`"test0"`, `["profile","email"]`, `"stefantoska@authos.com"`)
 - [x] `/duster/pull` rejects cross-tenant pulls (`403`) instead of letting any Duster
       service-account token read any app's plaintext client secret by `client_id`
+- [x] `GET /test/callback` reference `success_url` landing route (decision #20): resolves the
+      `duster_session` cookie via Duster's `GET /session`, mints Authos's own login cookie
+- [x] `POST /test/callback` webhook now actually returns decision #3's `200 {}` contract (was
+      still returning a stale `302`, so Duster's `isSuccess()` check silently failed every time)
 
 ---
 
@@ -86,3 +94,18 @@ done, what's next. Update it whenever that changes — don't let it drift.
   state afterward. Local-dev note: the IntelliJ-launched `duster` run config had no
   `DUSTER_ADMIN_TOKEN` set (docker-compose already defaults it to `dev-admin-token`) — every
   `/internal/*` call was silently 401ing until it was added to that run's environment.
+
+- **2026-08-28 (3)** — User hit a live `404` clicking the frontend's "Authos Login Test" button.
+  Traced it to the existing-session short-circuit in `/oauth/start` redirecting to `success_url`,
+  whose value was still the unconfigured default `"/"` - resolves against Duster's own origin,
+  which has no route for it. Rather than just picking a URL, worked through what `success_url` is
+  actually for (decision #4) and built the missing piece: a `GET /test/callback` handler in
+  Authos that implements the developer-backend contract for real (see decision #20), plus fixed
+  the sibling `POST /test/callback` to match decision #3's `200 {}` contract (it had silently been
+  returning `302` this whole time). Also fixed `dstr apps` never displaying `successUrl` et al. -
+  `DusterAppDto` was missing the fields; while there, corrected which fields need Authos's
+  snake_case `@JsonProperty` mapping vs. Duster's bare-camelCase ones, verified against the actual
+  wire response rather than assumed. Verified live: reused a real existing Duster session to hit
+  the short-circuit path end-to-end (no synthetic fixtures), confirmed the new route mints a real
+  Authos login cookie, and ran `dstr apps` / `dstr apps configure --success-url` against a live
+  Duster with the admin token set to confirm the CLI fixes for real, not just by compiling clean.

@@ -27,6 +27,12 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 import java.security.InvalidParameterException
 import javax.management.InvalidApplicationException
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
+import org.springframework.web.client.RestClientException
+import org.springframework.web.client.RestTemplate
 
 @RestController
 class DusterEndpoints(
@@ -45,21 +51,59 @@ class DusterEndpoints(
     private lateinit var frontendHost: String
     @Value("\${authos.api.host}")
     private lateinit var apiHost: String
+    @Value("\${authos.duster.host}")
+    private lateinit var dusterHost: String
 
-    // TODO cleanup na logika vo ovaj controller
-    // TODO da vidime kako ke funckionirat ova so noviot session handling i AUTHOS_SESSION cookie
+    // Server-to-server webhook: Duster POSTs here fire-and-forget after a successful login and
+    // only checks the status code (decision #3, docs/duster-v1-design.md). Any Set-Cookie header
+    // on this response can never reach the browser, so login no longer happens here -- see the
+    // GET handler below, which is what the browser actually lands on via `success_url`.
     @PostMapping("/test/callback")
     fun testDusterCallback(
-        @RequestBody userinfo: Map<String, String>,
+        @RequestBody userinfo: Map<String, String>
+    ): ResponseEntity<Map<String, String>> {
+        println("DUSTER TEST. RECEIVED USERINFO: $userinfo")
+        return ResponseEntity.ok(emptyMap())
+    }
+
+    // Browser-facing landing route for Duster's `success_url` (decision #4): Duster has already
+    // set the `duster_session` cookie by the time the browser lands here. Forward it to Duster's
+    // own session endpoint server-to-server to resolve who's actually logged in, then mint this
+    // app's own login cookie for that user.
+    @GetMapping("/test/callback")
+    fun testDusterCallbackLanding(
+        @RequestParam(name = "client_id") clientId: String,
         httpServletRequest: HttpServletRequest
     ): ResponseEntity<Void> {
-        println("DUSTER TEST.")
-        print("RECIEVED USERINFO: $userinfo")
-        val sub: String = userinfo["sub"] ?: throw InvalidParameterException("sub parameter not present")
-        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub,apiHost,httpServletRequest))
-        val headers = cookieService.getLoginCookieHeaders(token)
-        return ResponseEntity.status(302).headers(headers).location(URI("${frontendHost}/oauth/callback")).build()
+        val errorRedirect = ResponseEntity.status(302).location(URI("$frontendHost/error")).build<Void>()
+        val dusterSession = httpServletRequest.cookies?.firstOrNull { it.name == "duster_session" }?.value
+            ?: run {
+                println("Duster callback landing: no duster_session cookie present for client_id=$clientId")
+                return errorRedirect
+            }
+
+        val requestHeaders = HttpHeaders().apply { add("Cookie", "duster_session=$dusterSession") }
+        val sessionInfo = try {
+            RestTemplate().exchange(
+                "$dusterHost/duster/api/v1/session?client_id=$clientId",
+                HttpMethod.GET,
+                HttpEntity<Void>(requestHeaders),
+                object : ParameterizedTypeReference<Map<String, String>>() {}
+            ).body
+        } catch (e: RestClientException) {
+            println("Duster callback landing: session lookup failed for client_id=$clientId: ${e.message}")
+            return errorRedirect
+        }
+        val sub = sessionInfo?.get("sub") ?: run {
+            println("Duster callback landing: no 'sub' in Duster session response for client_id=$clientId")
+            return errorRedirect
+        }
+
+        val token = jwtTokenFactory.createToken(LoginTokenStrategy(sub, apiHost, httpServletRequest))
+        val loginHeaders = cookieService.getLoginCookieHeaders(token)
+        return ResponseEntity.status(302).headers(loginHeaders).location(URI("$frontendHost/oauth/callback")).build()
     }
+
 
     //todo client id = na aplikacijata, accesstoken= na duster
     // vo access token tabelata userid da mozit da e nullable za da rabotat i so Client Credentials Flow

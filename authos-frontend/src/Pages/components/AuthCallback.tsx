@@ -10,11 +10,11 @@ export const AuthCallback : React.FC  = () => {
     const nav = useNavigate()
     const verify = async () => {
         try {
-            const resp = await apiGetAuthenticated<UserInfoResponse>("/verify-sub")
+            const resp = await apiGetAuthenticated<UserInfoResponse>("/verify")
             setAuthLoading(true);
             setContext(resp.data)
             setIsAuthenticated(true);
-            nav("/profile")
+            nav("/dashboard")
         } catch (err) {
             console.error(err);
             setUser(defaultUser);

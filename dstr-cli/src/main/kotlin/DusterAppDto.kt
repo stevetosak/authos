@@ -12,6 +12,10 @@ data class DusterAppDto(
     @JsonProperty("scope") val scope: String = "openid",
     @JsonProperty("callback_uri") val callbackUri: String,
     @JsonProperty("name") val name: String,
+    val successUrl: String = "/",
+    val logoutRedirectUrl: String = "/",
+    val webhookSecret: String = "",
+    val sessionTtl: Long = 86400,
 
     ) {
     override fun toString(): String {
