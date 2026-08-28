@@ -17,7 +17,7 @@ Authos side:
 
 | Duster tier | Authos capability it needs | Authos status today |
 |---|---|---|
-| **0** — zero-code frontend | auth code + refresh + `prompt=none`; **real** `expires_in`; PKCE | auth code ✅ · refresh ✅ (30-day, no rotation) · `prompt=none` ✅ · `expires_in` ❌ hardcoded `3600` · **PKCE ❌ not implemented** |
+| **0** — zero-code frontend | auth code + refresh + `prompt=none`; **real** `expires_in`; PKCE | auth code ✅ · refresh ✅ (30-day, no rotation) · `prompt=none` ✅ · `expires_in` ❌ hardcoded `3600` · **PKCE ✅ (S256, verify-if-present)** |
 | **1** — cross-origin frontend | same as tier 0 | same |
 | **2** — backend BFF *(current model)* | + token revocation (RFC 7009); `end_session_endpoint` | revocation ❌ · end-session ❌ |
 | **3** — token-forwarding BFF | + token introspection (RFC 7662); resource-server `aud`; generic `client_credentials` | introspection ❌ (bespoke `/duster/validate-token` stub) · `client_credentials` is Duster-only |
@@ -35,11 +35,11 @@ revocation, introspection, device flow) now lead their phase.
 *Blocks every tier. Nothing else should land on top of the current core.*
 
 **Authos**
-- **PKCE, end to end.** Add `code_challenge` + `code_challenge_method` to `ShortSession` at
-  `/oauth/authorize`; accept and verify `code_verifier` (`S256`) on `/oauth/token`. It's a modifier
-  on `authorization_code`, not the stubbed `GrantType.PKCE`. Duster already sends both params
-  (`DusterOAuthClient.codeExchange`) and Authos silently ignores them — `duster-v1-design.md` #15
-  over-claims this is done.
+- **PKCE, end to end.** ✅ **Done** (branch `feature/authos-pkce-impl`). `code_challenge` +
+  `code_challenge_method` stored in the Redis `ShortSession` at `/oauth/authorize` (S256 only);
+  `code_verifier` verified at `/oauth/token` in `handleAuthorizationCodeRequest` (a modifier on
+  `authorization_code`, not the stubbed `GrantType.PKCE`). "Verify if present" + RFC 7636 §4.6
+  downgrade protection. `matchesS256Challenge` unit-tested against the RFC Appendix B vector.
 - **`GET /.well-known/openid-configuration`** — issuer, endpoint URLs, supported
   grants/scopes/claims, `jwks_uri`. Stops Duster and every SDK from hardcoding paths.
 - **Real `expires_in`.** `/oauth/token` returns a hardcoded `3600`. Duster stores the token in Redis
