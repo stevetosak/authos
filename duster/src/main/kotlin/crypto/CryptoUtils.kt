@@ -30,6 +30,12 @@ fun b64UrlSafeDecoder(value: String) : ByteArray {
 }
 
 
+fun computeHmac(secret: String, payload: String): String {
+    val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+    mac.init(javax.crypto.spec.SecretKeySpec(secret.toByteArray(), "HmacSHA256"))
+    return hex(mac.doFinal(payload.toByteArray()))
+}
+
 fun decodeBasicAuth(authHeader: String): Pair<String, String> {
     require(authHeader.startsWith("Basic ")) { "Invalid Authorization header" }
 

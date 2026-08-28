@@ -28,6 +28,11 @@ data class TokenRequestDto(
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+data class CallbackResponse(
+    val placeholder: String? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class DusterAppRegisterDto(
     @JsonProperty("client_id") val clientId: String,
     @JsonProperty("client_secret") val clientSecret: String,

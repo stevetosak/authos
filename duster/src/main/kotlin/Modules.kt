@@ -3,21 +3,22 @@ package com.authos
 import com.authos.service.StateStore
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterAppRepositoryImpl
+import com.authos.repository.DusterSessionRepository
+import com.authos.repository.DusterSessionRepositoryImpl
 import com.authos.repository.OAuthTokenRepository
 import com.authos.repository.TokenRepository
 import com.authos.repository.CredentialsRepository
 import com.authos.service.DusterCliService
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-// toodo dusterclient spored dadeniot app da sa gradit
 fun dusterExternalModule() = module {
-    singleOf(::StateStore)
-    single (createdAtStart = true){ buildRedisManager() }
+    single(createdAtStart = true) { buildRedisManager() }
+    single { StateStore(get()) }
     single { DusterAppRepositoryImpl(get()) } bind DusterAppRepository::class
     single { TokenRepository(get()) } bind OAuthTokenRepository::class
-    single { CredentialsRepository(get() ) }
+    single { DusterSessionRepositoryImpl(get()) } bind DusterSessionRepository::class
+    single { CredentialsRepository(get()) }
     single { DusterCliService(get()) }
 }
 
