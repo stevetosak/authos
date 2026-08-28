@@ -94,6 +94,26 @@ class AuthorizationHandler(
             )
         }
 
+        // PKCE (RFC 7636): if a challenge is supplied it is stored in the ShortSession and
+        // enforced at /oauth/token (TokenService). Only S256 is supported.
+        authorizeRequestParams.codeChallenge?.let { challenge ->
+            demand(authorizeRequestParams.codeChallengeMethod == "S256") {
+                AuthorizationEndpointException(
+                    AuthorizationErrorCode.INVALID_REQUEST,
+                    "unsupported code_challenge_method; only S256 is supported",
+                    authorizeRequestParams.redirectUri,
+                    authorizeRequestParams.state
+                )
+            }
+            demand(challenge.matches(Regex("^[A-Za-z0-9_-]{43,128}$"))) {
+                AuthorizationEndpointException(
+                    AuthorizationErrorCode.INVALID_REQUEST,
+                    "invalid code_challenge",
+                    authorizeRequestParams.redirectUri,
+                    authorizeRequestParams.state
+                )
+            }
+        }
 
         val authzId = shortSessionService.generateTempSession(authorizeRequestParams)
 

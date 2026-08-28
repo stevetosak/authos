@@ -76,6 +76,8 @@ class OAuthEndpoints(
         @RequestParam(name = "duster_uid", required = false) dusterSub: String?,
         @RequestParam(name = "max_age", required = false) maxAge: Int?,
         @RequestParam(name = "request", required = false) request: String?,
+        @RequestParam(name = "code_challenge", required = false) codeChallenge: String?,
+        @RequestParam(name = "code_challenge_method", required = false) codeChallengeMethod: String?,
         httpServletRequest: HttpServletRequest,
         response: HttpServletResponse,
     ): ResponseEntity<Void> {
@@ -96,7 +98,9 @@ class OAuthEndpoints(
                 dusterSub,
                 nonce,
                 maxAge,
-                request
+                request,
+                codeChallenge,
+                codeChallengeMethod
             ),
             httpServletRequest,
         )
@@ -183,10 +187,11 @@ class OAuthEndpoints(
         @RequestParam("client_id") clientId: String?,
         @RequestParam("client_secret") clientSecret: String?,
         @RequestParam("refresh_token") refreshToken: String?,
+        @RequestParam("code_verifier") codeVerifier: String?,
         request: HttpServletRequest,
     ): ResponseEntity<TokenResponse> {
 
-        val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken)
+        val dto = TokenRequestDto(code, redirectUri, grantType, clientId, clientSecret, refreshToken, codeVerifier)
 
         val tokenWrapper = tokenService.handleTokenRequest(dto, request)
 

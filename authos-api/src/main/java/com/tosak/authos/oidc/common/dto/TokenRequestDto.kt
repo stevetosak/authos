@@ -8,6 +8,7 @@ data class TokenRequestDto (
     val grantType: String,
     var clientId: String?,
     var clientSecret: String?,
-    val refreshToken: String?
+    val refreshToken: String?,
+    val codeVerifier: String? = null
 
 )

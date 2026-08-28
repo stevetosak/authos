@@ -61,8 +61,11 @@ lead their phase.
       this round of work — hits an unstarted external port, no `client_id`)
 
 ### Authos (next phase)
-- [ ] PKCE validation: `code_challenge` on `/oauth/authorize`, `code_verifier` on `/oauth/token`
-      (`GrantType.PKCE -> TODO()` today — Duster already sends both, Authos ignores them)
+- [x] PKCE validation: `code_challenge` stored in the `ShortSession` at `/oauth/authorize` (S256
+      only), `code_verifier` verified at `/oauth/token` in `handleAuthorizationCodeRequest`.
+      "Verify if present" + RFC 7636 §4.6 downgrade protection. Pure-function `matchesS256Challenge`
+      unit-tested against the RFC 7636 Appendix B vector (`PkceVerifierTest.kt` — repo's first real
+      test). No DB migration. Branch `feature/authos-pkce-impl`.
 - [ ] Token revocation endpoint (`/oauth/revoke`)
 - [ ] Device Authorization Flow (RFC 8628)
 
