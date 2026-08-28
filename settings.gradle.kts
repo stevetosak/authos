@@ -5,3 +5,4 @@ plugins {
 rootProject.name = "authos-stack"
 include("duster")
 include("dstr-cli")
+include("e2e-tests")
