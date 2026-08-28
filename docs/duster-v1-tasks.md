@@ -50,6 +50,10 @@ lead their phase.
       `duster_session` cookie via Duster's `GET /session`, mints Authos's own login cookie
 - [x] `POST /test/callback` webhook now actually returns decision #3's `200 {}` contract (was
       still returning a stale `302`, so Duster's `isSuccess()` check silently failed every time)
+- [x] `/oauth/token` returns a real `expires_in` — derived from the access token's persisted
+      `expires_at`, single config value `authos.oidc.access-token-ttl-seconds` (default 3600).
+      Actual access-token lifetime 24h → 1h (matches the ID token + the value already advertised).
+      `e2e-tests/TokenResponseTest`. (roadmap Phase 0)
 
 ---
 
@@ -73,8 +77,8 @@ lead their phase.
 ### Testing
 - [x] `e2e-tests/` Gradle module (`./gradlew :e2e-tests:e2eTest`, `.github/workflows/e2e.yaml`) —
       docker-compose stack (Postgres + Redis + authos-api + duster), HTTP-level suite: PKCE through
-      Duster + negatives + regression, Duster session lifecycle, internal-API auth gate,
-      `/duster/pull` tenant isolation, re-sync upsert-safety. Supersedes the broken
+      Duster + negatives + regression, `/oauth/token` `expires_in`, Duster session lifecycle,
+      internal-API auth gate, `/duster/pull` tenant isolation, re-sync upsert-safety. Supersedes the broken
       `duster/src/test/kotlin/ApplicationTest.kt`. Details + Phase 2 list in `automation-tests-plan.md`.
 - [ ] Phase 2: Playwright browser specs, `dstr-cli` binary coverage, `authos-frontend` component tests
 
