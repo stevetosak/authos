@@ -1,8 +1,9 @@
 # Authos + Duster — Roadmap
 
-**Date:** 2026-08-28
-**Companion docs:** `duster-v1-design.md` (why — decision log), `duster-v1-tasks.md` (current-sprint
-status), `automation-tests-plan.md` (test plan).
+**This file is the plan** — the multi-phase arc and the tier→capability dependencies. It changes
+only when the *plan* changes, which is rare and deliberate. It carries **no live status**: what is
+done vs. outstanding lives in `duster-v1-tasks.md`, the dated history in `CHANGELOG.md`, the
+rationale in `duster-v1-design.md`. Feature branches must not edit this file.
 
 ---
 
@@ -15,18 +16,18 @@ feature can only be as robust as the Authos endpoint beneath it.
 So the integration-tier ladder from `duster-v1-design.md` #21 has a hard dependency spine on the
 Authos side:
 
-| Duster tier | Authos capability it needs | Authos status today |
-|---|---|---|
-| **0** — zero-code frontend | auth code + refresh + `prompt=none`; **real** `expires_in`; PKCE | auth code ✅ · refresh ✅ (30-day, no rotation) · `prompt=none` ✅ · `expires_in` ✅ (derived from the persisted token; `authos.oidc.access-token-ttl-seconds`, default 3600) · **PKCE ✅ (S256, verify-if-present)** |
-| **1** — cross-origin frontend | same as tier 0 | same |
-| **2** — backend BFF *(current model)* | + token revocation (RFC 7009); `end_session_endpoint` | revocation ❌ · end-session ❌ |
-| **3** — token-forwarding BFF | + token introspection (RFC 7662); resource-server `aud`; generic `client_credentials` | introspection ❌ (bespoke `/duster/validate-token` stub) · `client_credentials` is Duster-only |
-| **4** — native / device | + Device Authorization Flow (RFC 8628); public clients (PKCE, no secret) | `GrantType.DEVICE_CODE -> TODO()` · no public-client support |
-| *all tiers* | discovery doc; custom/authz claims; JWKS rotation; audit + rate limiting | discovery ✅ (`/.well-known/openid-configuration`) · claims = standard OIDC only · single JWKS key · `println` logging |
+| Duster tier | Authos capability it needs |
+|---|---|
+| **0** — zero-code frontend | auth code + refresh + `prompt=none`; real `expires_in`; PKCE |
+| **1** — cross-origin frontend | same as tier 0 |
+| **2** — backend BFF *(current model)* | + token revocation (RFC 7009); `end_session_endpoint` |
+| **3** — token-forwarding BFF | + token introspection (RFC 7662); resource-server `aud`; generic `client_credentials` |
+| **4** — native / device | + Device Authorization Flow (RFC 8628); public clients (PKCE, no secret) |
+| *all tiers* | discovery doc; custom / authz claims; JWKS rotation; audit + rate limiting |
 
-This refines the "Duster production-readiness first, then Authos" ordering in `duster-v1-tasks.md`:
-Duster-first still holds **within** a phase, but the Authos gaps that *block* a tier (PKCE,
-revocation, introspection, device flow) now lead their phase.
+This refines the "Duster production-readiness first, then Authos" ordering: Duster-first still holds
+**within** a phase, but the Authos gaps that *block* a tier (PKCE, revocation, introspection, device
+flow) lead their phase.
 
 ---
 
@@ -35,49 +36,32 @@ revocation, introspection, device flow) now lead their phase.
 *Blocks every tier. Nothing else should land on top of the current core.*
 
 **Authos**
-- **PKCE, end to end.** ✅ **Done** (merged to master, PR #24). `code_challenge` +
-  `code_challenge_method` stored in the Redis `ShortSession` at `/oauth/authorize` (S256 only);
-  `code_verifier` verified at `/oauth/token` in `handleAuthorizationCodeRequest` (a modifier on
-  `authorization_code`, not the stubbed `GrantType.PKCE`). "Verify if present" + RFC 7636 §4.6
-  downgrade protection. `matchesS256Challenge` unit-tested against the RFC Appendix B vector.
-- **`GET /.well-known/openid-configuration`** ✅ **Done.** Issuer, endpoint URLs, `jwks_uri`, and
-  the supported response/grant/scope/claim/PKCE lists — all reflecting what the code actually does
-  (e.g. `grant_types_supported` omits the Duster-only `client_credentials`; `claims_supported` lists
-  only claims `ClaimService` can resolve). `issuer` byte-matches the ID token `iss`. Served from
-  `PublicEndpointsController`; `OpenIdProviderMetadata` DTO. `e2e-tests/DiscoveryTest`. Stops Duster
-  and every SDK from hardcoding paths.
-- **Real `expires_in`.** `/oauth/token` returns a hardcoded `3600`. Duster stores the token in Redis
-  with exactly this value (`TokenRepository.saveAll`), so a wrong number means premature or stale
-  silent refresh.
-- **Consistent OAuth errors** ✅ **Done.** `ErrorResponse` is now RFC 6749 §5.2 shape
-  (`error` / `error_description`, snake_case); `invalid_client` answers 401 + `WWW-Authenticate`.
-  A path-aware catch-all in `ExceptionHandler` guarantees `/oauth/token` errors are always JSON and
-  `/oauth/authorize` + `/oauth/approve` errors always redirect — no route falls through to a raw
-  500 / whitelabel page. Source fixes so the expected conditions carry the right code
-  (`unsupported_grant_type`, `invalid_request`, `invalid_client`, `invalid_grant` instead of raw
-  `TODO()` / `Exception` / `requireNotNull`). `e2e-tests/OAuthErrorTest`.
-- **Re-enable the `/approve` request-integrity check.** ✅ **Done.** `/oauth/approve` now mints the
-  code **only** from the server-side `ShortSession` (the copy validated at `/authorize`), never from
-  the browser-carried query params. The supplied `client_id` / `redirect_uri` are cross-checked
-  against the session and a mismatch is rejected; an expired / unknown `authz_id` is rejected
-  instead of silently continuing. `scope` / `state` are taken from the session (no escalation, no
-  redirect-swap). Dead `getRequestParamHash` removed. `e2e-tests/OAuthErrorTest`.
+- **PKCE, end to end.** `code_challenge` / `code_challenge_method` at `/oauth/authorize` (S256
+  only), `code_verifier` verified at `/oauth/token` — a modifier on the `authorization_code` grant.
+  "Verify if present" + RFC 7636 §4.6 downgrade protection.
+- **`GET /.well-known/openid-configuration`.** Issuer, endpoint URLs, `jwks_uri`, and the supported
+  response / grant / scope / claim / PKCE lists — each reflecting what the code actually does. The
+  `issuer` must byte-match the ID token `iss`. Stops Duster and every SDK from hardcoding paths.
+- **Real `expires_in`.** `/oauth/token` must report the access token's true lifetime (it was a
+  hardcoded `3600`). Duster stores the token in Redis with exactly this value, so a wrong number
+  means premature or stale silent refresh.
+- **Consistent OAuth errors.** RFC 6749 §5.2 JSON on `/token`, redirect-with-`error` on
+  `/authorize`; no path falls through to a raw 500 / whitelabel page (Duster #28 needs a clean
+  user-facing error).
+- **Re-enable the `/approve` request-integrity check.** The code must be minted from the server-side
+  `ShortSession`, not from the query params the browser carried through login/consent — otherwise a
+  swapped `redirect_uri` or escalated `scope` between `/authorize` and `/approve` goes unchecked.
 
 **Exit criteria:** OIDC smoke suite passes (authorize → PKCE token → userinfo, `prompt=none`, error
 cases); discovery doc validates; the existing Duster flow works unchanged against the hardened core.
-
-**Phase 0 status:** all 5 items done (PKCE, discovery, `expires_in`, error consistency, `/approve`
-integrity), each on its own branch off `master`. The `e2e-tests/` suite covers the flow end to end
-plus PKCE negatives, error shapes, and the discovery `issuer`↔`iss` invariant.
 
 ---
 
 ## Phase 1 — Duster tiers 0 & 1 (zero-code) + revocation
 
 **Authos**
-- **`POST /oauth/revoke`** (RFC 7009) — revoke refresh + access token, set the existing
-  `RefreshToken.revoked` flag (nothing sets it today). Unblocks the item already in
-  `duster-v1-tasks.md` → Next Up.
+- **`POST /oauth/revoke`** (RFC 7009) — revoke a refresh or access token; a refresh-token revoke
+  cascades to the access tokens for that grant. Unblocks Duster `/logout` revocation.
 - Verify `prompt=none` silent re-auth when the Authos SSO session outlives the Duster session —
   Duster's `/session` silent refresh (#16) depends on it.
 
@@ -143,9 +127,8 @@ token.
 ## Phase 4 — Duster tier 4 (native / device)
 
 **Authos**
-- **Device Authorization Flow** (RFC 8628) — `/oauth/device_authorization` + `device_code` grant
-  (`GrantType.DEVICE_CODE -> TODO()`). Also unblocks `dstr auth login` (#14), currently on a PAT
-  fallback.
+- **Device Authorization Flow** (RFC 8628) — `/oauth/device_authorization` + `device_code` grant.
+  Also unblocks `dstr auth login` (#14), currently on a PAT fallback.
 - **Public clients** — PKCE-only token exchange with no `client_secret`.
 
 **Duster**
@@ -166,18 +149,21 @@ with no browser cookie.
   and every SDK cache JWKS and break on a hard swap.
 - **Custom / authorization claims** — map roles / groups / entitlements into the ID token + userinfo
   so real apps at any tier get authz data, not just profile.
-- **Test coverage** — bootstrapped: the `e2e-tests/` module (`./gradlew :e2e-tests:e2eTest`,
-  `.github/workflows/e2e.yaml`) stands up a real Postgres+Redis+authos-api+duster stack and
-  covers the PKCE flow (through Duster + negatives + regression), the `/oauth/token` response
-  shape (`expires_in`), Duster session lifecycle, the internal-API auth gate, `/duster/pull`
-  tenant isolation, and re-sync upsert-safety. Each phase
-  extends it before it closes; browser specs + `dstr-cli`-binary coverage are Phase 2
-  (`automation-tests-plan.md`).
+- **Test coverage** — the `e2e-tests/` module stands up a real Postgres + Redis + authos-api +
+  duster stack. Each phase extends it before it closes; browser specs + `dstr-cli`-binary coverage
+  are Phase 2 (`automation-tests-plan.md`).
 
 ---
 
-## Relationship to `duster-v1-tasks.md`
+## The doc set
 
-This file is the **multi-phase arc**. `duster-v1-tasks.md` is the **current-sprint tracker** — when
-a phase goes active, its items move into that file's *Next Up* with checkboxes. Update the arc here
-when priorities or dependencies shift; update the tracker there as individual items land.
+`docs/README.md` has the full table (what each file is, who edits it and how) plus
+the size guardrail and the archiving procedure. In short:
+
+| file | what | who edits it |
+|---|---|---|
+| `roadmap.md` (this) | the plan: phases, tier→capability spine | only when re-planning |
+| `duster-v1-tasks.md` | live checklist, one box per item | feature branches — flip `[ ]`→`[x]` in place |
+| `CHANGELOG.md` | dated one-line history of what landed | feature branches — append at the end |
+| `duster-v1-design.md` | numbered decision log (the *why*) | when a decision is made |
+| `automation-tests-plan.md` | test strategy | when the test plan changes |

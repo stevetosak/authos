@@ -46,7 +46,7 @@ secrets.auto.tfvars
 .terraform
 *.tfstate
 *.tfstate*.backup
-scripts/
+/scripts/
 k8s/scripts
 secrets/
 CLAUDE.md
