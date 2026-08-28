@@ -30,7 +30,8 @@ class AuthorizationHandler(
     private val ppidService: PPIDService,
     private val ssoSessionService: SSOSessionService,
     private val userService: UserService,
-    private val shortSessionService: ShortSessionService
+    private val shortSessionService: ShortSessionService,
+    private val authorizationCodeService: AuthorizationCodeService,
 ) {
 
     @Value("\${authos.frontend.host}")
@@ -125,7 +126,7 @@ class AuthorizationHandler(
         }
 
         val sessionId = request.cookies?.find { it.name == "AUTHOS_SESSION" }?.value
-        val session = ssoSessionService.getSessionById(sessionId)
+        val session = if (sessionId != null) ssoSessionService.getSessionById(sessionId) else null
 
         if (session == null) {
             if (promptType == PromptType.NONE) throw AuthorizationEndpointException(
@@ -142,13 +143,44 @@ class AuthorizationHandler(
 
         return when (promptType) {
             PromptType.OMITTED -> handleNoPrompt(authorizeRequestParams, authzId, session)
-            PromptType.NONE -> redirectToApprove(authorizeRequestParams, authzId)
+            // session != null here implies sessionId != null
+            PromptType.NONE -> silentApprove(authorizeRequestParams, authzId, sessionId!!, session)
             PromptType.CONSENT -> handleConsent(authorizeRequestParams, authzId)
             PromptType.SELECT_ACCOUNT -> TODO()
             else -> {
                 throw IllegalStateException("how tf did this happen")
             }
         }
+    }
+
+    /**
+     * `prompt=none` success path (OIDC Core 3.1.2.1). A live SSO session is by itself sufficient
+     * proof of authentication and no interaction is permitted, so the authorization code is minted
+     * straight from the session here rather than by redirecting to `/oauth/approve`. That endpoint
+     * re-authenticates the browser off the short-lived `AUTH_TOKEN` login cookie, which can lapse
+     * while the (longer-lived) SSO session is still valid — the exact case silent re-auth exists
+     * to cover. Mirrors `OAuthEndpoints.approve`: the code is bound to both the ShortSession (for
+     * `/oauth/token`) and the SSO session (so the token step can resolve it).
+     */
+    private fun silentApprove(
+        params: AuthorizeRequestParams,
+        authzId: String,
+        sessionId: String,
+        session: SSOSession,
+    ): ResponseEntity<Void> {
+        val user = userService.getById(session.userId)
+        val code = authorizationCodeService.generateAuthorizationCode(
+            params.clientId, params.redirectUri, params.scope, user,
+        )
+        shortSessionService.bindCodeToShortSession(authzId, code)
+        ssoSessionService.bindCodeToSSOSession(code, sessionId)
+
+        // matches OAuthEndpoints.approve: state echoed as-is, only when present
+        val location = buildString {
+            append(params.redirectUri).append("?code=").append(code)
+            params.state?.let { append("&state=").append(it) }
+        }
+        return ResponseEntity.status(302).location(URI(location)).build()
     }
 
     /**
