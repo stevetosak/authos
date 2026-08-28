@@ -33,7 +33,6 @@ import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.nio.charset.StandardCharsets
-import java.security.InvalidParameterException
 import java.time.LocalDateTime
 
 // val atHash = b64UrlSafe(tokenHash.take(tokenHash.size / 2).toByteArray())
@@ -173,7 +172,7 @@ open class TokenService(
         val grantType = try {
             GrantType.valueOf(grant.uppercase())
         } catch (e: IllegalArgumentException) {
-            throw TokenEndpointException(TokenErrorCode.INVALID_GRANT)
+            throw TokenEndpointException(TokenErrorCode.UNSUPPORTED_GRANT_TYPE, "unsupported grant_type")
         }
         return grantType;
     }
@@ -184,7 +183,7 @@ open class TokenService(
         if (tokenRequestDto.grantType == "authorization_code" && tokenRequestDto.code == null
             || tokenRequestDto.grantType == "refresh_token" && tokenRequestDto.refreshToken == null
             || tokenRequestDto.grantType == "client_credentials" && tokenRequestDto.clientSecret == null
-        ) throw InvalidParameterException("parameters do not match grant type")
+        ) throw TokenEndpointException(TokenErrorCode.INVALID_REQUEST, "parameters do not match grant_type")
 
 
         return when (parseGrantType(tokenRequestDto.grantType)) {
@@ -192,9 +191,10 @@ open class TokenService(
             GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto,request)
             GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
             // PKCE is a modifier on the authorization_code grant (verified in handleAuthorizationCodeRequest),
-            // not a grant type of its own. This branch is unreachable for real requests.
-            GrantType.PKCE -> TODO()
-            GrantType.DEVICE_CODE -> TODO()
+            // not a grant type of its own; device flow is not implemented. Neither is reachable as a
+            // real grant_type value, but fail cleanly rather than with a TODO() 500 if one gets here.
+            GrantType.PKCE, GrantType.DEVICE_CODE ->
+                throw TokenEndpointException(TokenErrorCode.UNSUPPORTED_GRANT_TYPE, "unsupported grant_type")
         }
 
     }
@@ -228,7 +228,8 @@ open class TokenService(
         authorizationCodeRepository.save(code)
         val authorizationSession = shortSessionService.getSessionByCode(code.codeVal)
         verifyPkce(authorizationSession, dto.codeVerifier)
-        val ssoSession = requireNotNull(sSOSessionService.getSessionByCode(code.codeVal))
+        val ssoSession = sSOSessionService.getSessionByCode(code.codeVal)
+            ?: throw TokenEndpointException(TokenErrorCode.INVALID_GRANT, "no login session bound to this authorization code")
 
 
         val accessTokenWrapper =

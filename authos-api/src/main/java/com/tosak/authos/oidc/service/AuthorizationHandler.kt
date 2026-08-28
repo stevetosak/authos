@@ -2,8 +2,6 @@ package com.tosak.authos.oidc.service
 
 import SSOSession
 import com.tosak.authos.oidc.common.enums.PromptType
-import com.tosak.authos.oidc.exceptions.oauth.InvalidScopeException
-import com.tosak.authos.oidc.exceptions.oauth.UnsupportedResponseTypeException
 import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 //import com.tosak.authos.common.utils.redirectToLogin
 import com.tosak.authos.oidc.exceptions.badreq.BadPromptException
@@ -19,7 +17,6 @@ import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.net.URLEncoder
-import java.security.InvalidParameterException
 import java.time.Instant
 
 /**
@@ -48,9 +45,8 @@ class AuthorizationHandler(
      * @param prompt A string value representing the prompt type, which dictates how the request should be handled.
      * @param authorizeRequestParams Contains details of the authorization request, including client ID, redirect URI, state, scope, etc.
      * @return A ResponseEntity instance with an appropriate HTTP status and location, depending on the handling of the request.
-     * @throws UnsupportedResponseTypeException If the response type provided in the request is not supported.
-     * @throws InvalidScopeException If the scope provided in the request is invalid or does not contain "openid".
-     * @throws InvalidParameterException If an invalid or unrecognized prompt type is encountered.
+     * @throws AuthorizationEndpointException for an unsupported response_type, a bad/missing scope,
+     *   an unregistered redirect_uri, or a bad PKCE challenge.
      */
     fun handleRequest(
         prompt: String,
@@ -58,7 +54,14 @@ class AuthorizationHandler(
         request: HttpServletRequest,
     ): ResponseEntity<Void> {
         if (authorizeRequestParams.responseType != "code")
-            throw UnsupportedResponseTypeException("unsupported response type ${authorizeRequestParams.responseType}")
+            throw AuthorizationEndpointException(
+                AuthorizationErrorCode.UNSUPPORTED_RESPONSE_TYPE,
+                "unsupported response_type '${authorizeRequestParams.responseType}'; only 'code' is supported",
+                // redirect_uri is not validated against the client yet, so send the error to the
+                // Authos error page rather than bouncing it to an unverified URI.
+                null,
+                authorizeRequestParams.state,
+            )
 
 
         val promptType = PromptType.parse(prompt)
