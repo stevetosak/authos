@@ -228,44 +228,7 @@ same reasoning decision #1 already applies to webhook signing.
 
 ---
 
-## Implementation Backlog
+## Status
 
-### Duster
-- [x] Replace `sub` cookie with `duster_session` UUID cookie
-- [x] Add `GET /duster/api/v1/session?client_id=` endpoint
-- [x] Add `GET /duster/api/v1/logout?client_id=` endpoint — clears the local session; does not yet
-      call Authos token revocation (blocked on Authos `/oauth/revoke`, see below)
-- [x] Add HMAC-SHA256 signing to `sendToCallback()` — secret is set via `dstr apps configure --webhook-secret`
-- [x] Replace `Location` header callback contract with JSON body
-- [x] Add `success_url` + `logout_redirect_url` to `DusterApp` model and config — set via
-      `PATCH /internal/apps/config` / `dstr apps configure`
-- [x] Implement PKCE in Duster (`StateStore` + authorize URL + token exchange) — Duster side only;
-      Authos does not yet validate the challenge (see below)
-- [x] Silent session refresh via stored refresh token
-- [x] Configurable `session_ttl` — via `dstr apps configure --session-ttl`
-- [x] Remove / make opt-in `k8s/ingress.yml` — moved to `k8s/optional/ingress.yml`;
-      `kubectl apply -f k8s/` no longer deploys it
-- [x] Gate `/duster/api/v1/internal/*` behind `DUSTER_ADMIN_TOKEN` (decision #17 — not originally
-      scoped here, but required before any of the above can be called production-ready)
-
-### Authos
-- [ ] PKCE validation (`code_challenge` on authorize, `code_verifier` on token exchange) — Duster
-      already sends both; Authos silently ignores them (`GrantType.PKCE -> TODO()`)
-- [ ] Device Authorization Flow (RFC 8628)
-- [ ] Token revocation endpoint (`/oauth/revoke`) if not present — blocks wiring `/logout` to real
-      upstream revocation
-
-### dstr-cli
-- [ ] `dstr init` interactive wizard
-- [x] Per-app config command — shipped as `dstr apps configure -cid <id> [--success-url]
-      [--logout-url] [--webhook-secret] [--session-ttl]`, narrower than the originally-sketched
-      generic `dstr config set <key> <value>` but covers the same need
-- [ ] Device flow authentication (`dstr auth login`)
-
-### New Repositories (future)
-- [ ] `duster-node` — Express middleware
-- [ ] `duster-spring` — Spring Boot filter
-- [ ] `duster-dotnet` — .NET middleware
-- [ ] `duster-react` — React SDK
-- [ ] `duster-vue` — Vue composable
-- [ ] `duster-js` — Vanilla JS client
+This file records *why*. Current task status ("what's done, what's next") lives in
+`duster-v1-tasks.md` — update that file, not this one, as work progresses.
