@@ -222,6 +222,30 @@ class OAuthEndpoints(
 
     }
 
+    /**
+     * RFC 7009 token revocation. Client-authenticated (same methods as `/token`). Answers `200`
+     * for any syntactically valid request — whether or not the token existed — so a client can
+     * never probe token validity through this endpoint.
+     */
+    @PostMapping("/revoke", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE])
+    fun revoke(
+        @RequestParam(name = "token", required = false) token: String?,
+        @RequestParam(name = "token_type_hint", required = false) tokenTypeHint: String?,
+        @RequestParam(name = "client_id", required = false) clientId: String?,
+        @RequestParam(name = "client_secret", required = false) clientSecret: String?,
+        request: HttpServletRequest,
+    ): ResponseEntity<Void> {
+        demand(!token.isNullOrEmpty()) {
+            TokenEndpointException(TokenErrorCode.INVALID_REQUEST, "missing token parameter")
+        }
+        val app = appService.validateAppCredentials(
+            TokenRequestDto(null, null, "", clientId, clientSecret, null),
+            request,
+        )
+        tokenService.revokeToken(app, token!!, tokenTypeHint)
+        return ResponseEntity.ok().build()
+    }
+
     @RequestMapping(
         "/userinfo",
         method = [RequestMethod.GET, RequestMethod.POST],
