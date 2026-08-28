@@ -54,6 +54,10 @@ lead their phase.
       `expires_at`, single config value `authos.oidc.access-token-ttl-seconds` (default 3600).
       Actual access-token lifetime 24h → 1h (matches the ID token + the value already advertised).
       `e2e-tests/TokenResponseTest`. (roadmap Phase 0)
+- [x] `GET /.well-known/openid-configuration` — OIDC discovery doc. Endpoint URLs from `API_HOST`,
+      `issuer` == ID token `iss`, capability lists match the implementation (S256-only PKCE, no
+      Duster-only `client_credentials`, resolvable claims only). `e2e-tests/DiscoveryTest`.
+      (roadmap Phase 0)
 
 ---
 
