@@ -16,8 +16,8 @@ is what keeps the file merge-conflict-free across parallel branches.
 - [x] PKCE end to end — S256 only, verify-if-present, RFC 7636 §4.6 downgrade protection — PR #24
 - [x] `GET /.well-known/openid-configuration` discovery doc — PR #27
 - [x] Real `expires_in` on `/oauth/token` — PR #26
-- [ ] Consistent OAuth errors — RFC 6749 §5.2 JSON on `/token`, redirect-with-`error` on `/authorize`, no raw 500 / whitelabel page
-- [ ] Re-enable the `/approve` request-integrity check — mint the code from the server-side `ShortSession`, not the carried-through query params
+- [x] Consistent OAuth errors — RFC 6749 §5.2 JSON on `/token`, redirect-with-`error` on `/authorize`, no raw 500 / whitelabel page — PR #28
+- [x] Re-enable the `/approve` request-integrity check — mint the code from the server-side `ShortSession`, not the carried-through query params — PR #28
 
 ## Phase 1 — Duster tiers 0 & 1 (zero-code) + revocation
 
