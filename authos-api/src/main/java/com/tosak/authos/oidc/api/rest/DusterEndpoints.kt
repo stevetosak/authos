@@ -82,6 +82,9 @@ class DusterEndpoints(
 
         val token = tokenService.validateAccessToken(authorizationHeader.substring(7))
         if (!token.scope.contains("duster")) return ResponseEntity.status(401).build()
+        // A Duster service-account token may only pull config for apps its own owner registered -
+        // otherwise any developer's `dstr sync` could dump any other tenant's client secret.
+        if (token.user?.id != authosApp.user.id) return ResponseEntity.status(403).build()
 
         val dusterRedirectUri =
             authosApp.redirectUris.find { uri -> uri.id!!.redirectUri.contains("/duster/api/v1/oauth/callback") }

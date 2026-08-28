@@ -228,6 +228,32 @@ same reasoning decision #1 already applies to webhook signing.
 
 ---
 
+### 18. Internal App Registration Is Upsert, Not Create-Only
+**Decision:** `POST /duster/api/v1/internal/apps/create` must merge onto the existing `DusterApp`
+by `client_id` (preserving `successUrl`, `logoutRedirectUrl`, `webhookSecret`, `sessionTtl`) when
+one already exists, rather than always constructing a fresh record with field defaults.
+
+**Rationale:** `dstr sync` posts to this same endpoint on every re-sync (e.g. after a client
+secret rotation or app rename in Authos) — it is not a one-time registration call. Treating it as
+create-only silently reset any `dstr apps configure` values back to their defaults on the next
+sync, discarding real config with no warning. Found by actually running `dstr credentials save` +
+`dstr sync` end-to-end for the first time (2026-08-28) — this path had never been exercised before.
+
+---
+
+### 19. `/duster/pull` Is Scoped To The Calling Duster Client's Owner
+**Decision:** `POST /duster/pull` requires the presented Duster-service-account access token's
+associated user to match the target app's owning user; mismatches get `403`. A `client_credentials`
+token now carries its issuing `DusterApp`'s owner (`TokenService.generateAccessToken`'s
+`clientCredentialsUser` param) so this can be checked — previously every `client_credentials` token
+had `user = null` unconditionally.
+
+**Rationale:** The endpoint returns a decrypted plaintext `client_secret`. Without an ownership
+check, any developer holding valid Duster CLI credentials could pull — and thus impersonate — any
+other tenant's app by guessing/enumerating its `client_id`, regardless of who registered it.
+
+---
+
 ## Status
 
 This file records *why*. Current task status ("what's done, what's next") lives in

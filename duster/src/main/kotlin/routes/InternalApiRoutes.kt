@@ -51,14 +51,24 @@ fun Route.appRoutes(){
             try {
                 val body = call.receive<DusterAppRegisterDto>()
                 println("Received difference body: ${body.toString()}")
-                val dusterApp = DusterApp(
+                // Registration and sync share this endpoint: `dstr sync` re-posts here whenever an
+                // app's secret/name/scope changes in Authos. Preserve locally-configured fields
+                // (successUrl, logoutRedirectUrl, webhookSecret, sessionTtl) across a re-sync instead
+                // of resetting them to defaults.
+                val existing = try {
+                    dusterAppRepository.getDusterAppByClientId(body.clientId)
+                } catch (e: IllegalStateException) {
+                    null
+                }
+                val now = System.currentTimeMillis()
+                val dusterApp = (existing ?: DusterApp()).copy(
                     clientId = body.clientId,
                     clientSecret = body.clientSecret,
                     redirectUri = body.redirectUri,
                     isActive = true,
-                    lastSyncAt = System.currentTimeMillis(),
+                    lastSyncAt = now,
                     callbackUri = body.callbackUri,
-                    updatedAt = System.currentTimeMillis(),
+                    updatedAt = now,
                     scope = body.scope,
                     name = body.name,
                 )

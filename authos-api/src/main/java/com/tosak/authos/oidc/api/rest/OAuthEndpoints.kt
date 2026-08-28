@@ -3,6 +3,7 @@ package com.tosak.authos.oidc.api.rest
 import com.tosak.authos.oidc.common.enums.TokenType
 import com.tosak.authos.oidc.common.dto.TokenRequestDto
 import com.tosak.authos.oidc.common.dto.TokenResponse
+import com.tosak.authos.oidc.common.dto.ClientInfoDTO
 import com.tosak.authos.oidc.common.pojo.AuthorizeRequestParams
 import com.tosak.authos.oidc.service.JwtService
 import com.tosak.authos.oidc.common.utils.demand
@@ -101,6 +102,19 @@ class OAuthEndpoints(
         )
 
 
+    }
+
+    /**
+     * Returns public, non-sensitive client metadata for the consent screen (name, logo,
+     * description). Deliberately unauthenticated: an end-user must be able to see who they're
+     * granting access to before they have any session with that client.
+     *
+     * @param clientId The client ID of the application requesting authorization.
+     */
+    @GetMapping("/client-info")
+    fun clientInfo(@RequestParam("client_id") clientId: String): ResponseEntity<ClientInfoDTO> {
+        val app = appService.getAppByClientId(clientId)
+        return ResponseEntity.ok(ClientInfoDTO(app.name, app.logoUri, app.shortDescription))
     }
 
 

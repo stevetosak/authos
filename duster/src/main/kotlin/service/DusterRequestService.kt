@@ -97,6 +97,7 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
         return "${getAuthosAuthorizeUrl()}?client_id=${client.dusterApp.clientId}" +
             "&redirect_uri=${Url(app.redirectUri)}" +
             "&state=$state" +
+                "&prompt=consent" +
             "&scope=${URLEncoder.encode(scope, "UTF-8")}" +
             "&response_type=code" +
             "&code_challenge=$codeChallenge" +
