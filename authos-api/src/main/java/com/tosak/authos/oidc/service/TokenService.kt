@@ -99,7 +99,8 @@ open class TokenService(
     open fun generateAccessToken(
         clientId: String,
         authorizationCode: AuthorizationCode? = null,
-        refreshToken: RefreshToken? = null
+        refreshToken: RefreshToken? = null,
+        clientCredentialsUser: User? = null,
     ): AccessTokenWrapper {
 
         val tokenBytes = getSecureRandomValue(32)
@@ -108,7 +109,7 @@ open class TokenService(
         val scope = if (authorizationCode == null && refreshToken == null) "duster" else {
             refreshToken?.scope ?: authorizationCode!!.scope
         }
-        val user: User? = if (authorizationCode == null && refreshToken == null) null else {
+        val user: User? = if (authorizationCode == null && refreshToken == null) clientCredentialsUser else {
             refreshToken?.key?.user ?: authorizationCode!!.user
         }
 
@@ -187,8 +188,8 @@ open class TokenService(
     @Transactional
     open fun handleClientCredentialsRequest(request: TokenRequestDto): TokenWrapper {
         demand(request.clientId != null && request.clientSecret != null) { MissingParametersException() }
-        dusterAppService.validateAppCredentials(request.clientId!!, request.clientSecret!!)
-        val accessTokenWrapper = generateAccessToken(clientId = request.clientId!!)
+        val dusterApp = dusterAppService.validateAppCredentials(request.clientId!!, request.clientSecret!!)
+        val accessTokenWrapper = generateAccessToken(clientId = request.clientId!!, clientCredentialsUser = dusterApp.user)
         return TokenWrapper(accessTokenWrapper = accessTokenWrapper)
     }
 

@@ -43,3 +43,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+# Release artifacts (build output, not source)
+*.zip

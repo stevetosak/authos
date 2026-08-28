@@ -1,8 +1,10 @@
 package com.authos.routes
 
-import com.authos.data.AuthTokenResponse
+import com.authos.data.CallbackResponse
+import com.authos.model.DusterSession
 import com.authos.model.UserInfo
 import com.authos.repository.DusterAppRepository
+import com.authos.repository.DusterSessionRepository
 import com.authos.repository.TokenRepository
 import com.authos.service.DusterOAuthClient
 import com.authos.service.DusterRequestService
@@ -11,109 +13,122 @@ import com.authos.service.verifyIdToken
 import io.ktor.client.call.body
 import io.ktor.http.Cookie
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
 import java.security.InvalidParameterException
-import kotlin.getValue
-import kotlin.text.isEmpty
+import java.util.UUID
 
-fun Route.oAuthRoutes(){
+fun Route.oAuthRoutes() {
     val stateStore by inject<StateStore>()
     val dusterAppRepository by inject<DusterAppRepository>()
     val tokenRepository by inject<TokenRepository>()
+    val sessionRepository by inject<DusterSessionRepository>()
 
     route("/duster/api/v1/oauth") {
+
         get("/start") {
-            val clientId =
-                call.queryParameters["client_id"] ?: throw InvalidParameterException("Client ID is required")
-            val mode = call.queryParameters["mode"] ?: "auto";
-            val sub = call.queryParameters["sub"] ?: call.request.cookies["sub"]
-            println("Starting Duster Flow..")
+            val clientId = call.queryParameters["client_id"]
+                ?: throw InvalidParameterException("client_id is required")
 
             val app = dusterAppRepository.getDusterAppByClientId(clientId)
-            val client = DusterOAuthClient(app)
-            val requestService = DusterRequestService(client, tokenRepository)
-            val state = stateStore.generateState(clientId)
 
-            if (sub != null && mode == "auto") {
-                println("Sub is present")
-                println("Mode is \"${mode}\"")
-                val result = requestService.tryAccessTokenExchange(sub)
-                when (result) {
-                    is DusterRequestService.ResponseResult.Failure -> {
-                        println("Got Failure. Generating authorize url...")
-                        val url = requestService.generateAuthorizeUrl(app, sub, state) + "&duster_uid=${sub}"
-                        call.respondRedirect { url }
-
-                    }
-
-                    is DusterRequestService.ResponseResult.Success -> {
-                        println("Got Success. Returning data...")
-                        val redirectUrl = client.sendToCallback(result.data).headers["Location"]
-                        val subCookie = Cookie("sub", result.data["sub"]!!, secure = true, path = "/", httpOnly = true, maxAge = 3600)
-                        call.response.cookies.append(subCookie)
-                        call.respondRedirect(redirectUrl!!)
-
-                    }
+            val existingSession = call.request.cookies["duster_session"]
+            if (existingSession != null) {
+                val session = sessionRepository.get(existingSession, clientId)
+                if (session != null) {
+                    call.respondRedirect(app.successUrl.ifBlank { "/" })
+                    return@get
                 }
-
-            } else {
-                println("Generating authorization url...")
-                println("Mode is \"${mode}\"")
-                val url = requestService.generateAuthorizeUrl(app = app, state = state)
-                call.respondRedirect(url)
             }
 
+            val client = DusterOAuthClient(app)
+            val requestService = DusterRequestService(client, tokenRepository)
+            val (state, codeChallenge) = stateStore.generateState(clientId)
+            val url = requestService.generateAuthorizeUrl(app, state, codeChallenge)
+            call.respondRedirect(url)
         }
 
         get("/callback") {
             val code = call.queryParameters["code"]
-            val state = call.parameters["state"]
+            val state = call.queryParameters["state"]
 
-            println("Received callback from authos.")
-            println("Validating request parameters...")
-
-            if (code == null || state == null || state.isEmpty()) {
+            if (code == null || state.isNullOrEmpty()) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing required parameters"))
                 return@get
             }
 
             try {
-                val clientId = stateStore.validateState(state)
-                val app = dusterAppRepository.getDusterAppByClientId(clientId)
+                val stateData = stateStore.validateState(state)
+                val app = dusterAppRepository.getDusterAppByClientId(stateData.clientId)
                 val client = DusterOAuthClient(app)
-                println("Initiating code exchange...")
-                val tokenResponse: AuthTokenResponse = client.codeExchange(code)
-                println("Code exchange complete. Verifying id token...")
-                val (idTokenObj, idTokenString) = verifyIdToken(tokenResponse.idToken)
-                println("Fetching user information...")
+
+                val tokenResponse = client.codeExchange(code, stateData.codeVerifier)
+                val (idTokenObj, idTokenString) = verifyIdToken(tokenResponse.idToken!!)
+                val sub = idTokenObj.jwtClaimsSet.subject
+
                 val userInfoResponse = client.fetchUserInfo(tokenResponse.accessToken)
-                println("Success! User info fetched.")
-                println("Updating data...")
+                val userInfo: UserInfo = userInfoResponse.body()
+                val prunedInfo = UserInfo.getPrunedObject(userInfo)
+
                 tokenRepository.saveAll(
-                    idTokenObj.jwtClaimsSet.subject,
+                    sub,
                     idTokenString,
                     tokenResponse.accessToken,
                     tokenResponse.refreshToken,
                     idTokenObj.jwtClaimsSet.expirationTime.toInstant().epochSecond,
                     tokenResponse.expiresIn.toLong()
                 )
-                println("Sending userinfo to specified callback url...")
-                val userInfo: UserInfo = userInfoResponse.body()
-                val resp = client.sendToCallback(UserInfo.getPrunedObject(userInfo))
-                val subCookie = Cookie("sub", userInfo.sub, secure = true, path = "/", httpOnly = true, maxAge = 3600)
-                call.response.cookies.append(subCookie)
-                val redirectUrl = resp.headers["Location"]
-                call.respondRedirect("$redirectUrl")
-            } catch (e: Exception) {
-                println("Error: ${e.localizedMessage}")
-                e.printStackTrace()
-            }
 
+                if (app.callbackUri.isNotBlank()) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val webhookResp = client.sendToCallback(prunedInfo)
+                            if (webhookResp.status.isSuccess()) {
+                                try {
+                                    webhookResp.body<CallbackResponse>()
+                                } catch (e: Exception) {
+                                    println("Callback webhook returned a malformed body (ignored): ${e.message}")
+                                }
+                            } else {
+                                println("Callback webhook returned non-success status: ${webhookResp.status}")
+                            }
+                        } catch (e: Exception) {
+                            println("Webhook failed (non-blocking): ${e.message}")
+                        }
+                    }
+                }
+
+                val sessionId = UUID.randomUUID().toString()
+                sessionRepository.save(
+                    DusterSession(sessionId, stateData.clientId, sub, prunedInfo),
+                    app.sessionTtl
+                )
+
+                val cookie = Cookie(
+                    name = "duster_session",
+                    value = sessionId,
+                    httpOnly = true,
+                    secure = true,
+                    path = "/",
+                    maxAge = app.sessionTtl.toInt(),
+                    extensions = mapOf("SameSite" to "Strict")
+                )
+                call.response.cookies.append(cookie)
+                call.respondRedirect(app.successUrl.ifBlank { "/" })
+
+            } catch (e: Exception) {
+                println("Callback error: ${e.localizedMessage}")
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Authentication failed"))
+            }
         }
     }
 }

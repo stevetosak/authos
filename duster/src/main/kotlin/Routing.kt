@@ -4,6 +4,7 @@ import com.authos.routes.appRoutes
 import com.authos.routes.credentialsRoutes
 import com.authos.routes.healthRoutes
 import com.authos.routes.oAuthRoutes
+import com.authos.routes.sessionRoutes
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
@@ -20,6 +21,7 @@ fun Application.configureRouting() {
     routing {
         healthRoutes()
         oAuthRoutes()
+        sessionRoutes()
         appRoutes()
         credentialsRoutes()
     }

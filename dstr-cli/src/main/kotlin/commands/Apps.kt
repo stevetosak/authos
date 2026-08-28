@@ -26,6 +26,7 @@ private fun maskSecret(secret: String): String {
 }
 
 class Apps : SuspendingCliktCommand(name = "apps") {
+    override val invokeWithoutSubcommand = true
     val clientId by option("-cid", "--clientid", help = "Client ID of the application.")
     val name by option("-n", "--name", help = "Name of the application")
     val showSecret by option("-s", "--show-secret", help = "Show client secret in full (default: masked)").flag()
@@ -37,6 +38,7 @@ class Apps : SuspendingCliktCommand(name = "apps") {
         val resp = client.get("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/apps") {
             parameter("client_id", clientId)
             parameter("client_name", name)
+            header(HttpHeaders.Authorization, "Bearer ${DusterConfig.adminToken}")
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
         val t = terminal
@@ -59,17 +61,22 @@ class Apps : SuspendingCliktCommand(name = "apps") {
         } else {
             val app = resp.body<DusterAppDto>()
             val secret = if (showSecret) app.clientSecret else maskSecret(app.clientSecret)
+            val webhookSecret = if (showSecret) app.webhookSecret else maskSecret(app.webhookSecret)
             t.println(
                 Panel(
                     content = definitionList {
                         inline = true
                         descriptionSpacing = 2
-                        entry("ID",       app.clientId)
-                        entry("Secret",   secret)
-                        entry("Scope",    app.scope)
-                        entry("Grant",    app.grantType)
-                        entry("Redirect", app.redirectUri)
-                        entry("Callback", app.callbackUri)
+                        entry("ID",         app.clientId)
+                        entry("Secret",     secret)
+                        entry("Scope",      app.scope)
+                        entry("Grant",      app.grantType)
+                        entry("Redirect",   app.redirectUri)
+                        entry("Callback",   app.callbackUri)
+                        entry("Success URL",app.successUrl)
+                        entry("Logout URL", app.logoutRedirectUrl)
+                        entry("Session TTL",app.sessionTtl.toString())
+                        entry("Webhook Secret", webhookSecret)
                     },
                     title = Text(TextStyles.bold(app.name)),
                     borderType = BorderType.ROUNDED

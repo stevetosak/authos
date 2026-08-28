@@ -87,32 +87,21 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
      * @param state A unique string to maintain state between the request and callback. It is also used for CSRF protection.
      * @return The complete authorization URL as a string.
      */
-    suspend fun generateAuthorizeUrl(app: DusterApp, sub: String? = null, state: String): String {
-
-        var sc = app.scope
+    suspend fun generateAuthorizeUrl(app: DusterApp, state: String, codeChallenge: String): String {
+        var scope = app.scope
         if (client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS) {
-            if (!app.scope.contains("offline_access")) {
-                sc = "${app.scope} offline_access"
-            }
+            if (!scope.contains("offline_access")) scope = "$scope offline_access"
+            client.nextRequestType = NextAuthorizeRequestType.AUTO
         }
 
-        val url = "${getAuthosAuthorizeUrl()}?client_id=${client.dusterApp.clientId}" +
-                "&redirect_uri=${Url(app.redirectUri)}&state=$state" +
-                "&scope=${URLEncoder.encode(sc, "UTF-8")}" +
-                "&response_type=code"
-
-
-
-        if (sub == null || client.nextRequestType == NextAuthorizeRequestType.OFFLINE_ACCESS) {
-            client.nextRequestType = NextAuthorizeRequestType.AUTO
-            return "$url&prompt=consent"
-        };
-        val idToken = tokenRepository.getToken(sub, TokenType.ID_TOKEN)
-
-        if (idToken == null) return "$url&prompt=consent"
-
-        return "$url&id_token_hint=$idToken&prompt=none"
-
+        return "${getAuthosAuthorizeUrl()}?client_id=${client.dusterApp.clientId}" +
+            "&redirect_uri=${Url(app.redirectUri)}" +
+            "&state=$state" +
+                "&prompt=consent" +
+            "&scope=${URLEncoder.encode(scope, "UTF-8")}" +
+            "&response_type=code" +
+            "&code_challenge=$codeChallenge" +
+            "&code_challenge_method=S256"
     }
 
 

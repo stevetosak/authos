@@ -26,7 +26,9 @@ class Sync : SuspendingCliktCommand(name = "sync") {
         }.buildString()
         println("Request URL: $requestUrl")
 
-        val token = client.get("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/credentials/token").body<String>()
+        val token = client.get("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/credentials/token") {
+            header(HttpHeaders.Authorization, "Bearer ${DusterConfig.adminToken}")
+        }.body<String>()
 
         val dusterAppDto: DusterAppDto = client.post(requestUrl) {
             header("Authorization", "Bearer $token")
@@ -34,6 +36,7 @@ class Sync : SuspendingCliktCommand(name = "sync") {
 
         val saveReq = client.post("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/apps/create") {
             setBody(dusterAppDto)
+            header(HttpHeaders.Authorization, "Bearer ${DusterConfig.adminToken}")
             header(HttpHeaders.ContentType, ContentType.Application.Json)
         }
         if (saveReq.status != HttpStatusCode.OK) {

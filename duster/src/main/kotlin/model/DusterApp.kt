@@ -19,8 +19,11 @@ data class DusterApp (
     val grantType: String = "authorization_code",
     val isActive: Boolean = true,
     @JsonProperty("callback_uri")
-    val callbackUri: String,
-    val lastSyncAt: Long,
-    val updatedAt: Long,
-){
-}
+    val callbackUri: String = "",
+    val lastSyncAt: Long = 0,
+    val updatedAt: Long = 0,
+    val successUrl: String = "/",
+    val logoutRedirectUrl: String = "/",
+    val webhookSecret: String = "",
+    val sessionTtl: Long = 86400,
+)
