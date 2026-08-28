@@ -25,6 +25,10 @@ tasks.register<Exec>("buildAuthosApiJar") {
     description = "Packages authos-api (skip tests) into target/Authos-1.0.0-alpha.jar"
     workingDir = rootDir.resolve("authos-api")
     commandLine("./mvnw", "-q", "-DskipTests", "package")
+    // Without these the task is "up-to-date" whenever the jar merely exists, so a local
+    // e2e run silently tests a stale authos-api binary after any source change.
+    inputs.dir(rootDir.resolve("authos-api/src"))
+    inputs.file(rootDir.resolve("authos-api/pom.xml"))
     outputs.file(authosApiJar)
 }
 
