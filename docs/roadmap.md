@@ -17,12 +17,12 @@ Authos side:
 
 | Duster tier | Authos capability it needs | Authos status today |
 |---|---|---|
-| **0** — zero-code frontend | auth code + refresh + `prompt=none`; **real** `expires_in`; PKCE | auth code ✅ · refresh ✅ (30-day, no rotation) · `prompt=none` ✅ · `expires_in` ❌ hardcoded `3600` · **PKCE ✅ (S256, verify-if-present)** |
+| **0** — zero-code frontend | auth code + refresh + `prompt=none`; **real** `expires_in`; PKCE | auth code ✅ · refresh ✅ (30-day, no rotation) · `prompt=none` ✅ · `expires_in` ✅ (derived from the persisted token; `authos.oidc.access-token-ttl-seconds`, default 3600) · **PKCE ✅ (S256, verify-if-present)** |
 | **1** — cross-origin frontend | same as tier 0 | same |
 | **2** — backend BFF *(current model)* | + token revocation (RFC 7009); `end_session_endpoint` | revocation ❌ · end-session ❌ |
 | **3** — token-forwarding BFF | + token introspection (RFC 7662); resource-server `aud`; generic `client_credentials` | introspection ❌ (bespoke `/duster/validate-token` stub) · `client_credentials` is Duster-only |
 | **4** — native / device | + Device Authorization Flow (RFC 8628); public clients (PKCE, no secret) | `GrantType.DEVICE_CODE -> TODO()` · no public-client support |
-| *all tiers* | discovery doc; custom/authz claims; JWKS rotation; audit + rate limiting | discovery ❌ · claims = standard OIDC only · single JWKS key · `println` logging |
+| *all tiers* | discovery doc; custom/authz claims; JWKS rotation; audit + rate limiting | discovery ✅ (`/.well-known/openid-configuration`) · claims = standard OIDC only · single JWKS key · `println` logging |
 
 This refines the "Duster production-readiness first, then Authos" ordering in `duster-v1-tasks.md`:
 Duster-first still holds **within** a phase, but the Authos gaps that *block* a tier (PKCE,
@@ -35,13 +35,17 @@ revocation, introspection, device flow) now lead their phase.
 *Blocks every tier. Nothing else should land on top of the current core.*
 
 **Authos**
-- **PKCE, end to end.** ✅ **Done** (branch `feature/authos-pkce-impl`). `code_challenge` +
+- **PKCE, end to end.** ✅ **Done** (merged to master, PR #24). `code_challenge` +
   `code_challenge_method` stored in the Redis `ShortSession` at `/oauth/authorize` (S256 only);
   `code_verifier` verified at `/oauth/token` in `handleAuthorizationCodeRequest` (a modifier on
   `authorization_code`, not the stubbed `GrantType.PKCE`). "Verify if present" + RFC 7636 §4.6
   downgrade protection. `matchesS256Challenge` unit-tested against the RFC Appendix B vector.
-- **`GET /.well-known/openid-configuration`** — issuer, endpoint URLs, supported
-  grants/scopes/claims, `jwks_uri`. Stops Duster and every SDK from hardcoding paths.
+- **`GET /.well-known/openid-configuration`** ✅ **Done.** Issuer, endpoint URLs, `jwks_uri`, and
+  the supported response/grant/scope/claim/PKCE lists — all reflecting what the code actually does
+  (e.g. `grant_types_supported` omits the Duster-only `client_credentials`; `claims_supported` lists
+  only claims `ClaimService` can resolve). `issuer` byte-matches the ID token `iss`. Served from
+  `PublicEndpointsController`; `OpenIdProviderMetadata` DTO. `e2e-tests/DiscoveryTest`. Stops Duster
+  and every SDK from hardcoding paths.
 - **Real `expires_in`.** `/oauth/token` returns a hardcoded `3600`. Duster stores the token in Redis
   with exactly this value (`TokenRepository.saveAll`), so a wrong number means premature or stale
   silent refresh.
@@ -164,8 +168,9 @@ with no browser cookie.
   so real apps at any tier get authz data, not just profile.
 - **Test coverage** — bootstrapped: the `e2e-tests/` module (`./gradlew :e2e-tests:e2eTest`,
   `.github/workflows/e2e.yaml`) stands up a real Postgres+Redis+authos-api+duster stack and
-  covers the PKCE flow (through Duster + negatives + regression), Duster session lifecycle, the
-  internal-API auth gate, `/duster/pull` tenant isolation, and re-sync upsert-safety. Each phase
+  covers the PKCE flow (through Duster + negatives + regression), the `/oauth/token` response
+  shape (`expires_in`), Duster session lifecycle, the internal-API auth gate, `/duster/pull`
+  tenant isolation, and re-sync upsert-safety. Each phase
   extends it before it closes; browser specs + `dstr-cli`-binary coverage are Phase 2
   (`automation-tests-plan.md`).
 

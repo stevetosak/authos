@@ -216,7 +216,7 @@ class OAuthEndpoints(
                     refreshToken = tokenWrapper.refreshTokenWrapper?.refreshTokenValue,
                     tokenType = TokenType.Bearer.name,
                     idToken = tokenWrapper.idToken?.serialize(),
-                    expiresIn = 3600
+                    expiresIn = tokenWrapper.accessTokenWrapper.expiresInSeconds.toInt()
                 )
             )
 
