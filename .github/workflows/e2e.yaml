@@ -1,19 +1,22 @@
 name: e2e
 
+# Runs on PRs that touch the stack, and as a reusable gate (workflow_call) that
+# backend.yaml / frontend.yaml invoke before deploying from master. No bare `push`
+# trigger: a same-repo PR would otherwise fire push + pull_request = two runs, and
+# the master deploy already re-runs this via workflow_call.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "authos-api/**"
-      - "duster/**"
-      - "e2e-tests/**"
-      - ".github/workflows/e2e.yaml"
+  workflow_call:
   pull_request:
     paths:
       - "authos-api/**"
       - "duster/**"
       - "e2e-tests/**"
       - ".github/workflows/e2e.yaml"
+
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   e2e:

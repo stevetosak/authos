@@ -13,7 +13,12 @@ env:
   DOCKERHUB_NAMESPACE: "stevetosak"
 
 jobs:
+  # Gate: the deploy only proceeds if the full e2e stack suite is green.
+  e2e:
+    uses: ./.github/workflows/e2e.yaml
+
   frontend-build-push:
+    needs: e2e
     runs-on: ubuntu-22.04
     outputs:
       IMAGE_LATEST: ${{ steps.frontend_image_tags.outputs.IMAGE_LATEST }}
