@@ -203,6 +203,15 @@ Waiting... ✓ Authenticated
 - Validate `code_challenge` on `/oauth/authorize`
 - Validate `code_verifier` on `/oauth/token`
 
+**Status correction (2026-08-28):** only the Duster side was actually built in v1. Authos accepted
+`code_challenge` / `code_verifier` as query params and silently ignored them until the PKCE
+implementation landed (see `roadmap.md` Phase 0). The Authos side now: stores `code_challenge` +
+`code_challenge_method` in the `ShortSession` at `/oauth/authorize` (S256 only — `plain` and a
+missing method are rejected), and verifies `code_verifier` at `/oauth/token` inside
+`handleAuthorizationCodeRequest` with "verify if present" enforcement plus RFC 7636 §4.6 downgrade
+protection (verifier-without-challenge and challenge-without-verifier both rejected). No DB
+migration — the challenge lives in Redis with the rest of the `ShortSession`.
+
 ---
 
 ### 16. Session TTL

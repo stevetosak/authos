@@ -18,12 +18,14 @@ open class ShortSessionService(
     open fun generateTempSession(params: AuthorizeRequestParams) : String {
         val authzId = UUID.randomUUID().toString()
         val authSessionParams = ShortSession(
-            params.clientId,
-            params.redirectUri,
-            params.scope,
-            params.state,
-            params.responseType,
-            params.nonce
+            clientId = params.clientId,
+            redirectUri = params.redirectUri,
+            scope = params.scope,
+            state = params.state,
+            responseType = params.responseType,
+            nonce = params.nonce,
+            codeChallenge = params.codeChallenge,
+            codeChallengeMethod = params.codeChallengeMethod
         )
         redisTemplate.opsForValue().set("shortsession:authz:$authzId",authSessionParams,Duration.ofMinutes(5))
         return authzId

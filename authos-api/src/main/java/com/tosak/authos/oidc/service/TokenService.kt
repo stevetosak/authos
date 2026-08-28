@@ -7,6 +7,8 @@ import com.tosak.authos.oidc.common.utils.b64UrlSafeEncoder
 import com.tosak.authos.oidc.common.utils.getHash
 import com.tosak.authos.oidc.common.utils.getSecureRandomValue
 import com.tosak.authos.oidc.common.utils.hex
+import com.tosak.authos.oidc.common.utils.matchesS256Challenge
+import com.tosak.authos.oidc.common.pojo.ShortSession
 import com.tosak.authos.oidc.common.dto.TokenRequestDto
 import com.tosak.authos.oidc.entity.AccessToken
 import com.tosak.authos.oidc.entity.App
@@ -179,6 +181,8 @@ open class TokenService(
             GrantType.AUTHORIZATION_CODE -> handleAuthorizationCodeRequest(tokenRequestDto, request = request)
             GrantType.REFRESH_TOKEN -> handleRefreshTokenRequest(tokenRequestDto,request)
             GrantType.CLIENT_CREDENTIALS -> handleClientCredentialsRequest(tokenRequestDto)
+            // PKCE is a modifier on the authorization_code grant (verified in handleAuthorizationCodeRequest),
+            // not a grant type of its own. This branch is unreachable for real requests.
             GrantType.PKCE -> TODO()
             GrantType.DEVICE_CODE -> TODO()
         }
@@ -213,6 +217,7 @@ open class TokenService(
         code.used = true;
         authorizationCodeRepository.save(code)
         val authorizationSession = shortSessionService.getSessionByCode(code.codeVal)
+        verifyPkce(authorizationSession, dto.codeVerifier)
         val ssoSession = requireNotNull(sSOSessionService.getSessionByCode(code.codeVal))
 
 
@@ -242,6 +247,35 @@ open class TokenService(
             refreshTokenWrapper = refreshTokenWrapper,
             idToken = idToken
         )
+    }
+
+    /**
+     * PKCE (RFC 7636) verification, "verify if present" policy:
+     *  - challenge stored, verifier missing/mismatched -> reject
+     *  - verifier supplied but no challenge was in the authorization request -> reject (downgrade protection, §4.6)
+     *  - neither present -> pass (non-PKCE clients are unaffected)
+     * Only S256 is accepted; that is already enforced at /oauth/authorize.
+     */
+    private fun verifyPkce(authorizationSession: ShortSession?, codeVerifier: String?) {
+        val challenge = authorizationSession?.codeChallenge
+        if (challenge == null) {
+            demand(codeVerifier == null) {
+                TokenEndpointException(
+                    TokenErrorCode.INVALID_GRANT,
+                    "code_verifier supplied but no code_challenge was in the authorization request"
+                )
+            }
+            return
+        }
+        demand(!codeVerifier.isNullOrEmpty()) {
+            TokenEndpointException(TokenErrorCode.INVALID_GRANT, "code_verifier required")
+        }
+        demand(codeVerifier!!.matches(Regex("^[A-Za-z0-9\\-._~]{43,128}$"))) {
+            TokenEndpointException(TokenErrorCode.INVALID_GRANT, "malformed code_verifier")
+        }
+        demand(matchesS256Challenge(codeVerifier, challenge)) {
+            TokenEndpointException(TokenErrorCode.INVALID_GRANT, "code_verifier does not match code_challenge")
+        }
     }
 
     @Transactional
