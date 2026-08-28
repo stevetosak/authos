@@ -22,6 +22,7 @@ class OAuthFlow(private val fx: E2eFixture) {
         state: String = "st-${System.nanoTime()}",
         codeChallenge: String? = null,
         codeChallengeMethod: String? = null,
+        prompt: String? = null,
     ): String {
         val sb = StringBuilder("$authos/oauth/authorize?client_id=$clientId")
         sb.append("&redirect_uri=").append(urlEncode(redirectUri))
@@ -30,7 +31,24 @@ class OAuthFlow(private val fx: E2eFixture) {
         sb.append("&state=").append(state)
         codeChallenge?.let { sb.append("&code_challenge=").append(urlEncode(it)) }
         codeChallengeMethod?.let { sb.append("&code_challenge_method=").append(it) }
+        prompt?.let { sb.append("&prompt=").append(it) }
         return sb.toString()
+    }
+
+    /**
+     * A `prompt=none` authorize attempt — no login/consent page walk. Returns the terminal 302,
+     * whose Location is either `<redirect_uri>?code=..` (an SSO session was live and usable) or
+     * `<redirect_uri>?error=login_required` (no usable session). Authos bounces a successful
+     * `prompt=none` through `/oauth/approve`; this follows that hop.
+     */
+    fun silentAuthorize(http: Http, authorizeUrl: String): Resp {
+        val r = http.get(authorizeUrl)
+        check(r.status == 302) { "authorize(prompt=none) -> ${r.status} ${r.body}" }
+        val loc = r.location ?: error("authorize(prompt=none): no Location")
+        if (!loc.contains("/oauth/approve")) return r
+        val approve = http.get(fx.endpoints.rebase(loc))
+        check(approve.status == 302) { "approve (via prompt=none) -> ${approve.status} ${approve.body}" }
+        return approve
     }
 
     /** The 302 that /oauth/authorize returns. */
