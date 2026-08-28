@@ -1,9 +1,12 @@
 # Duster v1 — Task Tracker
 
-Rationale and architecture lives in `duster-v1-design.md`. This file tracks status: what's
+Rationale and architecture lives in `duster-v1-design.md`. The multi-phase arc (which Authos
+capability gates which Duster tier) lives in `roadmap.md`. This file tracks status: what's
 done, what's next. Update it whenever that changes — don't let it drift.
 
-**Priority order:** Duster production-readiness first, then Authos improvements.
+**Priority order:** Duster production-readiness first, then Authos improvements — but per
+`roadmap.md`, Authos gaps that *block* a tier (PKCE, `/oauth/revoke`, introspection, device flow)
+lead their phase.
 
 ---
 
