@@ -18,6 +18,7 @@ import com.tosak.authos.oidc.common.utils.getSecureRandomValue
 import com.tosak.authos.oidc.common.utils.hex
 import com.tosak.authos.oidc.exceptions.badreq.MissingParametersException
 import com.tosak.authos.oidc.exceptions.base.AuthosException
+import com.tosak.authos.oidc.exceptions.base.HttpBadRequestException
 import com.tosak.authos.oidc.common.utils.demand
 import com.tosak.authos.oidc.exceptions.TokenEndpointException
 import com.tosak.authos.oidc.exceptions.TokenErrorCode
@@ -61,24 +62,31 @@ open class AppService(
     }
 
     open fun getAppByClientId(clientId: String): App {
-        return appRepository.findByClientId(clientId) ?: throw Exception("bad client id")
+        return appRepository.findByClientId(clientId)
+            ?: throw AuthosException("invalid_client", "unknown or unregistered client_id", HttpBadRequestException())
     }
 
     open fun validateAppCredentials(tokenRequestDto: TokenRequestDto, request: HttpServletRequest): App {
         val authHeader = request.getHeader("Authorization")
         if (authHeader != null) {
-            val (clientId,clientSecret) = decodeBasicAuth(authHeader)
+            val (clientId, clientSecret) = try {
+                decodeBasicAuth(authHeader)
+            } catch (e: IllegalArgumentException) {
+                throw TokenEndpointException(TokenErrorCode.INVALID_CLIENT, "malformed Authorization header")
+            }
             tokenRequestDto.clientId = clientId
             tokenRequestDto.clientSecret = clientSecret
         } else {
             demand(tokenRequestDto.clientId != null && tokenRequestDto.clientSecret != null)
-            { TokenEndpointException(TokenErrorCode.UNAUTHORIZED_CLIENT) }
+            { TokenEndpointException(TokenErrorCode.INVALID_CLIENT, "client authentication required") }
         }
 
-
-        val app = getAppByClientId(tokenRequestDto.clientId!!)
+        val app = appRepository.findByClientId(tokenRequestDto.clientId!!)
+            ?: throw TokenEndpointException(TokenErrorCode.INVALID_CLIENT, "unknown client_id")
         val secretDecrypted = aesUtil.decryptBytes(b64UrlSafeDecoder(app.clientSecret))
-        demand(secretDecrypted == tokenRequestDto.clientSecret){ TokenEndpointException(TokenErrorCode.UNAUTHORIZED_CLIENT) }
+        demand(secretDecrypted == tokenRequestDto.clientSecret) {
+            TokenEndpointException(TokenErrorCode.INVALID_CLIENT, "invalid client credentials")
+        }
         return app;
     }
 

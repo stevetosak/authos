@@ -50,6 +50,12 @@ lead their phase.
       `duster_session` cookie via Duster's `GET /session`, mints Authos's own login cookie
 - [x] `POST /test/callback` webhook now actually returns decision #3's `200 {}` contract (was
       still returning a stale `302`, so Duster's `isSuccess()` check silently failed every time)
+- [x] Consistent OAuth errors — `ErrorResponse` is RFC 6749 §5.2 snake_case, `invalid_client` → 401,
+      and a path-aware catch-all in `ExceptionHandler` stops any `/oauth/*` route returning a raw
+      500. Expected conditions now carry the right code. `e2e-tests/OAuthErrorTest`. (roadmap Phase 0)
+- [x] `/oauth/approve` integrity check — the code is minted only from the server-side `ShortSession`,
+      supplied `client_id`/`redirect_uri` are cross-checked, expired `authz_id` is rejected. Closes
+      the redirect-swap / scope-escalation gap between `/authorize` and `/approve`. (roadmap Phase 0)
 - [x] `/oauth/token` returns a real `expires_in` — derived from the access token's persisted
       `expires_at`, single config value `authos.oidc.access-token-ttl-seconds` (default 3600).
       Actual access-token lifetime 24h → 1h (matches the ID token + the value already advertised).
