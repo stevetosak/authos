@@ -38,7 +38,11 @@ import java.time.LocalDateTime
 
 // val atHash = b64UrlSafe(tokenHash.take(tokenHash.size / 2).toByteArray())
 
-class AccessTokenWrapper(val accessTokenValue: String, val accessToken: AccessToken)
+class AccessTokenWrapper(
+    val accessTokenValue: String,
+    val accessToken: AccessToken,
+    val expiresInSeconds: Long,
+)
 class RefreshTokenWrapper(val refreshTokenValue: String, val refreshToken: RefreshToken)
 class TokenWrapper(
     val accessTokenWrapper: AccessTokenWrapper,
@@ -63,6 +67,9 @@ open class TokenService(
 ) {
     @Value("\${authos.api.host}")
     private lateinit var apiHost: String;
+
+    @Value("\${authos.oidc.access-token-ttl-seconds:3600}")
+    private var accessTokenTtlSeconds: Long = 3600
 
 
     private fun generateRefreshToken(user: User, clientId: String, scope: String, idToken: String): RefreshToken {
@@ -115,17 +122,20 @@ open class TokenService(
             refreshToken?.key?.user ?: authorizationCode!!.user
         }
 
+        val issuedAt = LocalDateTime.now()
         val accessToken = accessTokenRepository.save(
             AccessToken(
                 tokenHash = b64UrlSafeEncoder(tokenHash),
                 clientId = clientId,
                 user = user,
                 scope = scope,
-                authorizationCode = authorizationCode
+                authorizationCode = authorizationCode,
+                createdAt = issuedAt,
+                expiresAt = issuedAt.plusSeconds(accessTokenTtlSeconds),
             )
         )
 
-        return AccessTokenWrapper(b64UrlSafeEncoder(tokenBytes), accessToken)
+        return AccessTokenWrapper(b64UrlSafeEncoder(tokenBytes), accessToken, accessTokenTtlSeconds)
 
     }
 
