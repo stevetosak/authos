@@ -26,6 +26,7 @@ class DiscoveryTest : E2eBase() {
         assertEquals("$issuer/oauth/token", doc["token_endpoint"])
         assertEquals("$issuer/oauth/userinfo", doc["userinfo_endpoint"])
         assertEquals("$issuer/.well-known/jwks.json", doc["jwks_uri"])
+        assertEquals("$issuer/oauth/revoke", doc["revocation_endpoint"])
         assertEquals(listOf("code"), doc["response_types_supported"])
         assertEquals(listOf("pairwise"), doc["subject_types_supported"])
         assertEquals(listOf("RS256"), doc["id_token_signing_alg_values_supported"])

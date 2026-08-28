@@ -16,8 +16,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
  *  - `grant_types_supported` lists only `authorization_code` + `refresh_token`.
  *    `client_credentials` works but is Duster-only (validates against `duster_app`),
  *    so it is not advertised to generic RPs.
- *  - no `revocation_endpoint` (Phase 1), `end_session_endpoint` (Phase 2),
- *    `introspection_endpoint` (Phase 3), or `registration_endpoint`.
+ *  - no `end_session_endpoint` (Phase 2), `introspection_endpoint` (Phase 3),
+ *    or `registration_endpoint`.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,6 +27,7 @@ data class OpenIdProviderMetadata(
     val tokenEndpoint: String,
     val userinfoEndpoint: String,
     val jwksUri: String,
+    val revocationEndpoint: String,
     val scopesSupported: List<String> = listOf("openid", "profile", "email", "offline_access"),
     val responseTypesSupported: List<String> = listOf("code"),
     val responseModesSupported: List<String> = listOf("query"),
@@ -34,6 +35,7 @@ data class OpenIdProviderMetadata(
     val subjectTypesSupported: List<String> = listOf("pairwise"),
     val idTokenSigningAlgValuesSupported: List<String> = listOf("RS256"),
     val tokenEndpointAuthMethodsSupported: List<String> = listOf("client_secret_basic", "client_secret_post"),
+    val revocationEndpointAuthMethodsSupported: List<String> = listOf("client_secret_basic", "client_secret_post"),
     val codeChallengeMethodsSupported: List<String> = listOf("S256"),
     // Only claims ClaimService can actually resolve from the User entity.
     val claimsSupported: List<String> = listOf(

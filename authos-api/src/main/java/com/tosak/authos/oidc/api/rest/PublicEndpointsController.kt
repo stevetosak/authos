@@ -33,6 +33,7 @@ class PublicEndpointsController(private val rsaKeyDEV: RSAKey) {
             tokenEndpoint = "$base/oauth/token",
             userinfoEndpoint = "$base/oauth/userinfo",
             jwksUri = "$base/.well-known/jwks.json",
+            revocationEndpoint = "$base/oauth/revoke",
         )
         return ResponseEntity.ok()
             .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic())
