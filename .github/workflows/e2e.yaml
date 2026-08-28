@@ -1,0 +1,61 @@
+name: e2e
+
+on:
+  push:
+    paths:
+      - "authos-api/**"
+      - "duster/**"
+      - "e2e-tests/**"
+      - ".github/workflows/e2e.yaml"
+  pull_request:
+    paths:
+      - "authos-api/**"
+      - "duster/**"
+      - "e2e-tests/**"
+      - ".github/workflows/e2e.yaml"
+
+jobs:
+  e2e:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Verifies the committed gradle/wrapper/gradle-wrapper.jar against Gradle's
+      # published checksums (we ship the jar so CI can bootstrap ./gradlew).
+      - uses: gradle/actions/wrapper-validation@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: e2e-${{ runner.os }}-${{ hashFiles('**/pom.xml', '**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: e2e-${{ runner.os }}-
+
+      # Task deps build the authos-api jar (mvnw package) + duster fat jar + the test keystore,
+      # then support/Stack.kt brings the docker-compose stack up (docker + compose v2 are
+      # preinstalled on GitHub runners) and tears it down after the suite.
+      - name: Run e2e suite
+        run: ./gradlew --no-daemon :e2e-tests:e2eTest -De2e.skipTeardown=true
+
+      - name: Stack logs
+        if: always()
+        run: docker compose -p authos-e2e -f e2e-tests/docker-compose.e2e.yml logs --no-color --timestamps || true
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose -p authos-e2e -f e2e-tests/docker-compose.e2e.yml down -v --remove-orphans || true
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-report
+          path: e2e-tests/build/reports/tests/e2eTest/**
+          if-no-files-found: ignore

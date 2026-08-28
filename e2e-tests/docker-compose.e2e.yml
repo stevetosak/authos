@@ -1,0 +1,73 @@
+# Stack for the e2e-tests module. Brought up / torn down by support/Stack.kt.
+# Fixed host ports (18080/18785/15432/16379) chosen to not collide with the IntelliJ
+# run configs (8080/8785) or a typical local Postgres/Redis (5432/6379).
+# App images are a plain JRE with the locally-built jar bind-mounted - no image build.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: authos
+      POSTGRES_PASSWORD: authos
+      POSTGRES_DB: authos
+    ports:
+      - "15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authos -d authos"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  authos-api:
+    image: eclipse-temurin:21-jre
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    volumes:
+      - ../authos-api/target/Authos-1.0.0-alpha.jar:/app/app.jar:ro
+      - ./build/keystore/keystore.p12:/app/keystore.p12:ro
+    environment:
+      DB_USER: authos
+      DB_PASS: authos
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: authos
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASS: ""
+      KEYSTORE_PATH: /app/keystore.p12
+      KEYSTORE_PASS: changeit
+      FRONTEND_COOKIE_DOMAIN: localhost
+      API_COOKIE_DOMAIN: localhost
+      FRONTEND_HOST: http://localhost:5173
+      API_HOST: http://authos-api:8080
+      DUSTER_BASE_URL: http://duster:8785
+    command: ["java", "-Xmx512m", "-XX:+UseSerialGC", "-jar", "/app/app.jar"]
+    ports:
+      - "18080:8080"
+
+  duster:
+    image: eclipse-temurin:21-jre
+    depends_on:
+      authos-api: { condition: service_started }
+      redis: { condition: service_healthy }
+    volumes:
+      - ../duster/build/libs/fat.jar:/app/app.jar:ro
+    environment:
+      AUTHOS_BASE_URL: http://authos-api:8080
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      DUSTER_ADMIN_TOKEN: test-admin-token
+    command: ["java", "-Xmx384m", "-jar", "/app/app.jar"]
+    ports:
+      - "18785:8785"

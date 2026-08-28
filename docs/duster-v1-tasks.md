@@ -57,17 +57,26 @@ lead their phase.
 
 ### Duster (current priority)
 - [ ] Logout doesn't revoke the upstream refresh token — blocked on Authos `/oauth/revoke`
-- [ ] `ApplicationTest.kt` needs a real `testApplication` harness (pre-existing, broken before
-      this round of work — hits an unstarted external port, no `client_id`)
+- [x] Test harness — done as the stack-level `e2e-tests/` module (see Testing below); the dead
+      `duster/src/test/kotlin/ApplicationTest.kt` can be deleted
 
 ### Authos (next phase)
 - [x] PKCE validation: `code_challenge` stored in the `ShortSession` at `/oauth/authorize` (S256
       only), `code_verifier` verified at `/oauth/token` in `handleAuthorizationCodeRequest`.
       "Verify if present" + RFC 7636 §4.6 downgrade protection. Pure-function `matchesS256Challenge`
-      unit-tested against the RFC 7636 Appendix B vector (`PkceVerifierTest.kt` — repo's first real
-      test). No DB migration. Branch `feature/authos-pkce-impl`.
+      unit-tested against the RFC 7636 Appendix B vector (`PkceVerifierTest.kt`). **Verified
+      end-to-end** through Duster + all negative paths by the `e2e-tests/` module (see below).
+      No DB migration. Branch `feature/authos-pkce-impl`.
 - [ ] Token revocation endpoint (`/oauth/revoke`)
 - [ ] Device Authorization Flow (RFC 8628)
+
+### Testing
+- [x] `e2e-tests/` Gradle module (`./gradlew :e2e-tests:e2eTest`, `.github/workflows/e2e.yaml`) —
+      docker-compose stack (Postgres + Redis + authos-api + duster), HTTP-level suite: PKCE through
+      Duster + negatives + regression, Duster session lifecycle, internal-API auth gate,
+      `/duster/pull` tenant isolation, re-sync upsert-safety. Supersedes the broken
+      `duster/src/test/kotlin/ApplicationTest.kt`. Details + Phase 2 list in `automation-tests-plan.md`.
+- [ ] Phase 2: Playwright browser specs, `dstr-cli` binary coverage, `authos-frontend` component tests
 
 ### dstr-cli (later)
 - [ ] `dstr init` interactive wizard

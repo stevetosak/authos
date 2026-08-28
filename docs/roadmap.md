@@ -151,8 +151,12 @@ with no browser cookie.
   and every SDK cache JWKS and break on a hard swap.
 - **Custom / authorization claims** — map roles / groups / entitlements into the ID token + userinfo
   so real apps at any tier get authz data, not just profile.
-- **Test coverage** — the OAuth flows have no working harness (`ApplicationTest.kt` is broken; see
-  `automation-tests-plan.md`). Each phase adds flow tests before it closes.
+- **Test coverage** — bootstrapped: the `e2e-tests/` module (`./gradlew :e2e-tests:e2eTest`,
+  `.github/workflows/e2e.yaml`) stands up a real Postgres+Redis+authos-api+duster stack and
+  covers the PKCE flow (through Duster + negatives + regression), Duster session lifecycle, the
+  internal-API auth gate, `/duster/pull` tenant isolation, and re-sync upsert-safety. Each phase
+  extends it before it closes; browser specs + `dstr-cli`-binary coverage are Phase 2
+  (`automation-tests-plan.md`).
 
 ---
 
