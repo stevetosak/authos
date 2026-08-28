@@ -168,6 +168,51 @@ open class TokenService(
         return accessToken;
     }
 
+    /**
+     * RFC 7009 token revocation. An unknown / malformed / already-invalid token is a silent
+     * no-op (the endpoint still answers 200), and a token belonging to another client is left
+     * untouched. Revoking a refresh token also revokes the access tokens issued under the same
+     * grant (same user + client); revoking an access token does not touch the refresh token.
+     */
+    @Transactional
+    open fun revokeToken(app: App, token: String, tokenTypeHint: String?) {
+        if (tokenTypeHint == "access_token") {
+            if (revokeAsAccessToken(app, token)) return
+            revokeAsRefreshToken(app, token)
+        } else {
+            if (revokeAsRefreshToken(app, token)) return
+            revokeAsAccessToken(app, token)
+        }
+    }
+
+    /** @return true if a refresh token with this value exists (whoever owns it), so the caller stops looking. */
+    private fun revokeAsRefreshToken(app: App, token: String): Boolean {
+        val refreshToken = refreshTokenRepository
+            .findRefreshTokenByTokenHash(b64UrlSafeEncoder(getHash(token))) ?: return false
+        if (refreshToken.key?.clientId == app.clientId) {
+            if (!refreshToken.revoked) {
+                refreshToken.revoked = true
+                refreshTokenRepository.save(refreshToken)
+            }
+            refreshToken.key?.user?.id?.let { accessTokenRepository.revokeAllByUserIdAndClientId(it, app.clientId) }
+        }
+        return true
+    }
+
+    private fun revokeAsAccessToken(app: App, token: String): Boolean {
+        val decoded = try {
+            String(b64UrlSafeDecoder(token), StandardCharsets.US_ASCII)
+        } catch (e: IllegalArgumentException) {
+            return false
+        }
+        val accessToken = accessTokenRepository.findByTokenHash(b64UrlSafeEncoder(getHash(decoded))) ?: return false
+        if (accessToken.clientId == app.clientId && !accessToken.revoked) {
+            accessToken.revoked = true
+            accessTokenRepository.save(accessToken)
+        }
+        return true
+    }
+
     private fun parseGrantType(grant: String): GrantType {
         val grantType = try {
             GrantType.valueOf(grant.uppercase())

@@ -22,7 +22,7 @@ is what keeps the file merge-conflict-free across parallel branches.
 ## Phase 1 — Duster tiers 0 & 1 (zero-code) + revocation
 
 Authos:
-- [ ] `POST /oauth/revoke` (RFC 7009) — refresh-token revoke cascades to that grant's access tokens
+- [x] `POST /oauth/revoke` (RFC 7009) — refresh-token revoke cascades to that grant's access tokens
 - [ ] Verify `prompt=none` silent re-auth when the Authos SSO session outlives the Duster session (#16)
 
 Duster:

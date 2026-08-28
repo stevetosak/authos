@@ -25,6 +25,7 @@ open class JwtFilter(private val jwtService: JwtService, private val userDetails
         "/register",
         "/oauth/authorize",
         "/oauth/token",
+        "/oauth/revoke",
         "/oauth/userinfo",
         "/.well-known/*",
         "/test/*",
