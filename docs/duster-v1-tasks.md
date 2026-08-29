@@ -39,7 +39,7 @@ SDKs (#11, #31 — framework-agnostic `@authoss/duster-core` + thin adapters, po
 - [x] `@authoss/duster-core` — store/seam, `/me` normalization, CSRF, logout, `onUnauthenticated`; also the vanilla-JS build — PR #44
 - [x] `@authoss/duster-react` — `<DusterProvider>` + `useDuster()` + `<ProtectedRoute>`; browser-e2e vs the compose stack (closes the Phase 1 exit criterion) — PR #45, #46
 - [x] `@authoss/duster-vue` — `createDuster()` plugin + `useDuster()` + `<ProtectedRoute>` — PR #47
-- [ ] `@authoss/duster-angular` — `provideDuster()` + `DusterService` + `dusterAuthGuard`
+- [x] `@authoss/duster-angular` — `provideDuster()` + `DusterService` + `dusterAuthGuard` — PR #48
 
 ## Phase 2 — Duster tier 2 hardening + headless onboarding
 

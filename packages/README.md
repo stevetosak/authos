@@ -8,7 +8,7 @@ adapters. Design: `docs/duster-v1-design.md` #11, #12, #31.
 | [`@authoss/duster-core`](./core) | **shipped** | zero-dep client + observable store; also the `<script>` global (vanilla-JS SDK) |
 | [`@authoss/duster-react`](./react) | **shipped** | `<DusterProvider>` + `useDuster()` + `<ProtectedRoute>` |
 | [`@authoss/duster-vue`](./vue) | **shipped** | `createDuster()` plugin + `useDuster()` + `<ProtectedRoute>` |
-| `@authoss/duster-angular` | later | `provideDuster()` + `DusterService` + `dusterAuthGuard` |
+| [`@authoss/duster-angular`](./angular) | **shipped** | `provideDuster()` + `DusterService` (signals) + `dusterAuthGuard` |
 
 Not published: [`examples/react-vite`](./examples/react-vite) (a tier-0 SPA that consumes
 `@authoss/duster-react`) and [`e2e`](./e2e) (a Playwright suite that drives that SPA through
@@ -23,11 +23,17 @@ workspace. Run everything from `packages/`:
 cd packages
 npm install
 npm run build       # sequences core → adapters (npm --workspaces run is not topological)
-npm test            # vitest
+npm test            # vitest — one project per package
 npm run typecheck
 npm run lint
 npm run sync-license # copy packages/LICENSE into each publishable package
 ```
+
+`core` / `react` / `vue` share TypeScript `~5.7`. `angular` pins its own `typescript@~5.8` (its
+devDep `@angular/*@20` requires `>=5.8`); the contained workspace keeps that isolated — every
+package runs its own `tsc`, and the shared Vitest / esbuild transpiles all of them regardless.
+The Angular adapter has no components/directives/templates, so it builds with `tsup` like the
+others — no `ng-packagr` / Ivy partial-compilation step is needed.
 
 ## Licensing
 

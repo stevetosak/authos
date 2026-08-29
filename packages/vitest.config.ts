@@ -39,6 +39,16 @@ export default defineConfig({
           setupFiles: ['./test/setup.ts'],
         },
       },
+      {
+        resolve: { alias: { '@authoss/duster-core': coreSrc } },
+        test: {
+          name: 'angular',
+          root: './angular',
+          environment: 'jsdom',
+          include: ['test/**/*.test.ts'],
+          setupFiles: ['./test/setup.ts'],
+        },
+      },
     ],
     coverage: {
       provider: 'v8',
