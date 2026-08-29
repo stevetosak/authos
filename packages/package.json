@@ -8,11 +8,12 @@
   "workspaces": [
     "core",
     "react",
+    "vue",
     "e2e",
     "examples/react-vite"
   ],
   "scripts": {
-    "build": "npm run build -w @authoss/duster-core && npm run build -w @authoss/duster-react",
+    "build": "npm run build -w @authoss/duster-core && npm run build -w @authoss/duster-react && npm run build -w @authoss/duster-vue",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "test:watch": "vitest",

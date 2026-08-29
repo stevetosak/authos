@@ -32,7 +32,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run sync-license -- --check
-      - run: npm pack -w @authoss/duster-core -w @authoss/duster-react
+      - run: npm pack -w @authoss/duster-core -w @authoss/duster-react -w @authoss/duster-vue
 
   browser-e2e:
     # The real @authoss/duster-react package, consumed by a real Vite SPA, driven through

@@ -7,7 +7,7 @@ adapters. Design: `docs/duster-v1-design.md` #11, #12, #31.
 |---------|--------|------|
 | [`@authoss/duster-core`](./core) | **shipped** | zero-dep client + observable store; also the `<script>` global (vanilla-JS SDK) |
 | [`@authoss/duster-react`](./react) | **shipped** | `<DusterProvider>` + `useDuster()` + `<ProtectedRoute>` |
-| `@authoss/duster-vue` | later | `createDuster()` plugin + `useDuster()` composable |
+| [`@authoss/duster-vue`](./vue) | **shipped** | `createDuster()` plugin + `useDuster()` + `<ProtectedRoute>` |
 | `@authoss/duster-angular` | later | `provideDuster()` + `DusterService` + `dusterAuthGuard` |
 
 Not published: [`examples/react-vite`](./examples/react-vite) (a tier-0 SPA that consumes
