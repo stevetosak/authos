@@ -25,6 +25,9 @@ import java.net.URLEncoder
  * @param tokenRepository The token repository used for storing and retrieving tokens.
  */
 class DusterRequestService(private val client: DusterOAuthClient, private val tokenRepository: TokenRepository) {
+
+    private val clientId: String get() = client.dusterApp.clientId
+
     /**
      * Fetches user information based on an access token and returns the result.
      * This method attempts to retrieve user information through `fetchUserInfo` and processes the response.
@@ -60,13 +63,14 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
             val resp = client.refreshTokenRequest(refreshToken)
             val tokenResponse: AuthTokenResponse = resp.body()
             tokenRepository.save(
+                clientId,
                 TokenType.ACCESS_TOKEN,
                 sub,
                 tokenResponse.accessToken,
                 tokenResponse.expiresIn.toLong()
             )
             if (tokenResponse.refreshToken != null) {
-                tokenRepository.save(TokenType.REFRESH_TOKEN, sub, tokenResponse.refreshToken)
+                tokenRepository.save(clientId, TokenType.REFRESH_TOKEN, sub, tokenResponse.refreshToken)
             } else {
                 // najverojatno gresen scope imat pa ne mu davat refresh token
                 // ovde trebit nekako da zacuvam/ signaliziram deka trebit vo sledniot
@@ -114,7 +118,7 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
      * or [ResponseResult.Failure] in case of any errors during the token exchange process.
      */
     suspend fun tryAccessTokenExchange(sub: String, tryRefreshOnFail: Boolean = true): ResponseResult {
-        val accessToken = tokenRepository.getToken(sub, TokenType.ACCESS_TOKEN)
+        val accessToken = tokenRepository.getToken(clientId, sub, TokenType.ACCESS_TOKEN)
         if (accessToken == null) {
             println("Access token not present. Trying refresh token exchange.")
 
@@ -143,7 +147,7 @@ class DusterRequestService(private val client: DusterOAuthClient, private val to
      *         result provides the HTTP status and a descriptive error message in case of failure.
      */
     private suspend fun tryRefreshTokenExchange(sub: String): ResponseResult {
-        val refreshToken = tokenRepository.getToken(sub, TokenType.REFRESH_TOKEN)
+        val refreshToken = tokenRepository.getToken(clientId, sub, TokenType.REFRESH_TOKEN)
         println("Fetched refresh token: $refreshToken")
         if (refreshToken == null) {
             client.nextRequestType = NextAuthorizeRequestType.OFFLINE_ACCESS

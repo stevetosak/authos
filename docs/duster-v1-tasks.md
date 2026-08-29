@@ -30,7 +30,7 @@ Duster:
 - [x] `success_url` may be a plain SPA route at tier 0 (#22) — PR #35
 - [x] `SameSite=Strict` → `Lax` on `duster_session` (#23) — PR #36
 - [x] Client-scoped cookie name (#24) — PR #37
-- [ ] Client-scoped token Redis keys (#25) — fixes the same-AppGroup refresh-token clobber
+- [x] Client-scoped token Redis keys (#25) — fixes the same-AppGroup refresh-token clobber — PR #38
 - [ ] `/logout` calls `/oauth/revoke` + purges token keys (#26)
 - [ ] Per-app `allowed_origins` → CORS + `SameSite=None` for tier 1 (#27)
 - [ ] `/callback` failures redirect to `error_url`, not 500 (#28)

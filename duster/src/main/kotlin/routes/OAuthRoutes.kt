@@ -81,6 +81,7 @@ fun Route.oAuthRoutes() {
                 val prunedInfo = UserInfo.getPrunedObject(userInfo)
 
                 tokenRepository.saveAll(
+                    stateData.clientId,
                     sub,
                     idTokenString,
                     tokenResponse.accessToken,
