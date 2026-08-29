@@ -1,0 +1,87 @@
+name: sdk-release
+
+# Publishes @authoss/duster-{core,react,vue,angular} to npm, lockstep, at one version per release.
+#
+# Real release:   git tag duster-sdk-v1.4.0 && git push origin duster-sdk-v1.4.0
+# Dry run:        Actions -> sdk-release -> Run workflow (packs + validates, publishes nothing)
+#
+# Auth is npm **trusted publishing** (OIDC) — there is no NPM_TOKEN secret. One-time setup per
+# package on npmjs.com is required before the first real publish; see packages/README.md.
+
+on:
+  push:
+    tags:
+      - "duster-sdk-v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version for the dry run (nothing is published). Real releases go through a duster-sdk-vX.Y.Z tag."
+        required: false
+        default: "0.0.0-dryrun"
+
+concurrency:
+  group: sdk-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    environment: release
+    permissions:
+      contents: read
+      id-token: write # OIDC token for npm trusted publishing + provenance
+    defaults:
+      run:
+        working-directory: packages
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+          cache-dependency-path: packages/package-lock.json
+
+      # Trusted publishing (OIDC, no token) needs npm >= 11.5.1 — newer than what any Node LTS bundles.
+      - run: npm install -g npm@latest
+      - run: npm --version
+
+      - name: Resolve version
+        id: v
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "version=${GITHUB_REF_NAME#duster-sdk-v}" >> "$GITHUB_OUTPUT"
+            echo "dry=" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "dry=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm ci
+
+      - name: Stamp the release version
+        run: node scripts/set-release-version.mjs "${{ steps.v.outputs.version }}"
+
+      - run: npm run build
+      - run: npm run sync-license -- --check
+
+      - name: Publish (core first, then the adapters)
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          DRY: ${{ steps.v.outputs.dry }}
+        run: |
+          set -euo pipefail
+          for name in @authoss/duster-core @authoss/duster-react @authoss/duster-vue @authoss/duster-angular; do
+            if [ -n "$DRY" ]; then
+              echo "::group::dry-run $name@$VERSION"
+              npm publish -w "$name" --dry-run
+              echo "::endgroup::"
+            elif npm view "$name@$VERSION" version >/dev/null 2>&1; then
+              echo "$name@$VERSION is already on the registry — skipping"
+            else
+              echo "::group::publish $name@$VERSION"
+              npm publish -w "$name"
+              echo "::endgroup::"
+            fi
+          done

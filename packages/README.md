@@ -43,10 +43,32 @@ goal. `packages/LICENSE` is canonical; `npm run sync-license` copies it into eac
 
 ## Publishing
 
-Deferred until all adapters land. When ready: **npm trusted publishers** (OIDC from GitHub Actions,
-no `NPM_TOKEN`). Tag `duster-sdk-vX.Y.Z` → `.github/workflows/sdk-release.yaml` publishes all
-packages lockstep. Each `@authoss/duster-*` needs a one-time trusted-publisher config on npmjs.com
-(org `stevetosak`, repo `authos`, workflow `sdk-release.yaml`).
+`.github/workflows/sdk-release.yaml` publishes all four packages **lockstep** (one version per
+release) via npm **trusted publishing** — OIDC from GitHub Actions, no `NPM_TOKEN` secret, provenance
+automatic.
+
+**Cut a release:**
+
+```bash
+git tag duster-sdk-v1.4.0 && git push origin duster-sdk-v1.4.0
+```
+
+The workflow checks out the tag, runs `scripts/set-release-version.mjs` (stamps the version on
+`core` / `react` / `vue` / `angular` and pins the adapters' `@authoss/duster-core` range from `*` to
+`^<version>`), builds, then `npm publish`es core first, then the adapters. The committed
+`package.json` versions stay `0.0.0` — the release version is never committed. A **dry run** (packs +
+validates, publishes nothing) is `Actions → sdk-release → Run workflow`.
+
+**One-time setup on npmjs.com** (required before the first real publish — do it once per package):
+
+1. Publish each package manually once (`npm publish -w @authoss/duster-core` … as the `@authoss` org
+   owner with 2FA) so the name exists — or skip if npm lets you pre-register a trusted publisher for
+   a name that doesn't exist yet.
+2. For each `@authoss/duster-*`: **Settings → Trusted Publisher → GitHub Actions** → org
+   `stevetosak`, repo `authos`, workflow `sdk-release.yaml`, environment `release`.
+3. Add a **`release`** environment in the repo (Settings → Environments) with a required reviewer,
+   so a real publish waits for an approval.
+4. Once an OIDC release works, set the org to **"Require 2FA and disallow tokens"**.
 
 ## `npm pack` smoke test
 

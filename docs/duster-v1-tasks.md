@@ -40,6 +40,7 @@ SDKs (#11, #31 — framework-agnostic `@authoss/duster-core` + thin adapters, po
 - [x] `@authoss/duster-react` — `<DusterProvider>` + `useDuster()` + `<ProtectedRoute>`; browser-e2e vs the compose stack (closes the Phase 1 exit criterion) — PR #45, #46
 - [x] `@authoss/duster-vue` — `createDuster()` plugin + `useDuster()` + `<ProtectedRoute>` — PR #47
 - [x] `@authoss/duster-angular` — `provideDuster()` + `DusterService` + `dusterAuthGuard` — PR #48
+- [x] `sdk-release.yaml` — tag-gated lockstep `npm publish` via trusted publishers (first publish needs the one-time per-package config on npmjs.com) — PR #49
 
 ## Phase 2 — Duster tier 2 hardening + headless onboarding
 
