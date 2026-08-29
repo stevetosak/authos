@@ -1,5 +1,6 @@
 package com.authos.routes
 
+import com.authos.dusterSessionCookieName
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterSessionRepository
 import com.authos.repository.TokenRepository
@@ -33,13 +34,13 @@ fun Route.sessionRoutes() {
             val clientId = call.queryParameters["client_id"]
                 ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "client_id required"))
             val app = dusterAppRepository.getDusterAppByClientId(clientId)
-            val sessionId = call.request.cookies["duster_session"]
+            val sessionId = call.request.cookies[dusterSessionCookieName(clientId)]
             if (sessionId != null) {
                 sessionRepository.delete(sessionId, clientId)
             }
             call.response.cookies.append(
                 Cookie(
-                    name = "duster_session",
+                    name = dusterSessionCookieName(clientId),
                     value = "",
                     maxAge = 0,
                     path = "/",
@@ -55,7 +56,8 @@ fun Route.sessionRoutes() {
 }
 
 /**
- * Resolves the `duster_session` cookie to pruned userinfo, or `401` if it is absent or dead.
+ * Resolves the client's `duster_session_<clientId>` cookie to pruned userinfo, or `401` if it is
+ * absent or dead.
  *
  * Silent refresh (design decision #16): verify/refresh the underlying access token via the stored
  * refresh token on every check, so the session only dies on explicit logout or refresh-token
@@ -70,7 +72,7 @@ private suspend fun readSession(
 ) {
     val clientId = call.request.queryParameters["client_id"]
         ?: return call.respond(HttpStatusCode.BadRequest, mapOf("error" to "client_id required"))
-    val sessionId = call.request.cookies["duster_session"]
+    val sessionId = call.request.cookies[dusterSessionCookieName(clientId)]
         ?: return call.respond(HttpStatusCode.Unauthorized)
     val session = sessionRepository.get(sessionId, clientId)
         ?: return call.respond(HttpStatusCode.Unauthorized)

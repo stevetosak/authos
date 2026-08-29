@@ -94,6 +94,9 @@ class Http {
 
 fun urlEncode(s: String): String = URLEncoder.encode(s, StandardCharsets.UTF_8)
 
+/** The session cookie Duster sets for a client — the name carries the client id (design #24). */
+fun dusterSessionCookie(clientId: String) = "duster_session_$clientId"
+
 fun queryParams(url: String): Map<String, String> {
     val q = url.substringAfter('?', "")
     if (q.isEmpty()) return emptyMap()

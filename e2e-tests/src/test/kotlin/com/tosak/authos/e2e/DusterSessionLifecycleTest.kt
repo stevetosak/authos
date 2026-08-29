@@ -1,5 +1,6 @@
 package com.tosak.authos.e2e
 
+import com.tosak.authos.e2e.support.dusterSessionCookie
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -10,6 +11,7 @@ class DusterSessionLifecycleTest : E2eBase() {
     fun `session works, survives a re-check, then dies on logout`() {
         val h = http()
         val cid = fx.dusterApp.clientId
+        val cookie = dusterSessionCookie(cid)
 
         val approve = flow.loginAndApprove(h, flow.authorize(h, flow.startViaDuster(h, cid)))
         val cb = h.get(fx.endpoints.rebase(approve.location!!))
@@ -24,9 +26,9 @@ class DusterSessionLifecycleTest : E2eBase() {
 
         val logout = h.get("${fx.dusterBase}/duster/api/v1/logout?client_id=$cid")
         assertEquals(302, logout.status)
-        assertTrue(!h.cookies.containsKey("duster_session"), "logout should clear the duster_session cookie")
+        assertTrue(!h.cookies.containsKey(cookie), "logout should clear the session cookie")
 
-        val s3 = http().also { it.cookies["duster_session"] = "stale" }
+        val s3 = http().also { it.cookies[cookie] = "stale" }
             .get("${fx.dusterBase}/duster/api/v1/session?client_id=$cid")
         assertEquals(401, s3.status)
     }

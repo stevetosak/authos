@@ -2,6 +2,7 @@ package com.tosak.authos.e2e
 
 import com.tosak.authos.e2e.support.Http
 import com.tosak.authos.e2e.support.asMap
+import com.tosak.authos.e2e.support.dusterSessionCookie
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -53,7 +54,7 @@ class DusterMeEndpointTest : E2eBase() {
 
     @Test
     fun `me is 401 with a stale cookie`() {
-        val h = http().also { it.cookies["duster_session"] = "not-a-session" }
+        val h = http().also { it.cookies[dusterSessionCookie(cid)] = "not-a-session" }
         assertEquals(401, h.get(meUrl()).status)
     }
 
