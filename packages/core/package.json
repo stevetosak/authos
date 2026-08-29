@@ -1,0 +1,54 @@
+{
+  "name": "@authoss/duster-core",
+  "version": "0.0.0",
+  "description": "Framework-agnostic browser client for the Duster BFF — session, identity, silent refresh, logout. Also the vanilla-JS build.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./global": "./dist/duster.global.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevetosak/authos.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/stevetosak/authos/tree/master/packages/core#readme",
+  "bugs": "https://github.com/stevetosak/authos/issues",
+  "keywords": [
+    "duster",
+    "authos",
+    "oauth2",
+    "oidc",
+    "authentication",
+    "bff",
+    "sso",
+    "session"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "~5.7.2"
+  }
+}
