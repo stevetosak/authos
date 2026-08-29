@@ -14,4 +14,7 @@ interface OAuthTokenRepository {
         idTokenExpirationTimeSecs: Long = 0,
         accessTokenExpirationTimeSecs: Long = 0,
     )
+
+    /** Drops every stored token (id / access / refresh) for one app + subject. Used on logout. */
+    suspend fun deleteAll(clientId: String, sub: String)
 }

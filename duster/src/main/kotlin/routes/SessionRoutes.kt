@@ -1,6 +1,7 @@
 package com.authos.routes
 
 import com.authos.dusterSessionCookieName
+import com.authos.model.TokenType
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterSessionRepository
 import com.authos.repository.TokenRepository
@@ -36,6 +37,22 @@ fun Route.sessionRoutes() {
             val app = dusterAppRepository.getDusterAppByClientId(clientId)
             val sessionId = call.request.cookies[dusterSessionCookieName(clientId)]
             if (sessionId != null) {
+                // Resolve the session so we can revoke the grant upstream and purge our token
+                // copies. If the session is already gone we can't know the sub, so the tokens
+                // (only the refresh token has no TTL) are left to expire - an accepted edge.
+                val session = sessionRepository.get(sessionId, clientId)
+                if (session != null) {
+                    val refreshToken = tokenRepository.getToken(clientId, session.sub, TokenType.REFRESH_TOKEN)
+                    if (refreshToken != null) {
+                        // best-effort: logout must still complete if Authos is unreachable
+                        try {
+                            DusterOAuthClient(app).revokeRefreshToken(refreshToken)
+                        } catch (e: Exception) {
+                            println("logout: upstream revoke failed for $clientId (${e.message})")
+                        }
+                    }
+                    tokenRepository.deleteAll(clientId, session.sub)
+                }
                 sessionRepository.delete(sessionId, clientId)
             }
             call.response.cookies.append(

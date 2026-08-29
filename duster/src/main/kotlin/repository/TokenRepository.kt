@@ -75,4 +75,13 @@ class TokenRepository(val redisManager: RedisManager) : OAuthTokenRepository {
             cmd.exec().await()
         }
     }
+
+    override suspend fun deleteAll(clientId: String, sub: String) {
+        val keys = tokenTypeToSuffix.keys.map { key(clientId, sub, it) }.toTypedArray()
+        try {
+            redisManager.withCommands { cmd -> cmd.del(*keys).await() }
+        } catch (e: Exception) {
+            exposedLogger.error(e.message)
+        }
+    }
 }

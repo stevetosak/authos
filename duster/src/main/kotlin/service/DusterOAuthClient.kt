@@ -78,6 +78,22 @@ class DusterOAuthClient(val dusterApp: DusterApp) {
         return resp
     }
 
+    /**
+     * RFC 7009 revocation against Authos. Client-authenticated with the app's own credentials.
+     * Revoking the refresh token cascades to the access tokens issued under the same grant.
+     * Best-effort: the caller (logout) must still complete if this throws.
+     */
+    suspend fun revokeRefreshToken(refreshToken: String): HttpResponse {
+        return client.post(getAuthosRevokeUrl()) {
+            setBody(FormDataContent(Parameters.build {
+                append("client_id", dusterApp.clientId)
+                append("client_secret", dusterApp.clientSecret)
+                append("token", refreshToken)
+                append("token_type_hint", "refresh_token")
+            }))
+        }
+    }
+
     suspend fun sendToCallback(prunedData: HashMap<String, String>): HttpResponse {
         var callbackUrl = dusterApp.callbackUri
         if (getHostIp() != "localhost" && callbackUrl.contains("localhost")) {
@@ -101,6 +117,8 @@ class DusterOAuthClient(val dusterApp: DusterApp) {
 fun getAuthosTokenUrl() = "${getAuthosBaseUrl()}/oauth/token"
 
 fun getAuthosUserinfoUrl() = "${getAuthosBaseUrl()}/oauth/userinfo"
+
+fun getAuthosRevokeUrl() = "${getAuthosBaseUrl()}/oauth/revoke"
 
 suspend fun sendClientCredentialsTokenRequest(clientId: String, clientSecret: String): String {
     val resp: AuthTokenResponse = client.post(getAuthosTokenUrl()) {
