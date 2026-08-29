@@ -23,6 +23,24 @@ verbatim so cross-references (`#N`) and anchor links still resolve. Newest addit
 
 ---
 
+### 8. Logout
+**Decision:** Duster-owned, browser-initiated.
+
+**Flow:**
+1. Browser hits `GET /duster/api/v1/logout?client_id=<id>` (link or redirect from developer's app)
+2. Duster deletes `duster:session:<clientId>:<uuid>` from Redis
+3. Duster calls Authos token revocation endpoint with the stored refresh token
+4. Duster sets `Set-Cookie: duster_session=; Max-Age=0` (clears cookie)
+5. Duster redirects browser to configured `logout_redirect_url`
+
+Developer writes zero logout code.
+
+**Extended by:** #26 (`/logout` also revokes the grant upstream via `POST /oauth/revoke` and purges
+the `duster:token:<clientId>:<sub>:*` keys) and #27 (tier-1 apps must `POST` with an `X-Duster-Csrf`
+header; `GET` stays the tier-0/2 link).
+
+---
+
 ### 15. PKCE
 **Decision:** Implemented in v1 in both Duster and Authos simultaneously.
 

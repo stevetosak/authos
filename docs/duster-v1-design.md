@@ -90,16 +90,9 @@ Developer's backend calls Duster via cluster-internal DNS: `http://duster:8785`.
 ---
 
 ### 8. Logout
-**Decision:** Duster-owned, browser-initiated.
 
-**Flow:**
-1. Browser hits `GET /duster/api/v1/logout?client_id=<id>` (link or redirect from developer's app)
-2. Duster deletes `duster:session:<clientId>:<uuid>` from Redis
-3. Duster calls Authos token revocation endpoint with the stored refresh token
-4. Duster sets `Set-Cookie: duster_session=; Max-Age=0` (clears cookie)
-5. Duster redirects browser to configured `logout_redirect_url`
-
-Developer writes zero logout code.
+Shipped, extended by #26 (upstream revoke + token purge) and #27 (tier-1 `POST` + CSRF). Full text:
+archive/duster-v1-design-archive.md#8-logout
 
 ---
 
@@ -469,7 +462,13 @@ adapters, not a React package that Vue/Angular later copy.
   `/me` on `visibilitychange` / `online`), default off.
 - **Layout / publish:** a contained npm workspace at `packages/` (not wired into
   `settings.gradle.kts`, not a repo-root workspace); lockstep-versioned; public npm under
-  `@authoss/*`. Tiers 3–4 seams from `#30` are kept (`config.sessionToken?` reserved; `raw`).
+  `@authoss/*`. Published via **npm trusted publishers** (OIDC from GitHub Actions — no `NPM_TOKEN`
+  secret; provenance is automatic), one config per package pointing at `sdk-release.yaml`. Tiers 3–4
+  seams from `#30` are kept (`config.sessionToken?` reserved; `raw`).
+- **Licensing:** the repo-root `LICENSE` is **GPL-3.0** (the server + CLI). The SDK packages under
+  `packages/` are **MIT** (`packages/LICENSE` + `"license": "MIT"` per package) — a copyleft client
+  library that bundles into a consumer's app is a non-starter for the "delegate auth with no code"
+  goal.
 
 **Rationale:** `#11` names three frameworks and the user added Angular; porting is only cheap if the
 adapters carry no logic. Pushing the entire wire contract — which is fiddly (all-string `/me`
