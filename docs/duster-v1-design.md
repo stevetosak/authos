@@ -49,15 +49,9 @@ Redirect destination is driven by `success_url` configured in dstr-cli, not by t
 ---
 
 ### 4. Session Ownership
-**Decision:** Duster owns the session entirely.
 
-- After successful OIDC flow, Duster generates a `duster_session` UUID, stores userinfo + tokens in Redis
-- Redis key: `duster:session:<clientId>:<uuid>`
-- Duster sets `duster_session` as an `HttpOnly`, `Secure`, `SameSite=Strict` cookie on the browser
-- Duster redirects browser to configured `success_url`
-- Developer's protected routes call `GET /duster/api/v1/session?client_id=<id>` server-to-server with the session ID
-
-**Rationale:** Eliminates all session storage requirements from the developer's side. Developer never writes auth state management code.
+Shipped, with later refinements (#22, #23, #24). Full text:
+archive/duster-v1-design-archive.md#4-session-ownership
 
 ---
 
@@ -96,16 +90,9 @@ Developer's backend calls Duster via cluster-internal DNS: `http://duster:8785`.
 ---
 
 ### 8. Logout
-**Decision:** Duster-owned, browser-initiated.
 
-**Flow:**
-1. Browser hits `GET /duster/api/v1/logout?client_id=<id>` (link or redirect from developer's app)
-2. Duster deletes `duster:session:<clientId>:<uuid>` from Redis
-3. Duster calls Authos token revocation endpoint with the stored refresh token
-4. Duster sets `Set-Cookie: duster_session=; Max-Age=0` (clears cookie)
-5. Duster redirects browser to configured `logout_redirect_url`
-
-Developer writes zero logout code.
+Shipped, extended by #26 (upstream revoke + token purge) and #27 (tier-1 `POST` + CSRF). Full text:
+archive/duster-v1-design-archive.md#8-logout
 
 ---
 
@@ -192,25 +179,8 @@ Waiting... ✓ Authenticated
 ---
 
 ### 15. PKCE
-**Decision:** Implemented in v1 in both Duster and Authos simultaneously.
 
-**Duster changes:**
-- `StateStore` generates and stores `code_verifier` alongside state
-- `generateAuthorizeUrl()` appends `code_challenge=BASE64URL(SHA256(verifier))&code_challenge_method=S256`
-- `/callback` retrieves verifier from `StateStore`, sends `code_verifier` in token exchange request
-
-**Authos changes:**
-- Validate `code_challenge` on `/oauth/authorize`
-- Validate `code_verifier` on `/oauth/token`
-
-**Status correction (2026-08-28):** only the Duster side was actually built in v1. Authos accepted
-`code_challenge` / `code_verifier` as query params and silently ignored them until the PKCE
-implementation landed (see `roadmap.md` Phase 0). The Authos side now: stores `code_challenge` +
-`code_challenge_method` in the `ShortSession` at `/oauth/authorize` (S256 only — `plain` and a
-missing method are rejected), and verifies `code_verifier` at `/oauth/token` inside
-`handleAuthorizationCodeRequest` with "verify if present" enforcement plus RFC 7636 §4.6 downgrade
-protection (verifier-without-challenge and challenge-without-verifier both rejected). No DB
-migration — the challenge lives in Redis with the rest of the `ShortSession`.
+Shipped (Phase 0, PR #24). Full text: archive/duster-v1-design-archive.md#15-pkce
 
 ---
 
@@ -465,6 +435,46 @@ keep them reachable:
 **Rationale:** Both are genuine Duster use cases — an app calling resource APIs on the user's
 behalf, a mobile client — that need more than a cookie-attribute change. Recording the constraints
 now is cheap insurance against a v1 decision that quietly closes the door on them.
+
+---
+
+### 31. Frontend SDK — Framework-Agnostic Core + Thin Adapters
+**Decision:** `#11`'s frontend library is built as a zero-dependency core with per-framework
+adapters, not a React package that Vue/Angular later copy.
+
+- **`@authoss/duster-core`** — no runtime deps, no peer deps. Owns *everything*: the `fetch`
+  transport (always `credentials:'include'`), the `/me` → typed `DusterUser` normalization (every
+  `/me` value is a string; `emailVerified`/`phoneNumberVerified` coerced; a `raw` passthrough keeps
+  unknown/future claims usable with no release), the in-memory cache, `X-Duster-Csrf` capture +
+  replay on `POST /logout`, start/logout URL construction, the always-`POST`-logout path, the
+  `onUnauthenticated` dispatch (`'redirect' | 'ignore' | fn`), and SSR guards. Exposes one
+  framework-agnostic seam: `getSnapshot()` / `getServerSnapshot()` / `subscribe()` +
+  `init/refresh/login/logout`. Also emits an IIFE `window.Duster` build — that *is* the vanilla-JS
+  SDK (`#11`'s third target); no separate `-js` package.
+- **`@authoss/duster-react`**, then **`-vue`**, then **`-angular`** — each only bridges the store
+  seam into the framework (`useSyncExternalStore` / `shallowRef` / a `signal`) and adds an idiomatic
+  surface (`<DusterProvider>`+`useDuster()`+`<ProtectedRoute>` / `createDuster()` plugin /
+  `provideDuster()`+`DusterService`+`dusterAuthGuard`). No networking, no framework types in core.
+- **No router dependency** anywhere — `onUnauthenticated` is a callback, `<ProtectedRoute>` renders
+  a `fallback`; router wiring ships as docs recipes.
+- **No polling** (honours `#12`): the server slides the session TTL and silent-refreshes on every
+  `/me`, so a timer buys nothing. Opt-in `revalidateOnFocus` / `revalidateOnReconnect` (single
+  `/me` on `visibilitychange` / `online`), default off.
+- **Layout / publish:** a contained npm workspace at `packages/` (not wired into
+  `settings.gradle.kts`, not a repo-root workspace); lockstep-versioned; public npm under
+  `@authoss/*`. Published via **npm trusted publishers** (OIDC from GitHub Actions — no `NPM_TOKEN`
+  secret; provenance is automatic), one config per package pointing at `sdk-release.yaml`. Tiers 3–4
+  seams from `#30` are kept (`config.sessionToken?` reserved; `raw`).
+- **Licensing:** the repo-root `LICENSE` is **GPL-3.0** (the server + CLI). The SDK packages under
+  `packages/` are **MIT** (`packages/LICENSE` + `"license": "MIT"` per package) — a copyleft client
+  library that bundles into a consumer's app is a non-starter for the "delegate auth with no code"
+  goal.
+
+**Rationale:** `#11` names three frameworks and the user added Angular; porting is only cheap if the
+adapters carry no logic. Pushing the entire wire contract — which is fiddly (all-string `/me`
+bodies, empty-body 401s, `text/plain` 500s, the tier-1 CSRF dance, the opaque logout redirect) —
+into one tested core means each new framework is a ~150-line reactivity shim, not a reimplementation
+that drifts.
 
 ---
 
