@@ -90,6 +90,14 @@ Duster:
 - [ ] Wire endpoints added since the last frontend pass + fix the `AuthProvider.tsx` stale-closure `setInterval` bug
 - [ ] Frontend component test coverage
 
+## Phase 7 — `dstr-cli` realignment & portability
+
+- [ ] State audit — every command vs the current Duster + Authos surface; list the gaps
+- [ ] `debug` / `inspect` group — live session (`/me`), token keys, `duster:state:*`, app config, `/health`, tier
+- [ ] Feature parity — revocation, RFC 6749 §5.2 errors, discovery-doc validation, `sync` change reporting; fold in `dstr init` (#13) / `dstr auth login` (#14) as they land
+- [ ] Agent-grade I/O — `--json` on every command (stable schema), documented exit codes, no non-flag prompts, a machine-readable usage manifest
+- [ ] Portability — portable distribution (self-contained launcher / native image / package manager), cross-OS one-step install, CI/container-friendly config discovery
+
 ## Cross-cutting (every phase)
 
 - [ ] Audit logging on the Authos auth paths — replace `println` with structured events
