@@ -120,7 +120,11 @@ fun Route.oAuthRoutes() {
                     secure = true,
                     path = "/",
                     maxAge = app.sessionTtl.toInt(),
-                    extensions = mapOf("SameSite" to "Strict")
+                    // Lax, not Strict: Strict withholds the cookie on the first cross-site
+                    // top-level navigation into the app (a link from an email, another site),
+                    // so a deep link lands unauthenticated. Lax is the conventional session
+                    // choice and still blocks CSRF on unsafe methods. (design decision #23)
+                    extensions = mapOf("SameSite" to "Lax")
                 )
                 call.response.cookies.append(cookie)
                 call.respondRedirect(safeRedirectTarget(app.successUrl))

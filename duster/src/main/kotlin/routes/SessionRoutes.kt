@@ -45,7 +45,8 @@ fun Route.sessionRoutes() {
                     path = "/",
                     httpOnly = true,
                     secure = true,
-                    extensions = mapOf("SameSite" to "Strict")
+                    // must mirror the attributes the cookie was set with (design decision #23)
+                    extensions = mapOf("SameSite" to "Lax")
                 )
             )
             call.respondRedirect(safeRedirectTarget(app.logoutRedirectUrl))
