@@ -1,0 +1,7 @@
+# Impeccable working state — track the durable decisions, ignore the scratch.
+# Durable (committed): .impeccable/config.json, and DESIGN.md + its sidecar at the repo root.
+/build/
+/review/
+/mocks/
+/questions/
+/live/

@@ -49,7 +49,6 @@ secrets.auto.tfvars
 /scripts/
 k8s/scripts
 secrets/
-CLAUDE.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
