@@ -25,7 +25,8 @@ RUN apt-get update \
 WORKDIR /app
 # `fat.jar` is the exact name set in build.gradle.kts (ktor.fatJar.archiveFileName).
 COPY --from=build /home/gradle/app/build/libs/fat.jar /app/duster-client.jar
-USER duster
+# Numeric UID — a non-numeric USER can't be verified against Kubernetes `runAsNonRoot`.
+USER 10001
 # Duster honours PORT (default 8785); EXPOSE is documentation only.
 EXPOSE 8785
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
