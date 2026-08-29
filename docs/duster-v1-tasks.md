@@ -93,7 +93,7 @@ Duster:
 ## Cross-cutting (every phase)
 
 - [ ] Audit logging on the Authos auth paths — replace `println` with structured events
-- [ ] Rate limiting / brute-force protection on `/oauth-login`, `/oauth/token`, `/register`
+- [x] Rate limiting / brute-force protection on `/oauth-login`, `/oauth/token`, `/register` — PR #53
 - [ ] JWKS rotation strategy — publish overlapping `kid`s before rotating the signing key
 - [ ] Custom / authorization claims mapped into the ID token + userinfo
 - [x] `e2e-tests/` stack suite — Postgres + Redis + authos-api + duster, HTTP-level — PR #25
