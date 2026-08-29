@@ -40,6 +40,31 @@ fun safeRedirectTarget(url: String, fallback: String = "/"): String =
     if (isValidRedirectTarget(url)) url else fallback
 
 /**
+ * Where `/callback` sends the browser when the OAuth exchange fails (design decision #28).
+ * Explicit `error_url` wins; otherwise it is derived from `success_url` — the same origin (or
+ * root, for a tier-0 SPA route) with `/error` — matching the #20 convention for the landing route.
+ */
+fun errorRedirectTarget(app: com.authos.model.DusterApp): String {
+    if (isValidRedirectTarget(app.errorUrl)) return app.errorUrl
+    val base = app.successUrl
+    if (base.isBlank() || base.startsWith("/")) return "/error"
+    return try {
+        val u = URI.create(base)
+        if (u.scheme?.lowercase() in setOf("http", "https") && !u.host.isNullOrBlank()) {
+            buildString {
+                append(u.scheme).append("://").append(u.host)
+                if (u.port != -1) append(":").append(u.port)
+                append("/error")
+            }
+        } else {
+            "/error"
+        }
+    } catch (e: IllegalArgumentException) {
+        "/error"
+    }
+}
+
+/**
  * Whether [value] is a bare web origin — `scheme://host[:port]`, scheme `http`/`https`, and
  * nothing else (no path, query, fragment, userinfo, or trailing slash). This is exactly the
  * form the browser puts in an `Origin` header and compares against `Access-Control-Allow-Origin`,

@@ -75,6 +75,7 @@ class Apps : SuspendingCliktCommand(name = "apps") {
                         entry("Callback",   app.callbackUri)
                         entry("Success URL",app.successUrl)
                         entry("Logout URL", app.logoutRedirectUrl)
+                        entry("Error URL",  app.errorUrl.ifEmpty { "— (derived from Success URL)" })
                         entry("Session TTL",app.sessionTtl.toString())
                         entry("Webhook Secret", webhookSecret)
                         entry("Allowed Origins", app.allowedOrigins.joinToString(", ").ifEmpty { "—" })

@@ -2,6 +2,7 @@ package com.authos.routes
 
 import com.authos.data.CallbackResponse
 import com.authos.dusterSessionCookieName
+import com.authos.errorRedirectTarget
 import com.authos.model.DusterSession
 import com.authos.safeRedirectTarget
 import com.authos.sessionCookieSameSite
@@ -68,9 +69,13 @@ fun Route.oAuthRoutes() {
                 return@get
             }
 
+            // tracked for the catch block: on a mid-flow failure we redirect to the app's
+            // error_url instead of a 500 (design decision #28)
+            var appForError: com.authos.model.DusterApp? = null
             try {
                 val stateData = stateStore.validateState(state)
                 val app = dusterAppRepository.getDusterAppByClientId(stateData.clientId)
+                appForError = app
                 val client = DusterOAuthClient(app)
 
                 val tokenResponse = client.codeExchange(code, stateData.codeVerifier)
@@ -140,7 +145,11 @@ fun Route.oAuthRoutes() {
             } catch (e: Exception) {
                 println("Callback error: ${e.localizedMessage}")
                 e.printStackTrace()
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Authentication failed"))
+                // A failed exchange is the app's user staring at a broken page - send them to the
+                // app's own error route, not a Duster 500. If we failed before even resolving the
+                // app (bad state), fall back to a bare /error on the current origin. (design #28)
+                val target = appForError?.let { errorRedirectTarget(it) } ?: "/error"
+                call.respondRedirect(target)
             }
         }
     }

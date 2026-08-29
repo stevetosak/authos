@@ -24,6 +24,10 @@ data class DusterApp (
     val updatedAt: Long = 0,
     val successUrl: String = "/",
     val logoutRedirectUrl: String = "/",
+    // Where `/callback` sends the browser when the OAuth exchange fails, instead of a 500.
+    // Empty => derived from `successUrl` (its origin, or root, + `/error`). (design decision #28)
+    @JsonProperty("error_url")
+    val errorUrl: String = "",
     val webhookSecret: String = "",
     val sessionTtl: Long = 86400,
     // Non-empty => this is a tier-1 (cross-origin frontend) app: Duster enables credentialed CORS

@@ -107,6 +107,13 @@ fun Route.appRoutes(){
                     mapOf("error" to "allowed_origins entries must be bare origins like https://app.example.com (no path or trailing slash): '$it'"),
                 )
             }
+            // "" is allowed - it means "derive error_url from success_url".
+            body.errorUrl?.let {
+                if (it.isNotEmpty() && !isValidRedirectTarget(it)) return@patch call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "error_url must be a root-relative path or an absolute http(s) URL"),
+                )
+            }
 
             val existing = try {
                 dusterAppRepository.getDusterAppByClientId(clientId)
@@ -116,6 +123,7 @@ fun Route.appRoutes(){
             val updated = existing.copy(
                 successUrl = body.successUrl ?: existing.successUrl,
                 logoutRedirectUrl = body.logoutRedirectUrl ?: existing.logoutRedirectUrl,
+                errorUrl = body.errorUrl ?: existing.errorUrl,
                 webhookSecret = body.webhookSecret ?: existing.webhookSecret,
                 sessionTtl = body.sessionTtl ?: existing.sessionTtl,
                 allowedOrigins = body.allowedOrigins ?: existing.allowedOrigins,
