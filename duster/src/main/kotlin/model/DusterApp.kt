@@ -26,4 +26,9 @@ data class DusterApp (
     val logoutRedirectUrl: String = "/",
     val webhookSecret: String = "",
     val sessionTtl: Long = 86400,
+    // Non-empty => this is a tier-1 (cross-origin frontend) app: Duster enables credentialed CORS
+    // for exactly these origins on the browser-facing endpoints and issues the session cookie
+    // SameSite=None. Empty (the default) keeps the tight tier-0/2 posture. (design decision #27)
+    @JsonProperty("allowed_origins")
+    val allowedOrigins: List<String> = emptyList(),
 )

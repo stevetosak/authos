@@ -6,6 +6,7 @@ import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterSessionRepository
 import com.authos.repository.TokenRepository
 import com.authos.safeRedirectTarget
+import com.authos.sessionCookieSameSite
 import com.authos.service.DusterOAuthClient
 import com.authos.service.DusterRequestService
 import io.ktor.http.Cookie
@@ -35,6 +36,7 @@ fun Route.sessionRoutes() {
             val clientId = call.queryParameters["client_id"]
                 ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "client_id required"))
             val app = dusterAppRepository.getDusterAppByClientId(clientId)
+            call.applyPerAppCors(app)
             val sessionId = call.request.cookies[dusterSessionCookieName(clientId)]
             if (sessionId != null) {
                 // Resolve the session so we can revoke the grant upstream and purge our token
@@ -63,8 +65,8 @@ fun Route.sessionRoutes() {
                     path = "/",
                     httpOnly = true,
                     secure = true,
-                    // must mirror the attributes the cookie was set with (design decision #23)
-                    extensions = mapOf("SameSite" to "Lax")
+                    // must mirror the attributes the cookie was set with (design decisions #23, #27)
+                    extensions = mapOf("SameSite" to sessionCookieSameSite(app))
                 )
             )
             call.respondRedirect(safeRedirectTarget(app.logoutRedirectUrl))
@@ -89,12 +91,16 @@ private suspend fun readSession(
 ) {
     val clientId = call.request.queryParameters["client_id"]
         ?: return call.respond(HttpStatusCode.BadRequest, mapOf("error" to "client_id required"))
+    val app = dusterAppRepository.getDusterAppByClientId(clientId)
+    // Echo CORS headers before any early return, so a cross-origin caller can still read a 401
+    // (tell "not logged in" apart from "Duster unreachable"). (design decision #27)
+    call.applyPerAppCors(app)
+
     val sessionId = call.request.cookies[dusterSessionCookieName(clientId)]
         ?: return call.respond(HttpStatusCode.Unauthorized)
     val session = sessionRepository.get(sessionId, clientId)
         ?: return call.respond(HttpStatusCode.Unauthorized)
 
-    val app = dusterAppRepository.getDusterAppByClientId(clientId)
     val requestService = DusterRequestService(DusterOAuthClient(app), tokenRepository)
 
     when (val result = requestService.tryAccessTokenExchange(session.sub)) {

@@ -2,6 +2,7 @@ package com.authos.routes
 
 import com.authos.data.DusterAppConfigUpdateDto
 import com.authos.data.DusterAppRegisterDto
+import com.authos.isValidOrigin
 import com.authos.isValidRedirectTarget
 import com.authos.model.DusterApp
 import com.authos.repository.CredentialsRepository
@@ -100,6 +101,12 @@ fun Route.appRoutes(){
                     mapOf("error" to "logout_redirect_url must be a root-relative path or an absolute http(s) URL"),
                 )
             }
+            body.allowedOrigins?.forEach {
+                if (!isValidOrigin(it)) return@patch call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "allowed_origins entries must be bare origins like https://app.example.com (no path or trailing slash): '$it'"),
+                )
+            }
 
             val existing = try {
                 dusterAppRepository.getDusterAppByClientId(clientId)
@@ -111,6 +118,7 @@ fun Route.appRoutes(){
                 logoutRedirectUrl = body.logoutRedirectUrl ?: existing.logoutRedirectUrl,
                 webhookSecret = body.webhookSecret ?: existing.webhookSecret,
                 sessionTtl = body.sessionTtl ?: existing.sessionTtl,
+                allowedOrigins = body.allowedOrigins ?: existing.allowedOrigins,
                 updatedAt = System.currentTimeMillis(),
             )
             dusterAppRepository.save(updated)
