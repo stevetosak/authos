@@ -2,6 +2,7 @@ package com.authos.routes
 
 import com.authos.data.CallbackResponse
 import com.authos.model.DusterSession
+import com.authos.safeRedirectTarget
 import com.authos.model.UserInfo
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterSessionRepository
@@ -44,7 +45,7 @@ fun Route.oAuthRoutes() {
             if (existingSession != null) {
                 val session = sessionRepository.get(existingSession, clientId)
                 if (session != null) {
-                    call.respondRedirect(app.successUrl.ifBlank { "/" })
+                    call.respondRedirect(safeRedirectTarget(app.successUrl))
                     return@get
                 }
             }
@@ -122,7 +123,7 @@ fun Route.oAuthRoutes() {
                     extensions = mapOf("SameSite" to "Strict")
                 )
                 call.response.cookies.append(cookie)
-                call.respondRedirect(app.successUrl.ifBlank { "/" })
+                call.respondRedirect(safeRedirectTarget(app.successUrl))
 
             } catch (e: Exception) {
                 println("Callback error: ${e.localizedMessage}")
