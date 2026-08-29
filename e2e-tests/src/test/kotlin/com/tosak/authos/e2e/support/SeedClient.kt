@@ -29,6 +29,10 @@ class SeedClient(private val endpoints: Endpoints, private val adminToken: Strin
         login(http, user)
 
         val dusterApp = registerDusterApp(http)
+        // A second Duster-wired app registered with no explicit group -> shares the user's
+        // default AppGroup with dusterApp, so Authos issues both the same pairwise sub.
+        // Used by DusterClientScopedTokenTest (design #25).
+        val dusterApp2 = registerDusterApp(http, name = "e2e-duster-2")
         val directApp = registerApp(
             http,
             name = "e2e-direct",
@@ -39,8 +43,9 @@ class SeedClient(private val endpoints: Endpoints, private val adminToken: Strin
 
         saveDusterCredentials(dusterSvc)
         DusterSync.run(endpoints, adminToken, dusterApp.clientId, dusterSvc)
+        DusterSync.run(endpoints, adminToken, dusterApp2.clientId, dusterSvc)
 
-        return E2eFixture(endpoints, adminToken, user, dusterApp, directApp, dusterSvc)
+        return E2eFixture(endpoints, adminToken, user, dusterApp, dusterApp2, directApp, dusterSvc)
     }
 
     private fun registerUser(u: SeededUser) {
@@ -57,11 +62,11 @@ class SeedClient(private val endpoints: Endpoints, private val adminToken: Strin
         require(http.cookies.containsKey("AUTH_TOKEN")) { "native-login set no AUTH_TOKEN cookie" }
     }
 
-    private fun registerDusterApp(http: Http): SeededApp {
+    private fun registerDusterApp(http: Http, name: String = "e2e-duster"): SeededApp {
         val redirect = "$duster/duster/api/v1/oauth/callback"
         val app = registerApp(
             http,
-            name = "e2e-duster",
+            name = name,
             redirectUris = listOf(redirect),
             scope = listOf("openid", "profile", "email", "offline_access"),
         )

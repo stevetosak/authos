@@ -25,6 +25,8 @@ class E2eFixture(
     val adminToken: String,
     val user: SeededUser,
     val dusterApp: SeededApp,
+    /** A second Duster-wired app in the *same* AppGroup as [dusterApp] (same pairwise sub). */
+    val dusterApp2: SeededApp,
     val directApp: SeededApp,
     val dusterSvc: SeededCredentials,
 ) {

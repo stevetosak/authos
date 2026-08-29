@@ -5,54 +5,47 @@ package com.authos.repository
 import com.authos.model.TokenType
 import com.authos.service.RedisManager
 import kotlinx.coroutines.future.await
-import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.exposedLogger
 
 
 class TokenRepository(val redisManager: RedisManager) : OAuthTokenRepository {
 
+    // Keys are scoped by clientId, not just sub: Authos issues a pairwise (PPID) sub per AppGroup,
+    // so two Duster apps in the same group resolve the same sub for a user and would otherwise
+    // clobber each other's tokens - the second login's saveAll overwriting the first's refresh
+    // token (stored with no TTL). (design decision #25)
+    private val TOKEN_PREFIX = "duster:token"
 
-    private val tokenTypeToPrefix = HashMap<TokenType, String>()
+    private val tokenTypeToSuffix = mapOf(
+        TokenType.ACCESS_TOKEN to "access",
+        TokenType.REFRESH_TOKEN to "refresh",
+        TokenType.ID_TOKEN to "id",
+    )
 
-    private val ID_TOKEN_PREFIX = "id_token:sub"
-    private val REFRESH_TOKEN_PREFIX = "refresh_token:sub"
-    private val ACCESS_TOKEN_PREFIX = "access_token:sub"
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private fun key(clientId: String, sub: String, tokenType: TokenType) =
+        "$TOKEN_PREFIX:$clientId:$sub:${tokenTypeToSuffix.getValue(tokenType)}"
 
-    init {
-        tokenTypeToPrefix[TokenType.ACCESS_TOKEN] = ACCESS_TOKEN_PREFIX
-        tokenTypeToPrefix[TokenType.REFRESH_TOKEN] = REFRESH_TOKEN_PREFIX
-        tokenTypeToPrefix[TokenType.ID_TOKEN] = ID_TOKEN_PREFIX
-
-    }
-
-    override suspend fun getToken(sub: String, tokenType: TokenType): String? {
-        val prefix = tokenTypeToPrefix[tokenType]
-        val token: String? = redisManager.withCommands { cmd ->
-            cmd.get("$prefix:$sub").await()
+    override suspend fun getToken(clientId: String, sub: String, tokenType: TokenType): String? {
+        return redisManager.withCommands { cmd ->
+            cmd.get(key(clientId, sub, tokenType)).await()
         }
-        return token
     }
 
     override suspend fun save(
+        clientId: String,
         tokenType: TokenType,
         sub: String,
         token: String,
-        expirationTimeSecs: Long
+        expirationTimeSecs: Long,
     ) {
-        val prefix = tokenTypeToPrefix[tokenType]
-
+        val k = key(clientId, sub, tokenType)
         try {
             redisManager.withCommands { cmd ->
                 cmd.multi().await()
-                cmd.set("$prefix:$sub", token)
-
+                cmd.set(k, token)
                 if (expirationTimeSecs > 0) {
-                    cmd.expire("$prefix:$sub", expirationTimeSecs)
+                    cmd.expire(k, expirationTimeSecs)
                 }
-
                 cmd.exec().await()
             }
         } catch (e: Exception) {
@@ -61,20 +54,24 @@ class TokenRepository(val redisManager: RedisManager) : OAuthTokenRepository {
     }
 
     override suspend fun saveAll(
+        clientId: String,
         sub: String,
         idToken: String,
         accessToken: String,
         refreshToken: String?,
         idTokenExpirationTimeSecs: Long,
-        accessTokenExpirationTimeSecs: Long
+        accessTokenExpirationTimeSecs: Long,
     ) {
+        val idKey = key(clientId, sub, TokenType.ID_TOKEN)
+        val accessKey = key(clientId, sub, TokenType.ACCESS_TOKEN)
+        val refreshKey = key(clientId, sub, TokenType.REFRESH_TOKEN)
         redisManager.withCommands { cmd ->
             cmd.multi().await()
-            cmd.set("$ID_TOKEN_PREFIX:$sub", idToken)
-            cmd.set("$ACCESS_TOKEN_PREFIX:$sub", accessToken)
-            refreshToken?.let { cmd.set("$REFRESH_TOKEN_PREFIX:$sub", refreshToken) }
-            cmd.expire("$ID_TOKEN_PREFIX:$sub", idTokenExpirationTimeSecs)
-            cmd.expire("$ACCESS_TOKEN_PREFIX:$sub", accessTokenExpirationTimeSecs)
+            cmd.set(idKey, idToken)
+            cmd.set(accessKey, accessToken)
+            refreshToken?.let { cmd.set(refreshKey, it) }
+            cmd.expire(idKey, idTokenExpirationTimeSecs)
+            cmd.expire(accessKey, accessTokenExpirationTimeSecs)
             cmd.exec().await()
         }
     }
