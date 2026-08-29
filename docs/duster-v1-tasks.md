@@ -74,22 +74,6 @@ Authos:
 Duster:
 - [ ] Opaque session-token endpoint + bearer acceptance on `/me` (no cookie) (#30)
 
-## Phase 5 — Documentation site (`docs.tosak.net/authos`)
-
-- [ ] Site scaffold + `docs.tosak.net/authos` hosting + CI deploy on docs change
-- [ ] Concepts + per-tier integration guides + `@authoss/duster-*` SDK and `dstr` reference
-- [ ] Full HTTP + config + error-contract reference for Authos and Duster
-- [ ] AI-facing source (`llms.txt` / raw Markdown) served alongside the rendered site
-- [ ] Reconcile the in-repo `docs/` tracking set with the public site (non-duplicative split)
-
-## Phase 6 — Frontend redesign & realignment
-
-- [ ] Audit every screen against current API contracts (consent data, error shape, discovery, revoke, Duster app config)
-- [ ] Redesign — design system across login / consent / dashboard
-- [ ] First-class Duster app management UI (configure / sync / credentials / webhook / `allowed_origins` / `error_url` / CSRF / TTL)
-- [ ] Wire endpoints added since the last frontend pass + fix the `AuthProvider.tsx` stale-closure `setInterval` bug
-- [ ] Frontend component test coverage
-
 ## Cross-cutting (every phase)
 
 - [ ] Audit logging on the Authos auth paths — replace `println` with structured events
