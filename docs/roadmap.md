@@ -76,7 +76,9 @@ cases); discovery doc validates; the existing Duster flow works unchanged agains
 - `/callback` failures redirect to `error_url`, not 500 (#28)
 
 **SDKs**
-- `duster-react` (then `-vue`, `-js`) pointed at `/me` — no backend assumed (`duster-v1-design.md` #11)
+- `@authos/duster-core` (framework-agnostic; also the vanilla-JS build) + `@authos/duster-react`,
+  then `-vue`, then `-angular` — thin adapters over the core, pointed at `/me`, no backend assumed
+  (`duster-v1-design.md` #11, #31)
 
 **Exit criteria:** a static-hosted SPA with only a proxy rule + the React snippet can log in, survive
 silent refresh, and log out with the upstream token actually revoked.
