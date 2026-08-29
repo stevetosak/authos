@@ -1,0 +1,18 @@
+# Keep the build context small and deterministic — the image builds the fat jar itself.
+.git
+.gitignore
+.gradle
+.kotlin
+build
+*/build
+.idea
+*.iml
+.vscode
+k8s
+images
+*.md
+docker-compose*.yml
+.dockerignore
+.env
+.env.*
+run-package.sh

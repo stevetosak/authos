@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: duster-client
-  namespace: default
   labels:
     app: duster-client
 spec:
@@ -15,27 +14,45 @@ spec:
       labels:
         app: duster-client
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: tmp
+          emptyDir: {}
       containers:
         - name: duster-client
-          image: stevetosak/authos-duster-client:latest
+          image: stevetosak/authos-duster:latest
           ports:
-            - containerPort: 8785
+            - name: http
+              containerPort: 8785
           envFrom:
             - configMapRef:
                 name: duster-config
             - secretRef:
                 name: duster-secrets
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          # Liveness must not depend on Redis — /health/live is process-only.
           livenessProbe:
             httpGet:
-              path: /health
-              port: 8785
-            initialDelaySeconds: 20
+              path: /health/live
+              port: http
+            initialDelaySeconds: 15
             periodSeconds: 30
             failureThreshold: 3
+          # Readiness pings Redis — a Redis outage pulls the pod from the Service but never restarts it.
           readinessProbe:
             httpGet:
               path: /health
-              port: 8785
+              port: http
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3

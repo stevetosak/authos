@@ -1,23 +1,23 @@
-version: '3.8'
-
-# Use this file as a compose override to run Duster against an external Redis instance.
-# Usage: docker compose -f docker-compose.yml -f docker-compose.external-redis.yml up
+# Compose override: run Duster against an external Redis.
+#   docker compose -f docker-compose.yml -f docker-compose.external-redis.yml up
 #
-# Required environment variables (set in shell or .env file):
-#   REDIS_HOST     - hostname / IP of your Redis instance
-#   REDIS_PORT     - port (default 6379)
-#   REDIS_PASSWORD - password if your Redis requires auth (optional)
-#   REDIS_USESSL   - set to "true" if Redis is TLS-only (optional)
-
+# Set either REDIS_URL (one var, covers TLS / auth / db — wins), or the discrete pieces:
+#   REDIS_URL       redis[s]://[:password@]host:port[/db]
+#   REDIS_HOST      hostname / IP
+#   REDIS_PORT      port (default 6379)
+#   REDIS_PASSWORD  password, if required
+#   REDIS_USESSL    "true" for a TLS-only Redis
+#   REDIS_TIMEOUT   connection timeout seconds (default 60)
 services:
   duster-client:
     environment:
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_URL: ${REDIS_URL:-}
+      REDIS_HOST: ${REDIS_HOST:-}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       REDIS_USESSL: ${REDIS_USESSL:-false}
+      REDIS_TIMEOUT: ${REDIS_TIMEOUT:-60}
     depends_on: {}
 
   redis:
-    profiles:
-      - disabled
+    profiles: ["disabled"]

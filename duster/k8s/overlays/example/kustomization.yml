@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# A complete, deployable example overlay — copy this directory, edit the values, and
+#   kubectl apply -k <your-overlay>
+# Your GitOps repo's Duster overlay is a copy of this with real values (and the secret
+# sourced from your secret manager, not committed literals).
+
+namespace: duster
+
+resources:
+  - ../../base
+
+images:
+  - name: stevetosak/authos-duster
+    newTag: latest # pin to a digest or an alpha-<sha> tag in real deployments
+
+configMapGenerator:
+  - name: duster-config
+    literals:
+      - AUTHOS_BASE_URL=https://auth.example.com # must byte-match the Authos discovery `issuer`
+      - REDIS_HOST=redis.example.com
+      - REDIS_PORT=6379
+      # - REDIS_URL=rediss://redis.example.com:6380   # one var for a managed/TLS Redis; wins over the above
+      # - REDIS_USESSL=true
+      # - REDIS_TIMEOUT=60
+      # - PORT=8785
+      # - HOST_IP=                                    # only if app callback URIs use "localhost"
+
+secretGenerator:
+  - name: duster-secrets
+    literals:
+      # Replace both. DUSTER_ADMIN_TOKEN: openssl rand -hex 32 — must match `dstr`'s admin token.
+      - DUSTER_ADMIN_TOKEN=REPLACE_ME
+      - REDIS_PASSWORD=REPLACE_ME
+
+generatorOptions:
+  disableNameSuffixHash: true # stable names so envFrom refs in the base resolve
