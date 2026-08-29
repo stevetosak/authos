@@ -1,0 +1,20 @@
+{
+  "name": "@authoss/duster-browser-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Playwright browser e2e — the real @authoss/duster-react SPA driven through login / silent refresh / logout against the compose stack.",
+  "type": "module",
+  "scripts": {
+    "seed": "tsx seed.ts",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "typecheck": "tsc --noEmit",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.2",
+    "typescript": "~5.7.2"
+  }
+}
