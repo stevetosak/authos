@@ -16,6 +16,10 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        # Explicit numeric UID/GID — a non-numeric image USER can't be verified
+        # against runAsNonRoot. Matches the `duster` user in the image (uid 10001).
+        runAsUser: 10001
+        runAsGroup: 10001
         seccompProfile:
           type: RuntimeDefault
       volumes:
