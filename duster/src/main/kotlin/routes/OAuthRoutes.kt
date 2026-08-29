@@ -112,7 +112,10 @@ fun Route.oAuthRoutes() {
 
                 val sessionId = UUID.randomUUID().toString()
                 sessionRepository.save(
-                    DusterSession(sessionId, stateData.clientId, sub, prunedInfo),
+                    DusterSession(
+                        sessionId, stateData.clientId, sub, prunedInfo,
+                        csrfToken = UUID.randomUUID().toString(),
+                    ),
                     app.sessionTtl
                 )
 
