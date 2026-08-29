@@ -52,6 +52,13 @@ services:
       FRONTEND_HOST: http://localhost:5173
       API_HOST: http://authos-api:8080
       DUSTER_BASE_URL: http://duster:8785
+      # Rate limiting: trust every X-Forwarded-For in this throwaway stack so RateLimitTest can
+      # isolate itself on a fake IP. `register` is low for a fast test; `login`/`token` are well
+      # above anything the suite generates (the fixture seeds once: 1 /register, 1 /native-login).
+      RATE_LIMIT_TRUSTED_PROXIES: 0.0.0.0/0
+      RATE_LIMIT_REGISTER: "5"
+      RATE_LIMIT_LOGIN: "200"
+      RATE_LIMIT_TOKEN: "500"
     command: ["java", "-Xmx512m", "-XX:+UseSerialGC", "-jar", "/app/app.jar"]
     ports:
       - "18080:8080"
