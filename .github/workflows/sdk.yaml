@@ -34,6 +34,13 @@ jobs:
       - run: npm run sync-license -- --check
       - run: npm pack -w @authoss/duster-core -w @authoss/duster-react -w @authoss/duster-vue -w @authoss/duster-angular
 
+      # sdk-release.yaml only fires on tags, so sanity-check its version stamper here.
+      - name: Release version stamper
+        run: |
+          node scripts/set-release-version.mjs 9.9.9-citest
+          node -e "const d=require('./react/package.json').dependencies['@authoss/duster-core']; if(d!=='^9.9.9-citest'){console.error('core dep not pinned:',d);process.exit(1)}"
+          git checkout -- core react vue angular
+
   browser-e2e:
     # The real @authoss/duster-react package, consumed by a real Vite SPA, driven through
     # login -> silent refresh -> logout against the e2e-tests docker-compose stack. Closes the
