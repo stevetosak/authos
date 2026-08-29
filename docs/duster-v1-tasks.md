@@ -33,7 +33,7 @@ Duster:
 - [x] Client-scoped token Redis keys (#25) — fixes the same-AppGroup refresh-token clobber — PR #38
 - [x] `/logout` calls `/oauth/revoke` + purges token keys (#26) — PR #39
 - [x] Per-app `allowed_origins` → CORS + `SameSite=None` for tier 1 (#27) — PR #40, #41
-- [ ] `/callback` failures redirect to `error_url`, not 500 (#28)
+- [x] `/callback` failures redirect to `error_url`, not 500 (#28) — PR #42
 
 SDKs:
 - [ ] `duster-react` pointed at `/me` — no backend assumed (then `-vue`, `-js`) (#11)

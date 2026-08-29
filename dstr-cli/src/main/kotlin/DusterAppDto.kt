@@ -14,6 +14,7 @@ data class DusterAppDto(
     @JsonProperty("name") val name: String,
     val successUrl: String = "/",
     val logoutRedirectUrl: String = "/",
+    @JsonProperty("error_url") val errorUrl: String = "",
     val webhookSecret: String = "",
     val sessionTtl: Long = 86400,
     @JsonProperty("allowed_origins") val allowedOrigins: List<String> = emptyList(),

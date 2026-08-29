@@ -22,12 +22,17 @@ data class AppConfigUpdateRequest(
     @JsonProperty("webhook_secret") val webhookSecret: String? = null,
     @JsonProperty("session_ttl") val sessionTtl: Long? = null,
     @JsonProperty("allowed_origins") val allowedOrigins: List<String>? = null,
+    @JsonProperty("error_url") val errorUrl: String? = null,
 )
 
 class ConfigureApp : SuspendingCliktCommand(name = "configure") {
     val clientId by option("-cid", "--clientid", help = "Client ID of the app to configure").required()
     val successUrl by option("--success-url", help = "Where to redirect the browser after a successful login")
     val logoutRedirectUrl by option("--logout-url", help = "Where to redirect the browser after logout")
+    val errorUrl by option(
+        "--error-url",
+        help = "Where to redirect the browser when the OAuth callback fails (default: success-url origin + /error). Pass an empty string to reset to the default.",
+    )
     val webhookSecret by option(
         "--webhook-secret",
         help = "Shared secret used to HMAC-SHA256 sign the callback webhook payload (X-Duster-Signature)"
@@ -41,10 +46,10 @@ class ConfigureApp : SuspendingCliktCommand(name = "configure") {
 
     override suspend fun run() {
         if (successUrl == null && logoutRedirectUrl == null && webhookSecret == null &&
-            sessionTtl == null && allowedOrigins == null
+            sessionTtl == null && allowedOrigins == null && errorUrl == null
         ) {
             throw IllegalArgumentException(
-                "Provide at least one of --success-url, --logout-url, --webhook-secret, --session-ttl, --allowed-origins"
+                "Provide at least one of --success-url, --logout-url, --error-url, --webhook-secret, --session-ttl, --allowed-origins"
             )
         }
         val resp = client.patch("${DusterConfig.dusterBaseUrl}/duster/api/v1/internal/apps/config") {
@@ -55,6 +60,7 @@ class ConfigureApp : SuspendingCliktCommand(name = "configure") {
                 AppConfigUpdateRequest(
                     successUrl, logoutRedirectUrl, webhookSecret, sessionTtl,
                     allowedOrigins?.map { it.trim() }?.filter { it.isNotEmpty() },
+                    errorUrl,
                 )
             )
         }

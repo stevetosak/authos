@@ -39,6 +39,7 @@ data class DusterAppConfigUpdateDto(
     @JsonProperty("webhook_secret") val webhookSecret: String? = null,
     @JsonProperty("session_ttl") val sessionTtl: Long? = null,
     @JsonProperty("allowed_origins") val allowedOrigins: List<String>? = null,
+    @JsonProperty("error_url") val errorUrl: String? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
