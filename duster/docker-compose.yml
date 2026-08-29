@@ -1,35 +1,37 @@
-version: '3.8'
-
-# Local development compose — bundles Redis alongside Duster.
-# For external Redis, use:  docker compose -f docker-compose.yml -f docker-compose.external-redis.yml up
-# For production,           use docker-compose.prod.yml instead.
-
+# Local dev — Duster + a bundled Redis. Build from source with `--build`, or pull the image.
+#   docker compose up --build
+# For an external Redis:  docker compose -f docker-compose.yml -f docker-compose.external-redis.yml up
+# For production:         docker compose -f docker-compose.prod.yml up
 services:
   duster-client:
-    image: "stevetosak/authos-duster-client:1.0"
+    image: "stevetosak/authos-duster:latest"
+    build: .
     ports:
       - "8785:8785"
     environment:
       REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_PORT: "6379"
       AUTHOS_BASE_URL: ${AUTHOS_BASE_URL:-http://localhost:8080}
       HOST_IP: ${HOST_IP:-}
       DUSTER_ADMIN_TOKEN: ${DUSTER_ADMIN_TOKEN:-dev-admin-token}
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8785/health/live"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
-    networks:
-      - duster-net
+    networks: [duster-net]
 
   redis:
-    image: redis:alpine
+    image: redis:7-alpine
     ports:
       - "6380:6379"
     volumes:
       - redis-data:/data
-    networks:
-      - duster-net
+    networks: [duster-net]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

@@ -1,10 +1,15 @@
+# Tier-1 exposure ONLY: Duster on its own hostname, for cross-origin frontends whose apps
+# register `allowed_origins`. Add it to an overlay's `resources:` and set your host + TLS.
+#
+# Tier 0 (the common case) does NOT use this. Instead the consuming app's own Ingress gets a
+# path rule for `/duster` (pathType: Prefix, NO rewrite-target) pointing at this Service, so
+# Duster is same-origin with the app. See DEPLOY.md.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: duster-client
-  namespace: default
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "16k" # OIDC redirect headers can be large
 spec:
   ingressClassName: nginx
   rules:
@@ -17,9 +22,7 @@ spec:
               service:
                 name: duster-client
                 port:
-                  number: 8785
-  # Uncomment for TLS:
+                  name: http
   # tls:
-  #   - hosts:
-  #       - duster.example.com
+  #   - hosts: ["duster.example.com"]
   #     secretName: duster-tls

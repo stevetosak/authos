@@ -1,5 +1,6 @@
 package com.authos.service
 
+import com.authos.getAuthosBaseUrl
 import com.authos.model.DusterCredentials
 import com.authos.repository.CredentialsRepository
 import io.ktor.client.request.get
@@ -13,7 +14,7 @@ class DusterCliService (private val credentialsRepository: CredentialsRepository
         var token = credentials.token
         try{
             println("Checking token validity...")
-            client.get("http://localhost:8080/duster/validate-token") {
+            client.get("${getAuthosBaseUrl()}/duster/validate-token") {
                 headers.append("Authorization", "Bearer $token")
             }
             println("Success! Token is valid")

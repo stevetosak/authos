@@ -1,26 +1,34 @@
+# syntax=docker/dockerfile:1
 
-# Stage 1: Cache Gradle dependencies
-FROM gradle:latest AS cache
-LABEL authors="stevetosak"
-RUN mkdir -p /home/gradle/cache_home
+# ---- Stage 1: warm the Gradle dependency cache ----
+FROM gradle:8.13-jdk21 AS cache
 ENV GRADLE_USER_HOME=/home/gradle/cache_home
-COPY build.gradle.* gradle.properties /home/gradle/app/
-COPY gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app
-RUN gradle clean build -i --stacktrace
+COPY build.gradle.* gradle.properties settings.gradle.* ./
+COPY gradle ./gradle
+RUN gradle --no-daemon dependencies || true
 
-# Stage 2: Build Application
-FROM gradle:latest AS build
-COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src
-# Build the fat JAR, Gradle also supports shadow
-# and boot JAR by default.
-RUN gradle buildFatJar --no-daemon
+# ---- Stage 2: build the fat jar ----
+FROM gradle:8.13-jdk21 AS build
+ENV GRADLE_USER_HOME=/home/gradle/cache_home
+COPY --from=cache /home/gradle/cache_home /home/gradle/cache_home
+WORKDIR /home/gradle/app
+COPY . .
+RUN gradle --no-daemon buildFatJar
 
-# Stage 3: Create the Runtime Image
-FROM amazoncorretto:22 AS runtime
+# ---- Stage 3: runtime ----
+FROM eclipse-temurin:21-jre AS runtime
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --uid 10001 --home /app duster
+WORKDIR /app
+# `fat.jar` is the exact name set in build.gradle.kts (ktor.fatJar.archiveFileName).
+COPY --from=build /home/gradle/app/build/libs/fat.jar /app/duster-client.jar
+USER duster
+# Duster honours PORT (default 8785); EXPOSE is documentation only.
 EXPOSE 8785
-RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/duster-client.jar
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS "http://localhost:${PORT:-8785}/health/live" || exit 1
 ENTRYPOINT ["java","-jar","/app/duster-client.jar"]

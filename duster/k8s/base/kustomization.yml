@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace-agnostic base. An overlay supplies the namespace, the image tag, and the
+# `duster-config` ConfigMap + `duster-secrets` Secret the Deployment reads via envFrom.
+# See overlays/example for a complete, deployable set.
+
+resources:
+  - deployment.yml
+  - service.yml
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: duster
+      app.kubernetes.io/component: bff
+    includeSelectors: false

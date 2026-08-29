@@ -18,17 +18,11 @@ class RedisManager(private val config: RedisConfig) {
 
 
     fun connect() {
-        val uri = StringBuilder("redis://")
-        if (config.password != null) {
-            uri.append(config.password).append("@")
-        }
-        uri.append(config.host).append(":").append(config.port)
-
-        redisClient = RedisClient.create(uri.toString())
-        exposedLogger.warn("Connecting to redis host...")
+        val uri = config.redisUri()
+        exposedLogger.warn("Connecting to Redis @ ${config.redactedUri()} ...")
+        redisClient = RedisClient.create(uri)
         connection = redisClient.connect()
-        exposedLogger.info("Connected to redis host @ ${uri.toString()}")
-
+        exposedLogger.info("Connected to Redis @ ${config.redactedUri()}")
     }
 
     fun close() {
