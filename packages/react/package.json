@@ -1,0 +1,65 @@
+{
+  "name": "@authoss/duster-react",
+  "version": "0.0.0",
+  "description": "React bindings for @authoss/duster-core — <DusterProvider>, useDuster(), <ProtectedRoute>.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevetosak/authos.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/stevetosak/authos/tree/master/packages/react#readme",
+  "bugs": "https://github.com/stevetosak/authos/issues",
+  "keywords": [
+    "duster",
+    "authos",
+    "react",
+    "oauth2",
+    "oidc",
+    "authentication",
+    "hooks"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@authoss/duster-core": "*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "jsdom": "^26.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.5.0",
+    "typescript": "~5.7.2"
+  }
+}
