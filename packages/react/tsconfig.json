@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "noEmit": true,
+    "paths": {
+      "@authoss/duster-core": ["../core/src/index.ts"]
+    }
+  },
+  "include": ["src", "test", "tsup.config.ts"]
+}
