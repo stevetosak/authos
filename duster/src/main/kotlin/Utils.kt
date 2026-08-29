@@ -38,3 +38,37 @@ fun isValidRedirectTarget(url: String): Boolean {
 /** [url] when it is a valid redirect target (see [isValidRedirectTarget]), else [fallback]. */
 fun safeRedirectTarget(url: String, fallback: String = "/"): String =
     if (isValidRedirectTarget(url)) url else fallback
+
+/**
+ * Whether [value] is a bare web origin — `scheme://host[:port]`, scheme `http`/`https`, and
+ * nothing else (no path, query, fragment, userinfo, or trailing slash). This is exactly the
+ * form the browser puts in an `Origin` header and compares against `Access-Control-Allow-Origin`,
+ * so a per-app `allowed_origins` entry must match it byte for byte. (design decision #27)
+ */
+fun isValidOrigin(value: String): Boolean {
+    if (value.isBlank() || value.endsWith("/")) return false
+    return try {
+        val uri = URI(value)
+        uri.scheme?.lowercase() in setOf("http", "https") &&
+            !uri.host.isNullOrBlank() &&
+            uri.userInfo == null &&
+            uri.path.isNullOrEmpty() &&
+            uri.query == null &&
+            uri.fragment == null &&
+            value == buildString {
+                append(uri.scheme).append("://").append(uri.host)
+                if (uri.port != -1) append(":").append(uri.port)
+            }
+    } catch (e: java.net.URISyntaxException) {
+        false
+    }
+}
+
+/**
+ * The `SameSite` attribute for a client's `duster_session` cookie. Cross-origin (tier 1) apps —
+ * those with a non-empty `allowed_origins` — need `None` so the browser sends the cookie on a
+ * cross-site XHR to `/me`; everyone else keeps the tighter `Lax`. `None` is only ever paired
+ * with `Secure` (the cookie is always `Secure`). (design decision #27)
+ */
+fun sessionCookieSameSite(app: com.authos.model.DusterApp): String =
+    if (app.allowedOrigins.isNotEmpty()) "None" else "Lax"

@@ -27,6 +27,8 @@ class E2eFixture(
     val dusterApp: SeededApp,
     /** A second Duster-wired app in the *same* AppGroup as [dusterApp] (same pairwise sub). */
     val dusterApp2: SeededApp,
+    /** A Duster-wired app used for tier-1 (`allowed_origins` / CORS / CSRF) tests. */
+    val corsApp: SeededApp,
     val directApp: SeededApp,
     val dusterSvc: SeededCredentials,
 ) {

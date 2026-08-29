@@ -33,6 +33,10 @@ class SeedClient(private val endpoints: Endpoints, private val adminToken: Strin
         // default AppGroup with dusterApp, so Authos issues both the same pairwise sub.
         // Used by DusterClientScopedTokenTest (design #25).
         val dusterApp2 = registerDusterApp(http, name = "e2e-duster-2")
+        // A tier-1 (cross-origin) app: its Duster config carries `allowed_origins`, so login-time
+        // tests can mutate CORS / SameSite posture without touching the shared `dusterApp`.
+        // Used by DusterCorsTest / DusterLogoutCsrfTest (design #27).
+        val corsApp = registerDusterApp(http, name = "e2e-duster-cors")
         val directApp = registerApp(
             http,
             name = "e2e-direct",
@@ -44,8 +48,9 @@ class SeedClient(private val endpoints: Endpoints, private val adminToken: Strin
         saveDusterCredentials(dusterSvc)
         DusterSync.run(endpoints, adminToken, dusterApp.clientId, dusterSvc)
         DusterSync.run(endpoints, adminToken, dusterApp2.clientId, dusterSvc)
+        DusterSync.run(endpoints, adminToken, corsApp.clientId, dusterSvc)
 
-        return E2eFixture(endpoints, adminToken, user, dusterApp, dusterApp2, directApp, dusterSvc)
+        return E2eFixture(endpoints, adminToken, user, dusterApp, dusterApp2, corsApp, directApp, dusterSvc)
     }
 
     private fun registerUser(u: SeededUser) {

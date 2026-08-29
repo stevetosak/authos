@@ -38,6 +38,7 @@ data class DusterAppConfigUpdateDto(
     @JsonProperty("logout_redirect_url") val logoutRedirectUrl: String? = null,
     @JsonProperty("webhook_secret") val webhookSecret: String? = null,
     @JsonProperty("session_ttl") val sessionTtl: Long? = null,
+    @JsonProperty("allowed_origins") val allowedOrigins: List<String>? = null,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

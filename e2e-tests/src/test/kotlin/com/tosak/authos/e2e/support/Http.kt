@@ -37,6 +37,9 @@ class Http {
     fun get(url: String, headers: Map<String, String> = emptyMap()): Resp =
         send(reqBuilder(url, headers).GET())
 
+    fun options(url: String, headers: Map<String, String> = emptyMap()): Resp =
+        send(reqBuilder(url, headers).method("OPTIONS", HttpRequest.BodyPublishers.noBody()))
+
     fun postForm(
         url: String,
         form: Map<String, String?> = emptyMap(),

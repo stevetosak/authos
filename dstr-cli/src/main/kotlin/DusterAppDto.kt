@@ -16,6 +16,7 @@ data class DusterAppDto(
     val logoutRedirectUrl: String = "/",
     val webhookSecret: String = "",
     val sessionTtl: Long = 86400,
+    @JsonProperty("allowed_origins") val allowedOrigins: List<String> = emptyList(),
 
     ) {
     override fun toString(): String {

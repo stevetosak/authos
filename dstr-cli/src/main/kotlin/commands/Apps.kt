@@ -77,6 +77,7 @@ class Apps : SuspendingCliktCommand(name = "apps") {
                         entry("Logout URL", app.logoutRedirectUrl)
                         entry("Session TTL",app.sessionTtl.toString())
                         entry("Webhook Secret", webhookSecret)
+                        entry("Allowed Origins", app.allowedOrigins.joinToString(", ").ifEmpty { "—" })
                     },
                     title = Text(TextStyles.bold(app.name)),
                     borderType = BorderType.ROUNDED

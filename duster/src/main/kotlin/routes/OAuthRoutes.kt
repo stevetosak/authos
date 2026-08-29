@@ -4,6 +4,7 @@ import com.authos.data.CallbackResponse
 import com.authos.dusterSessionCookieName
 import com.authos.model.DusterSession
 import com.authos.safeRedirectTarget
+import com.authos.sessionCookieSameSite
 import com.authos.model.UserInfo
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterSessionRepository
@@ -126,7 +127,9 @@ fun Route.oAuthRoutes() {
                     // top-level navigation into the app (a link from an email, another site),
                     // so a deep link lands unauthenticated. Lax is the conventional session
                     // choice and still blocks CSRF on unsafe methods. (design decision #23)
-                    extensions = mapOf("SameSite" to "Lax")
+                    // A tier-1 (cross-origin) app gets SameSite=None so the browser sends the
+                    // cookie on a cross-site XHR to /me. (design decision #27)
+                    extensions = mapOf("SameSite" to sessionCookieSameSite(app))
                 )
                 call.response.cookies.append(cookie)
                 call.respondRedirect(safeRedirectTarget(app.successUrl))
