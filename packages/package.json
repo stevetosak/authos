@@ -7,7 +7,9 @@
   "type": "module",
   "workspaces": [
     "core",
-    "react"
+    "react",
+    "e2e",
+    "examples/react-vite"
   ],
   "scripts": {
     "build": "npm run build -w @authoss/duster-core && npm run build -w @authoss/duster-react",
@@ -16,8 +18,9 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "lint": "eslint .",
-    "clean": "rimraf \"*/dist\" \"*/coverage\" \"*/*.tsbuildinfo\"",
-    "sync-license": "node scripts/sync-license.mjs"
+    "clean": "rimraf \"*/dist\" \"*/coverage\" \"*/*.tsbuildinfo\" \"examples/*/dist\" \"e2e/playwright-report\" \"e2e/test-results\"",
+    "sync-license": "node scripts/sync-license.mjs",
+    "e2e": "npm test -w @authoss/duster-browser-e2e"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

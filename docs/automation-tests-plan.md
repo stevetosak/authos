@@ -14,14 +14,19 @@ that). Run: `./gradlew :e2e-tests:e2eTest`. CI: `.github/workflows/e2e.yaml`.
 click-through), `dstr-cli` exercised as a built binary, `authos-frontend` component tests,
 load/perf, wiring e2e into the deploy gate.
 
-**SDK browser e2e (Phase 1 close, `duster-v1-design.md` #31):** `packages/e2e/` (Playwright, in the
-npm workspace) drives a real Vite SPA built against `@authoss/duster-react` through login → silent
-refresh → logout against the existing `e2e-tests/docker-compose.e2e.yml` stack, asserting the
-upstream refresh-token key is gone from Redis after logout. **Caveat:** the compose stack has no
-`authos-frontend` UI, so the IdP login step is scripted via Playwright `APIRequestContext`
-(`POST /oauth-login` + `GET /oauth/approve`), not a rendered form — real login-form rendering stays
-Phase 2. CI installs Chromium with `--with-deps` (GitHub runners have sudo); locally use plain
-`npx playwright install chromium` per the Learnings below.
+**SDK browser e2e (Phase 1 close, `duster-v1-design.md` #31 — shipped PR #46):** `packages/e2e/`
+(Playwright, in the npm workspace) drives `packages/examples/react-vite` — a real Vite SPA built
+against `@authoss/duster-react` — through login → silent refresh → logout against the existing
+`e2e-tests/docker-compose.e2e.yml` stack, asserting the upstream refresh-token key is gone from
+Redis after logout. The `browser-e2e` job in `.github/workflows/sdk.yaml` runs it. **Caveats:**
+(1) the compose stack has no `authos-frontend` UI, so the IdP login step is scripted via Playwright
+`APIRequestContext` (`POST /oauth-login` + `GET /oauth/approve`), not a rendered form — real
+login-form rendering stays Phase 2. (2) Duster emits the Authos authorize URL with the
+compose-internal hostname (`authos-api:8080`); Chromium follows a top-level 3xx internally so
+`page.route` can't rewrite the redirected request — the spec instead fetches `/oauth/start` and
+rewrites its `Location` header to the host-mapped port. CI installs Chromium with `--with-deps`
+(GitHub runners have sudo); locally use plain `npx playwright install chromium` per the Learnings
+below.
 
 Goal: a standalone project that proves the Authos stack (authos-api, duster,
 authos-frontend, dstr-cli) works end-to-end, replacing the ad-hoc curl/browser

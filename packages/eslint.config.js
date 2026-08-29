@@ -4,7 +4,19 @@ import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/coverage/**', '**/*.config.ts', '**/*.config.js', 'scripts/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/*.config.ts',
+      '**/*.config.js',
+      'scripts/**',
+      // Test harness + demo app: their own toolchains (Playwright, Vite) type-check and run them;
+      // the shared browser-globals / ES2021 lint profile here doesn't fit their Node / React code.
+      'e2e/**',
+      'examples/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
