@@ -63,3 +63,12 @@ protection (verifier-without-challenge and challenge-without-verifier both rejec
 migration — the challenge lives in Redis with the rest of the `ShortSession`.
 
 ---
+
+### 16. Session TTL
+**Decision:** Configurable via dstr-cli, default 24h. Silent refresh using stored refresh token extends the session without re-prompting the user. Session ends only on explicit logout or refresh token expiry.
+
+```
+$ dstr config set session_ttl 86400
+```
+
+---

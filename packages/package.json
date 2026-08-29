@@ -9,11 +9,12 @@
     "core",
     "react",
     "vue",
+    "angular",
     "e2e",
     "examples/react-vite"
   ],
   "scripts": {
-    "build": "npm run build -w @authoss/duster-core && npm run build -w @authoss/duster-react && npm run build -w @authoss/duster-vue",
+    "build": "npm run build -w @authoss/duster-core && npm run build -w @authoss/duster-react && npm run build -w @authoss/duster-vue && npm run build -w @authoss/duster-angular",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "test:watch": "vitest",

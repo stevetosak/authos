@@ -185,11 +185,8 @@ Shipped (Phase 0, PR #24). Full text: archive/duster-v1-design-archive.md#15-pkc
 ---
 
 ### 16. Session TTL
-**Decision:** Configurable via dstr-cli, default 24h. Silent refresh using stored refresh token extends the session without re-prompting the user. Session ends only on explicit logout or refresh token expiry.
 
-```
-$ dstr config set session_ttl 86400
-```
+Shipped. Full text: archive/duster-v1-design-archive.md#16-session-ttl
 
 ---
 
@@ -475,6 +472,21 @@ adapters carry no logic. Pushing the entire wire contract — which is fiddly (a
 bodies, empty-body 401s, `text/plain` 500s, the tier-1 CSRF dance, the opaque logout redirect) —
 into one tested core means each new framework is a ~150-line reactivity shim, not a reimplementation
 that drifts.
+
+---
+
+### 32. Angular Adapter Builds With `tsup`, Not `ng-packagr`
+**Decision:** `@authoss/duster-angular` (`provideDuster()` / `DusterService` signals /
+`dusterAuthGuard`) ships as plain ESM+CJS+`.d.ts` from `tsup` like the other adapters. It has no
+`@Component`/`@Directive`/`@Pipe` and no `@Injectable` metadata (the service is a plain class behind
+a `useFactory` provider), so the Ivy partial compiler / Angular Package Format have nothing to do.
+Its devDeps pin **Angular 20 + `typescript@~5.8`** (19.2 has open advisories; Angular 20 needs
+`>=5.8`); the contained workspace isolates that from the `~5.7` the others use.
+
+**Rationale:** APF exists to ship compiled Angular *templates* safely across compiler versions. A
+binding library that only calls `@angular/core` runtime functions has no such payload, so
+`ng-packagr` (and the `@angular/compiler-cli` TS-range coupling it drags in) buys nothing.
+`ng-packagr` becomes mandatory only if a later version adds a template-bearing entity.
 
 ---
 
