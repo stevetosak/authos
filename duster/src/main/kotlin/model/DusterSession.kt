@@ -9,4 +9,7 @@ data class DusterSession(
     val sub: String,
     val userInfo: Map<String, String>,
     val createdAt: Long = System.currentTimeMillis(),
+    // Synchronizer token echoed by `/me` (`X-Duster-Csrf`) and required back on `POST /logout`
+    // for tier-1 apps, where `SameSite=None` removes the ambient CSRF protection. (design #27)
+    val csrfToken: String = "",
 )
