@@ -2,6 +2,7 @@ package com.authos.routes
 
 import com.authos.data.DusterAppConfigUpdateDto
 import com.authos.data.DusterAppRegisterDto
+import com.authos.isValidRedirectTarget
 import com.authos.model.DusterApp
 import com.authos.repository.CredentialsRepository
 import com.authos.repository.DusterAppRepository
@@ -83,6 +84,23 @@ fun Route.appRoutes(){
             val clientId = call.request.queryParameters["client_id"]
                 ?: return@patch call.respond(HttpStatusCode.BadRequest, mapOf("error" to "client_id required"))
             val body = call.receive<DusterAppConfigUpdateDto>()
+
+            // success_url / logout_redirect_url end up in a browser Location header. Allow a
+            // root-relative SPA route (tier 0, design #22) or an absolute http(s) URL (tier 2),
+            // nothing else.
+            body.successUrl?.let {
+                if (!isValidRedirectTarget(it)) return@patch call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "success_url must be a root-relative path or an absolute http(s) URL"),
+                )
+            }
+            body.logoutRedirectUrl?.let {
+                if (!isValidRedirectTarget(it)) return@patch call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "logout_redirect_url must be a root-relative path or an absolute http(s) URL"),
+                )
+            }
+
             val existing = try {
                 dusterAppRepository.getDusterAppByClientId(clientId)
             } catch (e: IllegalStateException) {

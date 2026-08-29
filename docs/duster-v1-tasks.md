@@ -27,7 +27,7 @@ Authos:
 
 Duster:
 - [x] `GET /duster/api/v1/me` — browser-facing session read (#22) — PR #34
-- [ ] `success_url` may be a plain SPA route at tier 0 (#22)
+- [x] `success_url` may be a plain SPA route at tier 0 (#22) — PR #35
 - [ ] `SameSite=Strict` → `Lax` on `duster_session` (#23)
 - [ ] Client-scoped cookie name (#24)
 - [ ] Client-scoped token Redis keys (#25) — fixes the same-AppGroup refresh-token clobber

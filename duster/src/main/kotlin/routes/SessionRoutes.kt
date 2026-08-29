@@ -3,6 +3,7 @@ package com.authos.routes
 import com.authos.repository.DusterAppRepository
 import com.authos.repository.DusterSessionRepository
 import com.authos.repository.TokenRepository
+import com.authos.safeRedirectTarget
 import com.authos.service.DusterOAuthClient
 import com.authos.service.DusterRequestService
 import io.ktor.http.Cookie
@@ -47,7 +48,7 @@ fun Route.sessionRoutes() {
                     extensions = mapOf("SameSite" to "Strict")
                 )
             )
-            call.respondRedirect(app.logoutRedirectUrl.ifBlank { "/" })
+            call.respondRedirect(safeRedirectTarget(app.logoutRedirectUrl))
         }
     }
 }
