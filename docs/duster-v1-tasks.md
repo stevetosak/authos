@@ -104,6 +104,8 @@ Duster:
 - [x] Rate limiting / brute-force protection on `/oauth-login`, `/oauth/token`, `/register` — PR #53
 - [ ] JWKS rotation strategy — publish overlapping `kid`s before rotating the signing key
 - [ ] Custom / authorization claims mapped into the ID token + userinfo
+- [ ] Duster deployability — portable artifacts (`PORT` / `REDIS_URL`, hardened image, Kustomize base+overlay, `DEPLOY.md`)
+- [ ] Deploy Duster to the cluster — first-class service + `duster.yaml` CI + GitOps overlay
 - [x] `e2e-tests/` stack suite — Postgres + Redis + authos-api + duster, HTTP-level — PR #25
 - [ ] Phase 2 test coverage — Playwright browser specs, `dstr-cli` binary, `authos-frontend` components
 

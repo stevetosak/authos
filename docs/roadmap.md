@@ -158,6 +158,9 @@ a machine-readable source (`llms.txt` / raw Markdown) served alongside the rende
 - **Reference** — every HTTP endpoint (Authos + Duster), the discovery document, config keys, env
   vars, Redis key shapes, the RFC 6749 §5.2 error contract.
 - **Operations** — deployment topologies, JWKS rotation, the compose / k8s manifests.
+- **Guided demo** — an interactive walkthrough at `demo.authos.tosak.net`, the click-through
+  companion to the reference: a real SPA on `@authoss/duster-react` that narrates each step of a
+  live login → silent refresh → logout → revoke against the deployed stack.
 
 Hosted on a separate domain, `docs.tosak.net`, with Authos under `/authos` (leaving sibling paths
 free for other projects). Static build, deployed from CI on a docs change.
@@ -234,6 +237,11 @@ and CI without a manual JDK setup.
   and every SDK cache JWKS and break on a hard swap.
 - **Custom / authorization claims** — map roles / groups / entitlements into the ID token + userinfo
   so real apps at any tier get authz data, not just profile.
+- **Deployment** — Duster runs in the cluster as a first-class service (image + CI + GitOps
+  overlay), like `authos-api` / `authos-frontend`. This is Duster's first deployment anywhere and
+  the test of its "deploy easily" promise, so the work is portability-first: one artifact set that
+  installs cleanly via `docker run`, docker-compose, raw k8s, Kustomize base+overlay, and bare JVM,
+  with a `DEPLOY.md` a third party could follow.
 - **Test coverage** — the `e2e-tests/` module stands up a real Postgres + Redis + authos-api +
   duster stack. Each phase extends it before it closes; browser specs + `dstr-cli`-binary coverage
   are Phase 2 (`automation-tests-plan.md`).
