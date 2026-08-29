@@ -1,6 +1,7 @@
 package com.tosak.authos.e2e
 
 import com.tosak.authos.e2e.support.asMap
+import com.tosak.authos.e2e.support.dusterSessionCookie
 import com.tosak.authos.e2e.support.queryParams
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -30,7 +31,10 @@ class PkceThroughDusterTest : E2eBase() {
         // Duster runs the code exchange here, sending the real code_verifier to Authos.
         val cb = h.get(callbackUrl)
         assertEquals(302, cb.status, cb.body)
-        assertTrue(h.cookies.containsKey("duster_session"), "duster set no duster_session cookie")
+        assertTrue(
+            h.cookies.containsKey(dusterSessionCookie(fx.dusterApp.clientId)),
+            "duster set no session cookie",
+        )
 
         val session = h.get("${fx.dusterBase}/duster/api/v1/session?client_id=${fx.dusterApp.clientId}")
         assertEquals(200, session.status, session.body)

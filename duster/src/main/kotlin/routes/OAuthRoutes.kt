@@ -1,6 +1,7 @@
 package com.authos.routes
 
 import com.authos.data.CallbackResponse
+import com.authos.dusterSessionCookieName
 import com.authos.model.DusterSession
 import com.authos.safeRedirectTarget
 import com.authos.model.UserInfo
@@ -41,7 +42,7 @@ fun Route.oAuthRoutes() {
 
             val app = dusterAppRepository.getDusterAppByClientId(clientId)
 
-            val existingSession = call.request.cookies["duster_session"]
+            val existingSession = call.request.cookies[dusterSessionCookieName(clientId)]
             if (existingSession != null) {
                 val session = sessionRepository.get(existingSession, clientId)
                 if (session != null) {
@@ -114,7 +115,7 @@ fun Route.oAuthRoutes() {
                 )
 
                 val cookie = Cookie(
-                    name = "duster_session",
+                    name = dusterSessionCookieName(stateData.clientId),
                     value = sessionId,
                     httpOnly = true,
                     secure = true,
