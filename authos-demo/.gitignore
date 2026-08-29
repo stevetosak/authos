@@ -1,0 +1,6 @@
+node_modules
+dist
+*.local
+.fixture.json
+.env
+.env.*.local

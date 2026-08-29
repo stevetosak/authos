@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authos-demo
+  labels:
+    app: authos-demo
+  annotations:
+    # Tier 0: the SPA and Duster share an origin. `/duster` is forwarded verbatim (NO
+    # rewrite-target) to the in-cluster Duster Service, so from the browser Duster looks
+    # same-origin — no CORS, `SameSite=Lax` cookie, `Secure` satisfied by the TLS below.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - authos-demo.tosak.net
+      secretName: authos-demo-tls
+  rules:
+    - host: authos-demo.tosak.net
+      http:
+        paths:
+          - path: /duster
+            pathType: Prefix
+            backend:
+              service:
+                # The first-class Duster service in this namespace (deployed by duster.yaml).
+                name: duster
+                port:
+                  number: 8785
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: authos-demo
+                port:
+                  number: 80

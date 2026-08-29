@@ -81,6 +81,7 @@ Duster:
 - [ ] Full HTTP + config + error-contract reference for Authos and Duster
 - [ ] AI-facing source (`llms.txt` / raw Markdown) served alongside the rendered site
 - [ ] Reconcile the in-repo `docs/` tracking set with the public site (non-duplicative split)
+- [x] Guided demo — interactive tier-0 walkthrough at `authos-demo.tosak.net` on `@authoss/duster-react` — PR #59
 
 ## Phase 6 — Frontend redesign & realignment
 

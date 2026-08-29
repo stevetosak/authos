@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T00:00:00Z",
+  "title": "Design System: Authos — The Handshake Trace",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Drafting Ground",
+        "canonical": "#f7f6f3",
+        "tonalRamp": ["#1c1b18", "#33322d", "#4d4b45", "#6b685f", "#8c887d", "#b0ab9e", "#d2cec1", "#f7f6f3"]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel",
+        "canonical": "#fffefb",
+        "tonalRamp": ["#1d1c19", "#35342f", "#504e47", "#6d6a61", "#8f8b80", "#b3aea1", "#d8d4c6", "#fffefb"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Warm Ink",
+        "canonical": "#14181d",
+        "tonalRamp": ["#14181d", "#22272d", "#333941", "#474e57", "#5c6167", "#868a8f", "#b4b7ba", "#e2e3e5"]
+      },
+      "blue": {
+        "role": "primary",
+        "displayName": "Structural Blue",
+        "canonical": "#2b63c4",
+        "tonalRamp": ["#0d1c39", "#12295a", "#183a7f", "#204a97", "#2b63c4", "#5a86d3", "#93aee3", "#e9eff9"]
+      },
+      "signal": {
+        "role": "secondary",
+        "displayName": "Signal Orange",
+        "canonical": "#e0562a",
+        "tonalRamp": ["#3a1408", "#5c2010", "#8a3117", "#b23f18", "#e0562a", "#ea8058", "#f2ac91", "#fbe9e1"]
+      },
+      "ok": {
+        "role": "utility",
+        "displayName": "OK Green",
+        "canonical": "#2f7d4f",
+        "tonalRamp": ["#0f2c1c", "#164027", "#1f5735", "#2a6d43", "#2f7d4f", "#5aa078", "#93c4a9", "#dcefe4"]
+      },
+      "bad": {
+        "role": "utility",
+        "displayName": "Bad Red",
+        "canonical": "#c23b3b",
+        "tonalRamp": ["#3a1010", "#571818", "#832626", "#a53131", "#c23b3b", "#d47070", "#e6a8a8", "#f7e2e2"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The single page headline. text-wrap: balance; inline <code> shifts to signal-ink." },
+      "readout": { "displayName": "Readout", "purpose": "The SESSION state word — the instrument's largest reading. B612 Mono 700." },
+      "title": { "displayName": "Title", "purpose": "Panel and narration headings." },
+      "body": { "displayName": "Body", "purpose": "Prose, capped at 68ch (58ch for the intro)." },
+      "label": { "displayName": "Label", "purpose": "Status keys, actor labels, summary terms. B612 Mono, wide tracking, usually uppercase." },
+      "mono": { "displayName": "Mono body", "purpose": "Request lines, code panel, transcript, /me payload, wire log. B612 Mono." }
+    },
+    "shadows": [
+      { "name": "panel", "value": "0 1px 2px rgba(20,24,29,0.05), 0 10px 24px -14px rgba(20,24,29,0.22)", "purpose": "The trace frame and every content panel — a sheet resting on the desk." },
+      { "name": "lift", "value": "0 2px 4px rgba(20,24,29,0.06), 0 18px 40px -18px rgba(20,24,29,0.28)", "purpose": "A more-raised surface; used sparingly." },
+      { "name": "primary-glow", "value": "0 1px 2px rgba(20,24,29,0.12), 0 8px 18px -10px rgba(43,99,196,0.6)", "purpose": "The one coloured shadow — a blue cast under the RUN trigger so it reads as the live thing on the page." }
+    ],
+    "motion": [
+      { "name": "trace-draw", "value": "stroke-dashoffset 660 -> 0 over 560ms cubic-bezier(0.2,0.7,0.2,1), staggered 55ms per row", "purpose": "The phase-change sweep: newly-reached message arrows draw themselves stroke-first when the flow advances. Fires once, then static." },
+      { "name": "trace-ink", "value": "opacity 0 -> 1 over 520ms ease-out, delay (55ms * row) + 140ms", "purpose": "Labels and wire chips fade in just behind their arrow during the sweep." },
+      { "name": "state-fast", "value": "120ms ease", "purpose": "Background, border, and box-shadow transitions on interactive elements." },
+      { "name": "press", "value": "60ms ease", "purpose": "The transform on :active (buttons translateY 1px, scrub grab)." }
+    ],
+    "breakpoints": [
+      { "name": "diagram-drop", "value": "720px", "purpose": "At or below: the SVG trace is display:none; the transcript is the reading and a 3-up instrument summary carries the state." },
+      { "name": "panels-2col", "value": "900px", "purpose": "At or above: the panel grid goes two columns; narration and wire log span full width." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (RUN)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one trigger per screen — starts the handshake. Sits at the instrument's trigger point, carries the only coloured shadow.",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-btn-key\" viewBox=\"0 0 10 10\" aria-hidden=\"true\"><path d=\"M2 1 L9 5 L2 9 Z\"/></svg>Run the handshake</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.6em; padding: 0.62em 1.15em; border: 1px solid #204a97; border-radius: 4px; background: #2b63c4; color: #fff; font-family: 'B612 Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; letter-spacing: 0.02em; cursor: pointer; box-shadow: 0 1px 2px rgba(20,24,29,0.12), 0 8px 18px -10px rgba(43,99,196,0.6); transition: background 120ms ease, transform 60ms ease; } .ds-btn-primary:hover { background: #204a97; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #2b63c4; outline-offset: 2px; } .ds-btn-key { width: 0.66em; height: 0.66em; flex: none; fill: currentColor; opacity: 0.9; }"
+    },
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Secondary actions (Force a silent refresh). A drafting-tool key: panel fill, hairline border, mono label.",
+      "html": "<button class=\"ds-btn\">Force a silent refresh</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 0.6em; padding: 0.62em 1.15em; border: 1px solid #c8c2b4; border-radius: 4px; background: #fffefb; color: #14181d; font-family: 'B612 Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; letter-spacing: 0.02em; cursor: pointer; transition: background 120ms ease, border-color 120ms ease, transform 60ms ease; } .ds-btn:hover { border-color: #5c6167; background: #f1efe9; } .ds-btn:active { transform: translateY(1px); } .ds-btn:focus-visible { outline: 2px solid #2b63c4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button (Log out)",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "The teardown action. Signal-ink text and a translucent orange border; fills with signal-wash on hover.",
+      "html": "<button class=\"ds-btn-danger\">Log out</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; gap: 0.6em; padding: 0.62em 1.15em; border: 1px solid rgba(178,63,24,0.4); border-radius: 4px; background: #fffefb; color: #b23f18; font-family: 'B612 Mono', ui-monospace, Menlo, Consolas, monospace; font-size: 0.82rem; letter-spacing: 0.02em; cursor: pointer; transition: background 120ms ease, border-color 120ms ease; } .ds-btn-danger:hover { background: #fbe9e1; border-color: #b23f18; } .ds-btn-danger:focus-visible { outline: 2px solid #2b63c4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "Every content surface — narration, code, /me, wire log. A drafting sheet on the desk: hairline border, one low shadow, flat at rest.",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-panel-title\">GET /me <span class=\"ds-panel-badge ok\">200</span></h2><p class=\"ds-panel-body\">Every value a string, plus the X-Duster-Csrf response header.</p></section>",
+      "css": ".ds-panel { background: #fffefb; border: 1px solid #ded9cf; border-radius: 6px; padding: 24px; box-shadow: 0 1px 2px rgba(20,24,29,0.05), 0 10px 24px -14px rgba(20,24,29,0.22); } .ds-panel-title { margin: 0 0 14px; font-family: 'B612 Mono', ui-monospace, Menlo, monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.02em; color: #14181d; display: flex; align-items: baseline; gap: 10px; } .ds-panel-badge { font-family: 'B612 Mono', ui-monospace, monospace; font-size: 0.7rem; font-weight: 700; padding: 0.1em 0.45em; border-radius: 3px; background: #f1efe9; color: #3d4249; } .ds-panel-badge.ok { background: rgba(47,125,79,0.14); color: #2f7d4f; } .ds-panel-body { margin: 0; font-family: 'B612', ui-sans-serif, system-ui, sans-serif; font-size: 0.92rem; color: #3d4249; }"
+    },
+    {
+      "name": "Readout Strip",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The instrument's status strip — a mono key, the large SESSION state word (ink when logged out, signal-ink when authenticated), a sub-line, then the controls. Joins the trace with no seam.",
+      "html": "<div class=\"ds-readout\"><span class=\"ds-readout-key\">SESSION</span><div class=\"ds-readout-value authed\">AUTHENTICATED</div><p class=\"ds-readout-sub\">Back from Authos. Duster verified the tokens, started a session, and the SDK's first /me answered 200.</p></div>",
+      "css": ".ds-readout { border: 1px solid #ded9cf; border-bottom: none; background: #fffefb; border-radius: 6px 6px 0 0; padding: 18px 26px 20px; } .ds-readout-key { font-family: 'B612 Mono', ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.18em; color: #5c6167; } .ds-readout-value { font-family: 'B612 Mono', ui-monospace, monospace; font-weight: 700; font-size: 1.9rem; letter-spacing: -0.02em; line-height: 1; color: #14181d; } .ds-readout-value.authed { color: #b23f18; } .ds-readout-sub { margin: 10px 0 0; max-width: 64ch; color: #3d4249; font-size: 0.94rem; font-family: 'B612', ui-sans-serif, system-ui, sans-serif; }"
+    },
+    {
+      "name": "Wire-log Item",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "One real request the browser made — method, path, timestamp, then status + timing + a safe header subset. Sunken fill, mono, no left stripe.",
+      "html": "<div class=\"ds-wire-item\"><div class=\"ds-wire-req\"><span class=\"ds-wire-method\">GET</span><span class=\"ds-wire-path\">/duster/api/v1/me?client_id=&hellip;</span><span class=\"ds-wire-t\">T+0ms</span></div><div class=\"ds-wire-res\"><span class=\"ds-wire-status ok\">200</span><span>121ms</span><span>x-duster-csrf: 9b1c7f42&hellip;</span></div></div>",
+      "css": ".ds-wire-item { padding: 8px 12px; background: #f1efe9; border: 1px solid #ded9cf; border-radius: 4px; font-family: 'B612 Mono', ui-monospace, Menlo, monospace; font-size: 0.76rem; } .ds-wire-req { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; } .ds-wire-method { font-weight: 700; color: #14181d; } .ds-wire-path { color: #3d4249; } .ds-wire-t { margin-left: auto; color: #5c6167; font-size: 0.72rem; } .ds-wire-res { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-top: 5px; color: #5c6167; font-size: 0.72rem; } .ds-wire-status { font-weight: 700; } .ds-wire-status.ok { color: #2f7d4f; } .ds-wire-status.bad { color: #c23b3b; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Handshake Trace",
+    "overview": "An OIDC session is a timed message exchange between three parties. Every explainer draws that exchange as a UML sequence diagram; this system takes the diagram literally and runs it on an instrument clock. Lifelines for BROWSER, DUSTER, and AUTHOS; labelled message arrows; activation bars; alt/opt frames; a time ruler down the left with a trigger parked at the auth request; and a logic channel down the right margin that reads the access token HIGH or LOW. The page is not a description of the flow — it is the flow, drawn as it happens.\n\nThe material is a lit drafting sheet, not a screen. The ground is a warm near-white (#F7F6F3), the ink is a near-black with a warm cast (#14181D), and the whole surface deliberately refuses the dark developer-tool landing page — that look (slate #111827, Ubuntu, shadcn defaults) is Authos's documented anti-reference. Two accents do all the chromatic work: one structural blue that marks where you are in the exchange, and one signal-orange, used sparingly, for the access-token trace and the trigger. B612 and B612 Mono — the faces designed for the Airbus cockpit display — carry every word.\n\nMotion happens exactly once per state change: when the flow advances, the newly-reached arrows sweep back in, drawn stroke-first and staggered down the ladder, then settle. There is no ambient animation, no scroll-triggered reveal, no loop. Latent structure is always drawn, never hidden behind a next button.",
+    "keyCharacteristics": [
+      "Sequence diagram as the literal interface, on an oscilloscope-style time base",
+      "Warm near-white drafting ground; no dark theme, ever",
+      "Two accents only: structural blue (position) + signal-orange (the token, the trigger)",
+      "B612 / B612 Mono throughout — load-bearing, not decorative",
+      "One authored motion: the phase-change sweep. Nothing else moves.",
+      "Honesty rule: real wire events are solid; narrated hops are dashed and linked to CI proof"
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "#E0562A / #B23F18 appears only on the token trace, the trigger, the completed ticks, and the AUTHENTICATED state word. If orange starts showing up on borders or headings, the reading is broken.", "section": "colors" },
+      { "name": "The Structural Blue Rule", "body": "Blue marks exactly one thing at a time — the message under the cursor and its echoes (step band, transcript row, code line). It is 'you are here', not a brand colour to sprinkle.", "section": "colors" },
+      { "name": "The Drafting-Ground Rule", "body": "The ground is warm near-white (#F7F6F3). Never the dev-tool slate (#111827), never a cool grey. Drift toward a dark or cold ground is drift toward the anti-reference.", "section": "colors" },
+      { "name": "The Light-Sheet Rule", "body": "There is no dark theme. Under prefers-color-scheme: dark the ground, panel, and sunken tokens lift a few points off pure white so a dark room isn't a glare slab; nothing inverts.", "section": "elevation" },
+      { "name": "The Cockpit-Face Rule", "body": "B612 / B612 Mono only. No system display face, no Inter, no Space Mono default. The faces are half of why the page reads as an instrument.", "section": "typography" },
+      { "name": "The Two-Register Rule", "body": "Proportional B612 for anything read as sentences; B612 Mono for anything read as a value, a label, or a wire line. No third face, no italic display use.", "section": "typography" },
+      { "name": "The Diagram-or-Transcript Rule", "body": "The SVG trace and the plain-text transcript are the same content at two fidelities. The transcript is always in the DOM; below 720px it is the only reading and the diagram steps aside rather than scrolling horizontally.", "section": "layout" },
+      { "name": "The Resting-Sheet Rule", "body": "Surfaces carry a hairline + the panel shadow at rest and do not deepen on hover. Hover changes border colour and background tint, not elevation. The one exception is the RUN button's blue glow, which is identity, not interaction.", "section": "elevation" },
+      { "name": "The Observed-vs-Narrated Rule", "body": "A solid ink arrow is a request the browser actually made, with a real WireEvent behind it. A redirect or server-to-server hop is drawn as the protocol — dashed, --ink-2, tagged, linked to the packages/e2e CI proof. Never draw a fake request line for something the page cannot observe.", "section": "components" },
+      { "name": "The Nothing-Blank Rule", "body": "Every future step is drawn from the first render — pale --dim strokes for the arrows, but labels at --ink-3 so the un-run diagram is fully readable.", "section": "components" },
+      { "name": "The One-Authored-Motion Rule", "body": "The only animation is the phase-change sweep (trace-draw + trace-ink, staggered 55ms per row). It fires once when the flow advances, then the diagram is static. No hover animation, no scroll reveal, no loop. Fully disabled under prefers-reduced-motion.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the trace honest: label an unobservable hop 'narrated · off the SPA's wire' and link the CI proof, rather than drawing a request line for it.",
+      "Do reserve signal-orange (#E0562A / #B23F18) for the token trace, the trigger, completed ticks, and the AUTHENTICATED word — nothing else.",
+      "Do draw latent structure at --dim strokes with --ink-3 labels; never hide a future step behind a control.",
+      "Do set every label, state word, status key, and wire line in B612 Mono; every sentence in B612.",
+      "Do keep the ground warm near-white in every colour scheme.",
+      "Do author icons as inline SVG paths."
+    ],
+    "donts": [
+      "Don't reach for a dark developer-tool ground (#111827), a cool grey field, or a numbered-circle stepper — the THESIS refuses all three, and the first two are the documented anti-reference.",
+      "Don't add a third colour role. Blue is position, orange is signal; everything else is drafting neutral.",
+      "Don't animate on hover, on scroll, or on a loop. The phase-change sweep is the only motion the world allows.",
+      "Don't use glyph or emoji icons, or an icon font.",
+      "Don't introduce shadcn/Radix components, Tailwind, or a second stylesheet; this world is one hand-authored styles.css.",
+      "Don't deepen a shadow on hover — hover moves border colour and background tint, not elevation."
+    ]
+  }
+}

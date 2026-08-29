@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Watch an OpenID Connect login happen to your own browser — one redirect and a GET /me. The Authos + Duster guided demo."
+    />
+    <title>The Handshake Trace — Authos + Duster</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=B612:ital,wght@0,400;0,700;1,400&family=B612+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="/config/config.js"></script>
+  </head>
+  <body>
+    <!--
+      DIRECTION CONTRACT · seed 1ecf0e2c · "The Handshake Trace" (code-led)
+
+      THESIS: An OIDC session is a timed message exchange; this page is the sequence diagram
+      every explainer draws, run for real on an instrument clock. It refuses the dark
+      developer-tool landing page and the numbered-circle stepper.
+
+      OWN-WORLD: Near-white drafting ground (#F7F6F3), ink (#14181D), one structural blue
+      (#2B63C4) for live messages, one signal-orange (#E0562A) for the token trace and the
+      trigger, dim neutral (#9098A0) for latent routes. B612 / B612 Mono (cockpit-display
+      faces). Lifelines, activation bars, labelled message arrows, alt/opt frames, and a
+      TOKEN logic channel down the right margin.
+
+      STORY: A first-time visitor presses RUN, is redirected through a real Authos login,
+      returns authenticated, watches the captured exchange play, forces a silent refresh,
+      logs out — and leaves able to say "one redirect and a GET /me", trusting the browser
+      holds no tokens.
+
+      FIRST VIEWPORT: Full-bleed near-white canvas. Three labelled lifelines (BROWSER,
+      DUSTER, AUTHOS) over a faint column grid; a time ruler down the left reading T+0.0s
+      with a trigger marker parked at the top (AUTH REQUEST); the TOKEN channel a flat LOW
+      line at the right; the opening message arrow drawn dashed and dim. One primary control
+      — RUN — at the trigger. Corner readout: SESSION · UNAUTHENTICATED.
+
+      FORM: sequence-diagram-on-a-timebase; grounded candidate #5 fused with #1 (The
+      Handshake Ladder) per the user's steer; seed key 1ecf0e2c.
+
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish
+      review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+    -->
+    <div id="root"></div>
+    <noscript>This demo runs a live OAuth flow in the browser and needs JavaScript.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

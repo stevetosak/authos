@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# A complete, deployable example overlay — copy this directory, edit the values, and
+#   kubectl apply -k <your-overlay>
+# The GitOps repo's demo overlay is a copy of this with real values; CI (demo.yaml) bumps
+# the image tag on every push to authos-demo/**.
+
+namespace: authos # co-located with Duster so the Ingress `/duster` route resolves
+
+resources:
+  - ../../base
+
+images:
+  - name: stevetosak/authos-demo
+    newTag: latest # CI pins this to alpha-<sha>
+
+configMapGenerator:
+  - name: authos-demo-config
+    literals:
+      # From scripts/bootstrap.ts. A public OAuth client_id — not a secret.
+      - DEMO_DUSTER_CLIENT_ID=REPLACE_ME
+      # Defaults below match entrypoint.sh; override only if the deployment differs.
+      # - DEMO_DUSTER_BASE_PATH=/duster/api/v1
+      # - DEMO_AUTHOS_ORIGIN=https://authos-api.tosak.net
+      # - DEMO_PROOF_SPEC_URL=https://github.com/stevetosak/authos/blob/master/packages/e2e/specs/login-refresh-logout.spec.ts
+      # - DEMO_PROOF_CI_URL=https://github.com/stevetosak/authos/actions/workflows/sdk.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true # stable name so the base's envFrom ref resolves
