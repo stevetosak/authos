@@ -15,7 +15,7 @@ click-through), `dstr-cli` exercised as a built binary, `authos-frontend` compon
 load/perf, wiring e2e into the deploy gate.
 
 **SDK browser e2e (Phase 1 close, `duster-v1-design.md` #31):** `packages/e2e/` (Playwright, in the
-npm workspace) drives a real Vite SPA built against `@authos/duster-react` through login → silent
+npm workspace) drives a real Vite SPA built against `@authoss/duster-react` through login → silent
 refresh → logout against the existing `e2e-tests/docker-compose.e2e.yml` stack, asserting the
 upstream refresh-token key is gone from Redis after logout. **Caveat:** the compose stack has no
 `authos-frontend` UI, so the IdP login step is scripted via Playwright `APIRequestContext`

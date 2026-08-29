@@ -449,7 +449,7 @@ now is cheap insurance against a v1 decision that quietly closes the door on the
 **Decision:** `#11`'s frontend library is built as a zero-dependency core with per-framework
 adapters, not a React package that Vue/Angular later copy.
 
-- **`@authos/duster-core`** — no runtime deps, no peer deps. Owns *everything*: the `fetch`
+- **`@authoss/duster-core`** — no runtime deps, no peer deps. Owns *everything*: the `fetch`
   transport (always `credentials:'include'`), the `/me` → typed `DusterUser` normalization (every
   `/me` value is a string; `emailVerified`/`phoneNumberVerified` coerced; a `raw` passthrough keeps
   unknown/future claims usable with no release), the in-memory cache, `X-Duster-Csrf` capture +
@@ -458,7 +458,7 @@ adapters, not a React package that Vue/Angular later copy.
   framework-agnostic seam: `getSnapshot()` / `getServerSnapshot()` / `subscribe()` +
   `init/refresh/login/logout`. Also emits an IIFE `window.Duster` build — that *is* the vanilla-JS
   SDK (`#11`'s third target); no separate `-js` package.
-- **`@authos/duster-react`**, then **`-vue`**, then **`-angular`** — each only bridges the store
+- **`@authoss/duster-react`**, then **`-vue`**, then **`-angular`** — each only bridges the store
   seam into the framework (`useSyncExternalStore` / `shallowRef` / a `signal`) and adds an idiomatic
   surface (`<DusterProvider>`+`useDuster()`+`<ProtectedRoute>` / `createDuster()` plugin /
   `provideDuster()`+`DusterService`+`dusterAuthGuard`). No networking, no framework types in core.
@@ -469,7 +469,7 @@ adapters, not a React package that Vue/Angular later copy.
   `/me` on `visibilitychange` / `online`), default off.
 - **Layout / publish:** a contained npm workspace at `packages/` (not wired into
   `settings.gradle.kts`, not a repo-root workspace); lockstep-versioned; public npm under
-  `@authos/*`. Tiers 3–4 seams from `#30` are kept (`config.sessionToken?` reserved; `raw`).
+  `@authoss/*`. Tiers 3–4 seams from `#30` are kept (`config.sessionToken?` reserved; `raw`).
 
 **Rationale:** `#11` names three frameworks and the user added Angular; porting is only cheap if the
 adapters carry no logic. Pushing the entire wire contract — which is fiddly (all-string `/me`

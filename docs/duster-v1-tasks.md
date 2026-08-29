@@ -35,11 +35,11 @@ Duster:
 - [x] Per-app `allowed_origins` → CORS + `SameSite=None` for tier 1 (#27) — PR #40, #41
 - [x] `/callback` failures redirect to `error_url`, not 500 (#28) — PR #42
 
-SDKs (#11, #31 — framework-agnostic `@authos/duster-core` + thin adapters, pointed at `/me`, no backend assumed):
-- [ ] `@authos/duster-core` — store/seam, `/me` normalization, CSRF, logout, `onUnauthenticated`; also the vanilla-JS build
-- [ ] `@authos/duster-react` — `<DusterProvider>` + `useDuster()` + `<ProtectedRoute>`; browser-e2e vs the compose stack (closes the Phase 1 exit criterion)
-- [ ] `@authos/duster-vue` — `createDuster()` plugin + `useDuster()` + `<ProtectedRoute>`
-- [ ] `@authos/duster-angular` — `provideDuster()` + `DusterService` + `dusterAuthGuard`
+SDKs (#11, #31 — framework-agnostic `@authoss/duster-core` + thin adapters, pointed at `/me`, no backend assumed):
+- [ ] `@authoss/duster-core` — store/seam, `/me` normalization, CSRF, logout, `onUnauthenticated`; also the vanilla-JS build
+- [ ] `@authoss/duster-react` — `<DusterProvider>` + `useDuster()` + `<ProtectedRoute>`; browser-e2e vs the compose stack (closes the Phase 1 exit criterion)
+- [ ] `@authoss/duster-vue` — `createDuster()` plugin + `useDuster()` + `<ProtectedRoute>`
+- [ ] `@authoss/duster-angular` — `provideDuster()` + `DusterService` + `dusterAuthGuard`
 
 ## Phase 2 — Duster tier 2 hardening + headless onboarding
 

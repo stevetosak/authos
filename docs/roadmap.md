@@ -76,7 +76,7 @@ cases); discovery doc validates; the existing Duster flow works unchanged agains
 - `/callback` failures redirect to `error_url`, not 500 (#28)
 
 **SDKs**
-- `@authos/duster-core` (framework-agnostic; also the vanilla-JS build) + `@authos/duster-react`,
+- `@authoss/duster-core` (framework-agnostic; also the vanilla-JS build) + `@authoss/duster-react`,
   then `-vue`, then `-angular` — thin adapters over the core, pointed at `/me`, no backend assumed
   (`duster-v1-design.md` #11, #31)
 
