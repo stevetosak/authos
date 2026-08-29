@@ -190,6 +190,41 @@ frontend component coverage lands with it (feeds the Cross-cutting test-coverage
 
 ---
 
+## Phase 7 — `dstr-cli` realignment & portability
+
+*`dstr-cli` has drifted the same way the frontend has: it was built against an earlier Duster and
+knows nothing about the Phase 0–4 additions. This phase audits it, closes the feature gap, and makes
+it the primary way to operate and debug Duster — for a human at a terminal and for an AI agent
+driving it non-interactively.*
+
+**North star:** `dstr` is the best tool to both *use* and *debug* Duster. A human should reach for it
+before `curl` or `redis-cli`; an agent should be able to script the whole provisioning + inspection
+surface from it with stable output and exit codes.
+
+- **State audit** — inventory every command against the current Duster + Authos surface. Known gaps:
+  no way to inspect a live session (`/me` / `/session`), the stored token keys
+  (`duster:token:<clientId>:<sub>:*`), the pending `duster:state:*` entries, or `/health`; no
+  awareness of revocation, the discovery document, `allowed_origins` / `error_url` / logout-CSRF /
+  session-TTL semantics, or the tier a given app is running at.
+- **Feature parity** — bring the command tree up to the Phase 0–2 reality: a `debug` / `inspect`
+  group (session, tokens, state, app config, health, tier); surface revocation and the RFC 6749 §5.2
+  error contract in output; validate config against the live discovery doc; make `sync` report what
+  changed. Fold in `dstr init` (#13) and `dstr auth login` (#14) as they land in Phases 2 and 4.
+- **Agent-grade I/O** — a `--json` mode on every command (stable schema), documented exit codes,
+  fully non-interactive operation (no prompt that can't be a flag), and a short machine-readable
+  capability/usage manifest an agent can load. The human path keeps the Mordant tables.
+- **Portability** — today `dstr` needs a JVM and a Unix `install.sh` → `~/.local/bin/dstr`. Decide
+  and ship a portable distribution: a self-contained launcher, a native image, and/or a package
+  manager path; cross-OS install; config discovery that works from CI and containers. This mirrors
+  the Duster deployability work — the CLI must travel as easily as the service it manages.
+
+**Exit criteria:** every Duster/Authos capability through Phase 2 is reachable from `dstr`; `dstr`
+can provision, inspect, and tear down a Duster app end to end without the dashboard or raw HTTP;
+`--json` output is stable enough to script against; the CLI installs in one step on Linux, macOS,
+and CI without a manual JDK setup.
+
+---
+
 ## Cross-cutting (every phase)
 
 - **Audit logging** — replace `println` on the Authos auth paths with structured, queryable events
