@@ -1,0 +1,11 @@
+node_modules
+src
+scripts
+k8s
+*.md
+tsconfig.json
+tsconfig.*.json
+vite.config.ts
+eslint.config.js
+.gitignore
+.github

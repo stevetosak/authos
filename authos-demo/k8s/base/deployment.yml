@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authos-demo
+  labels:
+    app: authos-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authos-demo
+  template:
+    metadata:
+      labels:
+        app: authos-demo
+    spec:
+      containers:
+        - name: authos-demo
+          image: stevetosak/authos-demo:latest
+          ports:
+            - name: http
+              containerPort: 80
+          # entrypoint.sh renders config/config.js from these at container start.
+          # DEMO_DUSTER_CLIENT_ID is a public OAuth client_id (minted by scripts/bootstrap.ts),
+          # not a secret — it ships in a ConfigMap the overlay generates.
+          envFrom:
+            - configMapRef:
+                name: authos-demo-config
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "96Mi"
+              cpu: "200m"

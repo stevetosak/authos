@@ -2,11 +2,12 @@
 
 ## What Is This
 
-Authos is a self-hosted OpenID Connect (OIDC) Identity Provider ecosystem. The JVM modules live here as a Gradle multi-project build; `authos-frontend/` and `packages/` are standalone npm projects.
+Authos is a self-hosted OpenID Connect (OIDC) Identity Provider ecosystem. The JVM modules live here as a Gradle multi-project build; `authos-frontend/`, `authos-demo/`, and `packages/` are standalone npm projects.
 
 ```
 authos-api/       Spring Boot OIDC IDP (the auth server)
 authos-frontend/  React SPA (login, consent, dashboard UI)
+authos-demo/      React SPA — public guided walkthrough of a real tier-0 login (authos-demo.tosak.net)
 duster/           Ktor BFF proxy (OAuth flow handler for client apps)
 dstr-cli/         Kotlin CLI (manage Duster from the terminal)
 e2e-tests/        Kotlin/JUnit HTTP-level suite — spins up the whole stack via docker-compose
@@ -60,6 +61,13 @@ dstr (CLI) → duster + authos-api               ← app registration / sync
   - `@` alias → `./src`
 - **Full details:** `authos-frontend/CLAUDE.md`
 
+### authos-demo — Public Guided Walkthrough
+- **Stack:** React 19, TypeScript, Vite 7 — standalone npm project, consumes the **published** `@authoss/duster-react`
+- **Build:** `npm run dev` (port 5175) / `npm run build` / `npm run typecheck` / `npm run lint`
+- **What:** "The Handshake Trace" — a real tier-0 OIDC login drawn as a sequence diagram on a time base, at `authos-demo.tosak.net`. Everything shown on the wire is genuine; server-to-server hops are labelled *narrated* + linked to the `packages/e2e` CI proof.
+- **Runtime config:** `client_id` from `scripts/bootstrap.ts` (one-time), injected by `entrypoint.sh` → `config/config.js` — never baked into the image.
+- **Full details:** `authos-demo/CLAUDE.md`
+
 ### duster — BFF Proxy
 - **Stack:** Ktor 3.1.3 (Netty), Kotlin, Koin 4.1.0, Lettuce/Redis
 - **Port:** 8785
@@ -101,6 +109,7 @@ dstr (CLI) → duster + authos-api               ← app registration / sync
 | Backend  | `.github/workflows/backend.yaml`  | push to `master` (authos-api changes) | Deploy gated on the `e2e` job (`uses: ./.github/workflows/e2e.yaml`) |
 | Frontend | `.github/workflows/frontend.yaml` | push to `master` (authos-frontend changes) | Deploy gated on the `e2e` job |
 | Duster   | `.github/workflows/duster.yaml`   | push to `master` (duster changes) | Deploy gated on the `e2e` job. Dockerfile self-builds (no host Gradle). Image `stevetosak/authos-duster`; bumps `INFRA_REPO_DUSTER_OVERLAY_DIR`. Runs in the `authos` namespace, shares the cluster Redis. |
+| Demo     | `.github/workflows/demo.yaml`     | push to `master` (authos-demo changes) | Deploy gated on the `e2e` job. Node 22 build (resolves `@authoss/duster-react` from npm), image `stevetosak/authos-demo`; bumps `INFRA_REPO_DEMO_OVERLAY_DIR`. Runs in the `authos` namespace; Ingress `/duster` path-routes to the in-cluster `duster` Service. |
 | docs     | `.github/workflows/docs.yaml`     | `pull_request` touching `docs/**` | Runs `.github/scripts/doc-size.sh` — fails if a tracking doc is over its line limit |
 | sdk      | `.github/workflows/sdk.yaml`      | `pull_request` touching `packages/**` | `unit` (Node 20, `cd packages`: lint / typecheck / `vitest` / build / `npm pack`) + `browser-e2e` (Playwright drives `packages/examples/react-vite` through login/refresh/logout vs `docker-compose.e2e.yml`). |
 | sdk-release | `.github/workflows/sdk-release.yaml` | push tag `duster-sdk-v*`; `workflow_dispatch` (dry run) | Lockstep `npm publish` of `@authoss/duster-{core,react,vue,angular}` via npm trusted publishing (OIDC, no `NPM_TOKEN`). `scripts/set-release-version.mjs` stamps the version. `environment: release`. |

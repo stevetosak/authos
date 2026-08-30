@@ -1,0 +1,1168 @@
+/* =========================================================================
+   The Handshake Trace — Authos + Duster guided demo
+   seed 1ecf0e2c · code-led
+
+   An OIDC session drawn as the sequence diagram every explainer sketches —
+   lifelines, message arrows, a time ruler, a logic channel for the access
+   token — run for real on an instrument clock. Near-white drafting ground,
+   ink, one structural blue for live messages, one signal-orange for the
+   token trace and the trigger, dim neutral for latent routes. B612 / B612
+   Mono, the Airbus cockpit faces.
+   ========================================================================= */
+
+:root {
+  --ground: #f7f6f3;
+  --panel: #fffefb;
+  --sunken: #f1efe9;
+  --ink: #14181d;
+  --ink-2: #3d4249;   /* warm-dark secondary — tinted from the ink, not gray */
+  --ink-3: #5c6167;   /* tertiary / captions */
+  --rule: #ded9cf;     /* drafting-paper hairline */
+  --rule-strong: #c8c2b4;
+
+  --blue: #2b63c4;     /* structural — committed / live messages */
+  --blue-ink: #204a97;
+  --blue-wash: #e9eff9;
+  --signal: #e0562a;   /* the token trace, the trigger */
+  --signal-ink: #b23f18;
+  --signal-wash: #fbe9e1;
+  --dim: #949aa1;      /* latent routes, not-yet-run */
+  --ok: #2f7d4f;
+  --bad: #c23b3b;
+
+  --font-sans: 'B612', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'B612 Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+
+  --shadow-panel:
+    0 1px 2px rgba(20, 24, 29, 0.05),
+    0 10px 24px -14px rgba(20, 24, 29, 0.22);
+  --shadow-lift:
+    0 2px 4px rgba(20, 24, 29, 0.06),
+    0 18px 40px -18px rgba(20, 24, 29, 0.28);
+
+  --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* The scene is a lit desk with a drafting sheet — it stays light on purpose.
+     Only lift the sheet a touch off pure white so a dark-room screen isn't a slab. */
+  :root {
+    --ground: #eceae4;
+    --panel: #f8f7f3;
+    --sunken: #e4e1d9;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  font-feature-settings: 'kern' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(43, 99, 196, 0.16);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+a {
+  color: var(--blue-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-decoration-color: rgba(32, 74, 151, 0.4);
+  transition: text-decoration-color 120ms ease;
+}
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--sunken);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0.06em 0.34em;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* themed scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--rule-strong);
+  border-radius: 6px;
+  border: 2px solid var(--ground);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* =========================================================================
+   Shell
+   ========================================================================= */
+
+.app {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 56px) clamp(16px, 4vw, 44px) 72px;
+}
+
+.masthead {
+  max-width: 60rem;
+  margin-bottom: clamp(28px, 5vw, 52px);
+}
+
+.masthead h1 {
+  margin: 0 0 0.5em;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 1.1rem + 2.6vw, 2.85rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.masthead h1 code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82em;
+  color: var(--signal-ink);
+  white-space: nowrap;
+}
+
+.masthead p {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: 1.02rem;
+}
+
+/* =========================================================================
+   Readout — SESSION state, sub-line, controls. The instrument's status strip.
+   ========================================================================= */
+
+.readout {
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  background: var(--panel);
+  border-radius: 6px 6px 0 0;
+  padding: 18px clamp(16px, 3vw, 26px) 20px;
+}
+
+.readout-line {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.readout-key {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+}
+
+.readout-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(1.3rem, 0.9rem + 1.6vw, 1.9rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.readout-value.phase-ready,
+.readout-value.phase-ended {
+  color: var(--ink);
+}
+.readout-value.phase-authenticated,
+.readout-value.phase-refreshed {
+  color: var(--signal-ink);
+}
+
+.readout-sub {
+  margin: 10px 0 0;
+  max-width: 64ch;
+  color: var(--ink-2);
+  font-size: 0.94rem;
+}
+
+.readout-error {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  background: var(--signal-wash);
+  border: 1px solid rgba(178, 63, 24, 0.28);
+  border-radius: 4px;
+  color: var(--signal-ink);
+  font-size: 0.88rem;
+}
+
+/* controls */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.62em 1.15em;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 60ms ease;
+}
+.btn:hover {
+  border-color: var(--ink-3);
+  background: var(--sunken);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.primary {
+  background: var(--blue);
+  border-color: var(--blue-ink);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(20, 24, 29, 0.12), 0 8px 18px -10px rgba(43, 99, 196, 0.6);
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--blue-ink);
+}
+.btn.danger {
+  color: var(--signal-ink);
+  border-color: rgba(178, 63, 24, 0.4);
+}
+.btn.danger:hover:not(:disabled) {
+  background: var(--signal-wash);
+  border-color: var(--signal-ink);
+}
+
+.btn-key {
+  width: 0.66em;
+  height: 0.66em;
+  flex: none;
+  fill: currentColor;
+  opacity: 0.9;
+}
+
+/* =========================================================================
+   Stage — trace full-bleed, panels grid below
+   ========================================================================= */
+
+.stage {
+  display: block;
+}
+
+.stage-trace {
+  margin-bottom: clamp(28px, 5vw, 48px);
+}
+
+.scrub-hint {
+  margin: 12px 2px 0;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--ink-3);
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.link-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--blue-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* =========================================================================
+   Trace — the SVG sequence diagram
+   ========================================================================= */
+
+.trace {
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: 0 0 6px 6px;
+  background: var(--panel);
+  /* faint drafting column grid behind the diagram */
+  background-image:
+    linear-gradient(var(--ground) 0 0),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 39px,
+      rgba(148, 154, 161, 0.06) 39px 40px
+    );
+  background-blend-mode: normal;
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+.trace-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 8px 6px 4px;
+}
+
+.fill-ink { fill: var(--ink); }
+.fill-blue { fill: var(--blue); }
+.fill-dim { fill: var(--dim); }
+.fill-signal { fill: var(--signal); }
+
+/* lifelines */
+.lifeline {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+.actor-chip {
+  fill: var(--ink);
+}
+.actor-label {
+  fill: var(--panel);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+/* time ruler */
+.ruler-axis {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+.tick {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+.tick-label {
+  fill: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+}
+.tick-label.is-done {
+  fill: var(--signal-ink);
+  font-weight: 700;
+}
+.trigger-mark {
+  fill: var(--signal);
+}
+.trigger-label {
+  fill: var(--signal-ink);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.scrub {
+  cursor: grab;
+  touch-action: none;
+}
+.scrub:active {
+  cursor: grabbing;
+}
+.scrub-dot {
+  fill: var(--panel);
+  stroke: var(--signal);
+  stroke-width: 2;
+}
+.scrub-caret {
+  fill: var(--signal);
+}
+.scrub:focus-visible {
+  outline: none;
+}
+.scrub:focus-visible .scrub-dot {
+  stroke: var(--blue);
+  stroke-width: 3;
+}
+
+/* step bands — a quiet reading marker, not a filled slab */
+.step-band > rect {
+  fill: transparent;
+  stroke: transparent;
+  transition: fill 140ms ease;
+}
+.step-band {
+  cursor: pointer;
+}
+.step-band:hover > rect {
+  fill: rgba(148, 154, 161, 0.05);
+}
+.step-band.is-active > rect {
+  fill: rgba(43, 99, 196, 0.05);
+  stroke: none;
+}
+.step-band.is-active > .step-edge {
+  stroke: var(--blue);
+  stroke-width: 2;
+}
+.step-edge {
+  stroke: transparent;
+}
+.step-title {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.step-band.is-active .step-title {
+  fill: var(--blue-ink);
+}
+.step-ord {
+  fill: var(--ink-3);
+  font-weight: 700;
+}
+
+/* messages */
+.msg {
+  cursor: pointer;
+}
+.msg-hit {
+  fill: transparent;
+}
+.msg-line {
+  stroke-width: 1.5;
+  fill: none;
+}
+.msg-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+.msg-detail {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  fill: var(--ink-3);
+}
+.msg-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  fill: var(--ink-3);
+}
+
+/* latent — nothing run yet, or a step still ahead of the frontier.
+   Strokes go pale (--dim), but the words stay legible (--ink-3): on the first viewport
+   and on any narrow screen the diagram text is the only reading there is. */
+.msg.state-idle .msg-line {
+  stroke: var(--dim);
+  stroke-dasharray: 5 4;
+}
+.msg.state-idle .msg-label {
+  fill: var(--ink-3);
+}
+.msg.state-idle .msg-detail {
+  fill: var(--ink-3);
+}
+
+/* narrated — off the SPA's wire, drawn as the protocol, dashed even when reached */
+.msg.mode-narrated.state-done .msg-line {
+  stroke: var(--ink-2);
+  stroke-dasharray: 6 3;
+}
+.msg.mode-narrated.state-done .msg-label {
+  fill: var(--ink-2);
+}
+
+/* observed + done — a real request the browser made: solid, ink */
+.msg.mode-observed.state-done .msg-line {
+  stroke: var(--ink);
+  stroke-dasharray: none;
+}
+.msg.mode-observed.state-done .msg-label {
+  fill: var(--ink);
+  font-weight: 700;
+}
+
+/* active row under the cursor */
+.msg.is-active .msg-line {
+  stroke: var(--blue);
+  stroke-width: 2.5;
+}
+.msg.is-active .msg-label {
+  fill: var(--blue-ink);
+}
+.msg:hover .msg-line {
+  stroke: var(--blue);
+}
+/* Latent phases (nothing run / logged out): the parked cursor must not read as a live message.
+   Keep the arrow latent; only lift the focused label to full ink so the panels still have a subject. */
+.msg.is-latent-cursor .msg-line {
+  stroke: var(--dim);
+  stroke-width: 1.5;
+}
+.msg.is-latent-cursor.state-idle .msg-label {
+  fill: var(--ink);
+}
+.msg.is-latent-cursor .msg-label {
+  fill: var(--ink);
+}
+
+/* the live wire chip pinned past the arrowhead */
+.wire-chip {
+  fill: var(--panel);
+  stroke: var(--ok);
+  stroke-width: 1;
+}
+.wire-chip.bad {
+  stroke: var(--bad);
+}
+.wire-chip-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--ok);
+}
+.wire-chip.bad + .wire-chip-text,
+.msg .wire-chip.bad ~ .wire-chip-text {
+  fill: var(--bad);
+}
+
+/* cursor line */
+.cursor-line {
+  stroke: var(--blue);
+  stroke-width: 1;
+  stroke-dasharray: 1 3;
+  opacity: 0.5;
+}
+
+/* horizontal graticule — every arrow tied to its clock tick */
+.grat-line {
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.07;
+}
+
+/* activation bars — the actor is doing work on this stretch of its lifeline */
+.activation {
+  fill: var(--panel);
+  stroke: var(--dim);
+  stroke-width: 1;
+}
+.activation.is-live {
+  fill: #eef0f3;
+  stroke: var(--ink-2);
+}
+
+/* opt / ref frames — a dashed bracket round the server-to-server pair, named above it */
+.frame-box {
+  fill: none;
+  stroke: var(--dim);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.frame.is-live .frame-box {
+  stroke: var(--ink-3);
+}
+.frame-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--ink-3);
+}
+
+/* invisible drag rail down the ruler — the pointer half of "scrub the handshake" */
+.scrub-rail {
+  fill: transparent;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+/* token logic channel */
+.token-axis {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+.token-head {
+  fill: var(--signal-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.token-foot {
+  fill: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+}
+.token-trace {
+  fill: none;
+  stroke: var(--signal);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.token-trace.level-0 {
+  opacity: 0.7;
+}
+.token-edge {
+  fill: var(--signal);
+}
+.token-edge.edge-fall {
+  fill: var(--ink);
+}
+.token-edge-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  fill: var(--ink-3);
+}
+.pulse-bracket-line {
+  stroke: var(--signal);
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.7;
+}
+.pulse-bracket-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  fill: var(--signal-ink);
+  letter-spacing: 0.02em;
+}
+
+/* ---- the one authored moment: a phase change sweeps the newly-reached
+   arrows back in, drawn stroke-first, staggered down the ladder ---- */
+.trace-svg.is-sweeping .msg.state-done .msg-line {
+  stroke-dasharray: 660;
+  animation: trace-draw 560ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--row, 0) * 55ms);
+}
+.trace-svg.is-sweeping .msg.state-done .msg-label,
+.trace-svg.is-sweeping .msg.state-done .msg-detail,
+.trace-svg.is-sweeping .msg.state-done .wire-chip,
+.trace-svg.is-sweeping .msg.state-done .wire-chip-text {
+  animation: trace-ink 520ms ease-out both;
+  animation-delay: calc(var(--row, 0) * 55ms + 140ms);
+}
+@keyframes trace-draw {
+  from { stroke-dashoffset: 660; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes trace-ink {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* =========================================================================
+   Instrument summary — the one-line state read. Hidden on desktop (the diagram
+   says all this); on a phone, where the diagram is dropped, it carries the
+   timebase + token story above the transcript.
+   ========================================================================= */
+
+.instrument-summary {
+  display: none;
+  margin: 0;
+  border-top: 1px solid var(--rule);
+  padding: 12px clamp(14px, 4vw, 20px);
+  background: var(--ground);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.instrument-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.instrument-summary dt {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+.instrument-summary dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--ink);
+}
+.instrument-summary dd.tok-1 {
+  color: var(--signal-ink);
+}
+
+/* =========================================================================
+   Transcript — always in the DOM. On desktop a slim plain-text log under the
+   trace (a scan aid and the screen-reader reading); on narrow screens it
+   replaces the diagram.
+   ========================================================================= */
+
+.transcript {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 4px;
+  border-top: 1px solid var(--rule);
+  background: var(--ground);
+}
+
+.t-row {
+  border-bottom: 1px solid transparent;
+}
+.t-row.is-active {
+  background: var(--blue-wash);
+}
+
+.t-row button {
+  display: grid;
+  grid-template-columns: 132px 1fr auto;
+  gap: 4px 14px;
+  width: 100%;
+  padding: 7px clamp(12px, 3vw, 22px);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--ink-2);
+  align-items: baseline;
+}
+.t-row button:hover {
+  color: var(--ink);
+}
+.t-actors {
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+.t-label {
+  color: var(--ink);
+}
+/* latent rows read quieter but must stay legible (mobile: this is the only view) */
+.t-row.state-idle .t-label {
+  color: var(--ink-3);
+}
+.t-row.is-active .t-label {
+  color: var(--blue-ink);
+  font-weight: 700;
+}
+.t-detail {
+  display: none;
+}
+.t-state {
+  font-size: 0.7rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.t-row.state-done .t-state {
+  color: var(--ok);
+}
+.t-row.state-idle .t-state {
+  color: var(--dim);
+}
+
+/* =========================================================================
+   Panels — narration, code, /me, wire log
+   ========================================================================= */
+
+.stage-panels {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: clamp(16px, 2.4vw, 24px);
+  box-shadow: var(--shadow-panel);
+}
+
+.panel-title {
+  margin: 0 0 14px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.panel-note {
+  font-weight: 400;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+
+.panel-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1em 0.45em;
+  border-radius: 3px;
+  background: var(--sunken);
+  color: var(--ink-2);
+}
+.panel-badge.ok {
+  background: rgba(47, 125, 79, 0.14);
+  color: var(--ok);
+}
+
+.panel-empty {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 0.9rem;
+  max-width: 60ch;
+}
+
+/* narration */
+.narration-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.narration-ord {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+}
+.narration-title {
+  margin: 0;
+  font-size: 1.24rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.narration-state {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+}
+.narration-state.st-done {
+  color: var(--ok);
+  border-color: rgba(47, 125, 79, 0.35);
+}
+.narration-caption {
+  margin: 0 0 0.7em;
+  font-size: 1rem;
+  color: var(--ink);
+  max-width: var(--measure);
+}
+.narration-prose {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  max-width: var(--measure);
+}
+.narration-proof {
+  margin: 0.9em 0 0;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+/* code panel */
+.code-block {
+  margin: 0;
+  padding: 12px 0;
+  background: var(--sunken);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+.code-block code {
+  background: none;
+  border: none;
+  padding: 0;
+  display: block;
+  min-width: max-content;
+}
+.code-line {
+  display: flex;
+  gap: 14px;
+  padding: 0 16px;
+}
+.code-line.is-active {
+  background: var(--blue-wash);
+  box-shadow: inset 2px 0 0 var(--blue);
+}
+.code-gutter {
+  color: var(--dim);
+  text-align: right;
+  min-width: 2ch;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+.code-line.is-active .code-gutter {
+  color: var(--blue-ink);
+}
+.code-text {
+  color: var(--ink-2);
+  white-space: pre;
+}
+.code-line.is-active .code-text {
+  color: var(--ink);
+}
+.code-note {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-3);
+  max-width: 60ch;
+}
+
+/* /me panel */
+.me-body,
+.me-headers {
+  margin: 0;
+}
+.me-headers {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.me-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 6px 16px;
+  padding: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.me-row dt {
+  color: var(--ink-3);
+}
+.me-row dd {
+  margin: 0;
+  color: var(--ink);
+  word-break: break-all;
+}
+.me-row dd span {
+  border-bottom: 1px dotted var(--rule-strong);
+  cursor: help;
+}
+.me-cookie-note {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  max-width: 58ch;
+}
+
+/* wire panel */
+.wire-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wire-item {
+  padding: 8px 12px;
+  background: var(--sunken);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+.wire-req {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.wire-method {
+  font-weight: 700;
+  color: var(--ink);
+}
+.wire-path {
+  color: var(--ink-2);
+}
+.wire-t {
+  margin-left: auto;
+  color: var(--ink-3);
+  font-size: 0.72rem;
+}
+.wire-res {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-top: 5px;
+  color: var(--ink-3);
+  font-size: 0.72rem;
+}
+.wire-status {
+  font-weight: 700;
+}
+.wire-status.ok {
+  color: var(--ok);
+}
+.wire-status.bad {
+  color: var(--bad);
+}
+.wire-header {
+  color: var(--ink-3);
+  word-break: break-all;
+}
+
+/* =========================================================================
+   Colophon
+   ========================================================================= */
+
+.colophon {
+  margin-top: clamp(32px, 6vw, 60px);
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+/* =========================================================================
+   NotConfigured / ErrorPage
+   ========================================================================= */
+
+.app.notconf,
+.app.errorpage {
+  max-width: 640px;
+}
+.app.notconf h1,
+.app.errorpage .masthead h1 {
+  font-size: clamp(1.6rem, 1.2rem + 2vw, 2.3rem);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.4em;
+}
+.app.notconf p {
+  color: var(--ink-2);
+}
+.errorpage .panel {
+  margin-top: 8px;
+}
+
+/* =========================================================================
+   Responsive
+   ========================================================================= */
+
+@media (min-width: 900px) {
+  .stage-panels {
+    grid-template-columns: 1fr 1fr;
+  }
+  .narration,
+  .wire-panel {
+    grid-column: 1 / -1;
+  }
+  .t-row button {
+    grid-template-columns: 150px 1fr 2fr auto;
+  }
+  .t-detail {
+    display: block;
+    color: var(--ink-3);
+  }
+}
+
+/* On narrow screens the diagram doesn't survive the downscale — the transcript
+   is the reading, and the instrument summary carries the state. */
+@media (max-width: 720px) {
+  .trace-svg {
+    display: none;
+  }
+  .trace {
+    background-image: none;
+    border-radius: 0 0 6px 6px;
+  }
+  .instrument-summary {
+    display: grid;
+  }
+  .transcript {
+    padding: 4px 0;
+  }
+  .t-row button {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'actors state'
+      'label  label';
+    font-size: 0.78rem;
+    padding: 10px clamp(12px, 4vw, 18px);
+  }
+  .t-actors { grid-area: actors; }
+  .t-state { grid-area: state; }
+  .t-label { grid-area: label; font-size: 0.86rem; }
+  .scrub-hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .trace-svg.is-sweeping .msg .msg-line {
+    stroke-dasharray: none;
+  }
+}
