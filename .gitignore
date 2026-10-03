@@ -52,3 +52,6 @@ secrets/
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
+
+# Agent session notes, handoffs and local settings; never committed.
+.claude/
