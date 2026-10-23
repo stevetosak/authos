@@ -67,30 +67,19 @@ jobs:
             ${{steps.frontend_image_tags.outputs.IMAGE_LATEST}}
             ${{steps.frontend_image_tags.outputs.IMAGE_VERSION}}
 
+  # The tag bump goes to the infra repo as a pull request that only its
+  # required check `deploy-scope` can let merge (infra ADR 0010, Amendment
+  # 2026-10-22). One group per Application, so two bumps never race.
   deploy-frontend:
     needs: frontend-build-push
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: tag-bump-authos-ui
+      cancel-in-progress: false
     steps:
-      - name: Setup Kustomize
-        uses: imranismail/setup-kustomize@v2.1.0
-
-      - name: Checkout infra repo
-        uses: actions/checkout@v4
+      - uses: stevetosak/hetzner-cloud-infra/.github/actions/tag-bump@master
         with:
-          repository: 'stevetosak/${{vars.INFRA_REPO_NAME}}'
-          token: '${{secrets.INFRA_REPO_TOKEN}}'
-          path: '${{vars.INFRA_REPO_NAME}}'
-
-      - name: Update Overlay
-        run: |
-          cd ${{vars.INFRA_REPO_NAME}}/${{vars.INFRA_REPO_FRONTEND_OVERLAY_DIR}}
-          kustomize edit set image ${{needs.frontend-build-push.outputs.IMAGE_VERSION}}
-
-      - name: Commit and Push Changes
-        run: |
-          cd ${{vars.INFRA_REPO_NAME}}
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --cached --quiet || git commit -m "Update Frontend image"
-          git push origin HEAD
+          private-key: ${{ secrets.TAG_BUMP_APP_KEY }}
+          overlay-dir: projects/authos/ui/manifests/overlays/dev
+          image: stevetosak/authos-ui
+          tag: ${{ env.IMAGE_VERSION_PATTERN }}
