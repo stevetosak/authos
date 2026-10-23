@@ -1,7 +1,7 @@
 name: e2e
 
 # Runs on PRs that touch the stack, and as a reusable gate (workflow_call) that
-# backend.yaml / frontend.yaml invoke before deploying from master. No bare `push`
+# the four deploy workflows invoke before deploying from master. No bare `push`
 # trigger: a same-repo PR would otherwise fire push + pull_request = two runs, and
 # the master deploy already re-runs this via workflow_call.
 on:
@@ -14,8 +14,11 @@ on:
       - "e2e-tests/**"
       - ".github/workflows/e2e.yaml"
 
+# One group per caller: in a called workflow `github.workflow` is the CALLER's
+# name. A shared group keeps one pending run and cancels the older one, so a
+# merge that starts several deploy workflows used to lose all but two of them.
 concurrency:
-  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  group: e2e-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
