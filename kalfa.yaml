@@ -3,3 +3,6 @@ modules:
   - tosak-platform
   - tosak-docs
 plans: []
+skill-refs:
+  # URL paths in CLAUDE.md, not skills.
+  ignore: [callback, duster]
