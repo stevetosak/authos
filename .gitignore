@@ -55,3 +55,4 @@ build/
 
 # Agent session notes, handoffs and local settings; never committed.
 .claude/
+.kalfa/
